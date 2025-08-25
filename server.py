@@ -25,9 +25,6 @@ class User(UserMixin, db.Model):
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient_user', lazy=True)
 
-    def __repr__(self):
-        return f'<User {self.username}>'
-
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -35,8 +32,10 @@ class Message(db.Model):
     body = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<Message {self.body}>'
+# --- ИСПРАВЛЕНИЕ: СОЗДАЕМ ТАБЛИЦЫ ЗДЕСЬ ---
+# Эта команда теперь будет выполняться при каждом запуске сервера на Render
+with app.app_context():
+    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -48,7 +47,8 @@ def load_user(user_id):
 def index():
     users = User.query.all()
     return render_template('index.html', current_user=current_user, users=users)
-
+    
+# ... (остальной код /register, /login, /logout, websocket... остается без изменений)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -81,63 +81,50 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# --- API ДЛЯ ЗАГРУЗКИ ИСТОРИИ ---
 @app.route('/history/<username>')
 @login_required
 def history(username):
     peer = User.query.filter_by(username=username).first_or_404()
-    
     messages = db.session.query(Message).filter(
         or_(
             (Message.sender_id == current_user.id) & (Message.recipient_id == peer.id),
             (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id)
         )
     ).order_by(Message.timestamp.asc()).all()
-    
     messages_json = [
         {'sender': msg.author.username, 'message': msg.body}
         for msg in messages
     ]
-    
     return jsonify(messages_json)
 
-# --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
 @login_required
 def handle_connect():
     user_sids[current_user.username] = request.sid
-    print(f"User {current_user.username} connected with sid {request.sid}")
 
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
         del user_sids[current_user.username]
-        print(f"User {current_user.username} disconnected")
 
 @socketio.on('private_message')
 @login_required
 def handle_private_message(data):
     recipient_username = data['recipient']
     message_text = data['message']
-    
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
         return
-
     new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text)
     db.session.add(new_message)
     db.session.commit()
-
     recipient_sid = user_sids.get(recipient_username)
     message_payload = {'sender': current_user.username, 'message': message_text}
-    
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
-    
     emit('receive_private_message', message_payload, to=request.sid)
 
 # --- ЗАПУСК ПРИЛОЖЕНИЯ ---
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    # Эта часть теперь нужна только для локального запуска
     socketio.run(app, debug=True)
