@@ -32,8 +32,6 @@ class Message(db.Model):
     body = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
-# --- ИСПРАВЛЕНИЕ: СОЗДАЕМ ТАБЛИЦЫ ЗДЕСЬ ---
-# Эта команда теперь будет выполняться при каждом запуске сервера на Render
 with app.app_context():
     db.create_all()
 
@@ -47,8 +45,7 @@ def load_user(user_id):
 def index():
     users = User.query.all()
     return render_template('index.html', current_user=current_user, users=users)
-    
-# ... (остальной код /register, /login, /logout, websocket... остается без изменений)
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -97,6 +94,7 @@ def history(username):
     ]
     return jsonify(messages_json)
 
+# --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
 @login_required
 def handle_connect():
@@ -115,16 +113,24 @@ def handle_private_message(data):
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
         return
+
     new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text)
     db.session.add(new_message)
     db.session.commit()
+
     recipient_sid = user_sids.get(recipient_username)
-    message_payload = {'sender': current_user.username, 'message': message_text}
+    # ИСПРАВЛЕНИЕ: Добавляем получателя в данные для отправки
+    message_payload = {
+        'sender': current_user.username,
+        'recipient': recipient_username,
+        'message': message_text
+    }
+    
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
+    
     emit('receive_private_message', message_payload, to=request.sid)
 
 # --- ЗАПУСК ПРИЛОЖЕНИЯ ---
 if __name__ == '__main__':
-    # Эта часть теперь нужна только для локального запуска
     socketio.run(app, debug=True)

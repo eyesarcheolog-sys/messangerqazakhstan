@@ -100,7 +100,10 @@
         });
 
         socket.on('receive_private_message', function(data) {
-            if ((data.sender === recipientUsername && username === data.recipient) || (data.sender === username && recipientUsername === data.recipient)) {
+            // ИСПРАВЛЕНИЕ: Упрощенная и правильная логика
+            // Показываем сообщение, если оно от собеседника, с которым открыт чат,
+            // или если это наше собственное сообщение, отправленное этому собеседнику.
+            if (data.sender === recipientUsername || (data.sender === username && data.recipient === recipientUsername)) {
                 appendMessage(data);
             }
         });
