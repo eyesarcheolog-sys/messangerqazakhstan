@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Мессенджер</title>
+    <style>
+        /* Добавим немного стилей для красоты */
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background-color: #f0f2f5; }
+        #chat-container { max-width: 800px; margin: 20px auto; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 90vh; }
+        #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; }
+        #messages li { padding: 8px 12px; margin-bottom: 10px; border-radius: 18px; width: fit-content; max-width: 70%; }
+        #messages li.my-message { background-color: #0084ff; color: white; margin-left: auto; }
+        #messages li.other-message { background-color: #e4e6eb; color: #050505; }
+        #form { display: flex; padding: 20px; border-top: 1px solid #ddd; }
+        #input { border: 1px solid #ccc; padding: 10px; flex-grow: 1; border-radius: 18px; margin-right: 10px; }
+        #form button { background: #0084ff; border: none; padding: 10px 15px; color: white; border-radius: 18px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off" placeholder="Введите сообщение..." />
+            <button>Отправить</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <script>
+        // Устанавливаем соединение с нашим сервером
+        const socket = io();
+
+        // Находим элементы на странице
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        
+        // Генерируем простое имя пользователя, чтобы отличать свои сообщения
+        const username = "User" + Math.round(Math.random() * 1000);
+
+        // Когда форма отправляется...
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // ...отменяем стандартное поведение (перезагрузку страницы)
+            if (input.value) {
+                // ...отправляем на сервер событие 'send_message' с данными
+                socket.emit('send_message', { user: username, message: input.value });
+                input.value = ''; // Очищаем поле ввода
+            }
+        });
+
+        // Когда от сервера приходит событие 'receive_message'...
+        socket.on('receive_message', function(data) {
+            const item = document.createElement('li');
+            item.textContent = `${data.user}: ${data.message}`;
+            
+            // Определяем, наше это сообщение или чужое, и добавляем нужный класс
+            if (data.user === username) {
+                item.classList.add('my-message');
+            } else {
+                item.classList.add('other-message');
+            }
+            
+            messages.appendChild(item);
+            // Прокручиваем чат вниз, чтобы видеть последнее сообщение
+            messages.scrollTop = messages.scrollHeight;
+        });
+    </script>
+</body>
+</html>
