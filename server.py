@@ -1,49 +1,120 @@
-# Импортируем Flask для создания веб-приложения и render_template для работы с html
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
+# request из flask_socketio нам больше не нужен, но нужен из flask
 from flask_socketio import SocketIO, emit
-# Импортируем SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ И БАЗЫ ДАННЫХ ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
-# Указываем путь к файлу нашей базы данных
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messenger.db'
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
+# --- Словарь для отслеживания пользователей онлайн ---
+# Формат: {'имя_пользователя': 'session_id'}
+user_sids = {}
 
-# --- МОДЕЛЬ ПОЛЬЗОВАТЕЛЯ ---
-# Описываем, как будет выглядеть таблица пользователей в базе данных
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-
-# --- СТАРЫЙ КОД ОСТАЕТСЯ НИЖЕ ---
-
-# Когда пользователь заходит на главную страницу...
+# --- СТРАНИЦЫ И ЛОГИКА ---
 @app.route('/')
+@login_required
 def index():
-    # ...мы отправляем ему файл index.html из папки 'templates'
-    return render_template('index.html')
+    users = User.query.all()
+    return render_template('index.html', current_user=current_user, users=users)
 
-# Когда сервер получает от клиента событие 'send_message'...
-@socketio.on('send_message')
-def handle_message(data):
-    # ...мы печатаем его в консоль сервера...
-    print('Получено сообщение: ' + str(data))
-    # ...и отправляем его обратно всем подключенным клиентам
-    emit('receive_message', data, broadcast=True)
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    # ... (код без изменений)
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if User.query.filter_by(username=username).first():
+            return "Это имя пользователя уже занято!"
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('register.html')
 
-# Эта часть нужна, только если мы запускаем файл напрямую (python server.py)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # ... (код без изменений)
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.password == password:
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            return "Неверное имя пользователя или пароль!"
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    # Перед выходом удаляем пользователя из словаря онлайн
+    if current_user.username in user_sids:
+        del user_sids[current_user.username]
+    logout_user()
+    return redirect(url_for('login'))
+
+# --- НОВАЯ ЛОГИКА SocketIO ---
+
+# Когда пользователь подключается
+@socketio.on('connect')
+def handle_connect():
+    if current_user.is_authenticated:
+        user_sids[current_user.username] = request.sid
+        print(f"User {current_user.username} connected with sid {request.sid}")
+        print("Online users:", user_sids)
+
+# Когда пользователь отключается
+@socketio.on('disconnect')
+def handle_disconnect():
+    if current_user.is_authenticated and current_user.username in user_sids:
+        del user_sids[current_user.username]
+        print(f"User {current_user.username} disconnected")
+        print("Online users:", user_sids)
+
+# Когда приходит личное сообщение
+@socketio.on('private_message')
+def handle_private_message(data):
+    recipient_username = data['recipient']
+    message_text = data['message']
+    
+    # Ищем sid получателя
+    recipient_sid = user_sids.get(recipient_username)
+    
+    message_payload = {
+        'sender': current_user.username,
+        'message': message_text
+    }
+    
+    if recipient_sid:
+        # Отправляем сообщение только получателю
+        emit('receive_private_message', message_payload, to=recipient_sid)
+    
+    # Отправляем сообщение обратно самому себе, чтобы видеть его в чате
+    emit('receive_private_message', message_payload, to=request.sid)
+    print(f"Message from {current_user.username} to {recipient_username}: {message_text}")
+
+
+# --- ЗАПУСК ПРИЛОЖЕНИЯ ---
 if __name__ == '__main__':
-    # Перед первым запуском нужно создать таблицы в базе данных
     with app.app_context():
         db.create_all()
-    # Запускаем сервер для локальной разработки
     socketio.run(app, debug=True)
