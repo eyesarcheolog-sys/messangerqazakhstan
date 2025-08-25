@@ -4,3 +4,4 @@ gunicorn
 simple-websocket
 Flask-SQLAlchemy
 Flask-Login
+gevent-websocket

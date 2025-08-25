@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
-# request из flask_socketio нам больше не нужен, но нужен из flask
 from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
-# --- НАСТРОЙКА ПРИЛОЖЕНИЯ И БАЗЫ ДАННЫХ ---
+# --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messenger.db'
@@ -14,20 +13,24 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- Словарь для отслеживания пользователей онлайн ---
-# Формат: {'имя_пользователя': 'session_id'}
+# Словарь для отслеживания онлайн-пользователей: {'имя_пользователя': 'session_id'}
 user_sids = {}
 
+# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
 
+    def __repr__(self):
+        return f'<User {self.username}>'
+
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    # SQLAlchemy 2.0 рекомендует использовать db.session.get() вместо User.query.get()
+    return db.session.get(User, int(user_id))
 
-# --- СТРАНИЦЫ И ЛОГИКА ---
+# --- МАРШРУТЫ (ROUTES) ---
 @app.route('/')
 @login_required
 def index():
@@ -36,7 +39,6 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # ... (код без изменений)
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -48,10 +50,8 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # ... (код без изменений)
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -66,37 +66,28 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    # Перед выходом удаляем пользователя из словаря онлайн
-    if current_user.username in user_sids:
-        del user_sids[current_user.username]
     logout_user()
     return redirect(url_for('login'))
 
-# --- НОВАЯ ЛОГИКА SocketIO ---
-
-# Когда пользователь подключается
+# --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
+@login_required
 def handle_connect():
-    if current_user.is_authenticated:
-        user_sids[current_user.username] = request.sid
-        print(f"User {current_user.username} connected with sid {request.sid}")
-        print("Online users:", user_sids)
+    user_sids[current_user.username] = request.sid
+    print(f"User {current_user.username} connected with sid {request.sid}")
 
-# Когда пользователь отключается
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
         del user_sids[current_user.username]
         print(f"User {current_user.username} disconnected")
-        print("Online users:", user_sids)
 
-# Когда приходит личное сообщение
 @socketio.on('private_message')
+@login_required
 def handle_private_message(data):
     recipient_username = data['recipient']
     message_text = data['message']
     
-    # Ищем sid получателя
     recipient_sid = user_sids.get(recipient_username)
     
     message_payload = {
@@ -105,16 +96,14 @@ def handle_private_message(data):
     }
     
     if recipient_sid:
-        # Отправляем сообщение только получателю
         emit('receive_private_message', message_payload, to=recipient_sid)
     
-    # Отправляем сообщение обратно самому себе, чтобы видеть его в чате
     emit('receive_private_message', message_payload, to=request.sid)
     print(f"Message from {current_user.username} to {recipient_username}: {message_text}")
-
 
 # --- ЗАПУСК ПРИЛОЖЕНИЯ ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+    # Для локального запуска используется стандартный сервер
     socketio.run(app, debug=True)
