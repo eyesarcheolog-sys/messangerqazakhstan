@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
+from sqlalchemy import or_
 
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
 app = Flask(__name__)
@@ -21,15 +22,12 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    # Связь с сообщениями, которые пользователь отправил
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
-    # Связь с сообщениями, которые пользователь получил
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient_user', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
 
-# НОВАЯ МОДЕЛЬ ДЛЯ СООБЩЕНИЙ
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -51,7 +49,6 @@ def index():
     users = User.query.all()
     return render_template('index.html', current_user=current_user, users=users)
 
-# ... (маршруты /register, /login, /logout остаются без изменений)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -84,6 +81,26 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# --- API ДЛЯ ЗАГРУЗКИ ИСТОРИИ ---
+@app.route('/history/<username>')
+@login_required
+def history(username):
+    peer = User.query.filter_by(username=username).first_or_404()
+    
+    messages = db.session.query(Message).filter(
+        or_(
+            (Message.sender_id == current_user.id) & (Message.recipient_id == peer.id),
+            (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id)
+        )
+    ).order_by(Message.timestamp.asc()).all()
+    
+    messages_json = [
+        {'sender': msg.author.username, 'message': msg.body}
+        for msg in messages
+    ]
+    
+    return jsonify(messages_json)
+
 # --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
 @login_required
@@ -94,8 +111,7 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
-        if current_user.username in user_sids:
-            del user_sids[current_user.username]
+        del user_sids[current_user.username]
         print(f"User {current_user.username} disconnected")
 
 @socketio.on('private_message')
@@ -104,30 +120,20 @@ def handle_private_message(data):
     recipient_username = data['recipient']
     message_text = data['message']
     
-    # Ищем получателя в базе данных
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
-        return # Если получателя нет, ничего не делаем
+        return
 
-    # СОХРАНЯЕМ СООБЩЕНИЕ В БАЗУ ДАННЫХ
-    new_message = Message(
-        sender_id=current_user.id,
-        recipient_id=recipient_obj.id,
-        body=message_text
-    )
+    new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text)
     db.session.add(new_message)
     db.session.commit()
 
-    # Отправляем сообщение получателю, если он онлайн
     recipient_sid = user_sids.get(recipient_username)
-    message_payload = {
-        'sender': current_user.username,
-        'message': message_text
-    }
+    message_payload = {'sender': current_user.username, 'message': message_text}
+    
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
     
-    # Отправляем сообщение обратно себе
     emit('receive_private_message', message_payload, to=request.sid)
 
 # --- ЗАПУСК ПРИЛОЖЕНИЯ ---

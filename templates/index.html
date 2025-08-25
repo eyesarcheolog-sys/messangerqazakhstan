@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Мой Мессенджер</title>
     <style>
-        /* ... (все стили остаются без изменений) ... */
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
         #sidebar { width: 250px; background-color: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
         #user-info { padding: 20px; border-bottom: 1px solid #ddd; }
@@ -13,7 +12,6 @@
         #contact-list { list-style-type: none; padding: 0; margin: 0; flex-grow: 1; overflow-y: auto; }
         #contact-list li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
         #contact-list li:hover { background-color: #f5f5f5; }
-        /* Новый стиль для активного чата */
         #contact-list li.active { background-color: #e0f0ff; }
         #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
         #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; }
@@ -57,28 +55,40 @@
         const contactList = document.getElementById('contact-list');
         
         const username = "{{ current_user.username }}";
-        let recipientUsername = null; // Переменная для хранения выбранного получателя
+        let recipientUsername = null;
 
-        // --- Обработка клика по контакту ---
+        function appendMessage(data) {
+            const item = document.createElement('li');
+            if (data.sender === username) {
+                item.textContent = `Вы: ${data.message}`;
+                item.classList.add('my-message');
+            } else {
+                item.textContent = `${data.sender}: ${data.message}`;
+                item.classList.add('other-message');
+            }
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
         contactList.addEventListener('click', function(e) {
             if (e.target && e.target.nodeName === 'LI') {
-                // Убираем класс 'active' у всех
                 document.querySelectorAll('#contact-list li').forEach(li => li.classList.remove('active'));
-                // Добавляем класс 'active' кликнутому
                 e.target.classList.add('active');
                 
                 recipientUsername = e.target.dataset.username;
-                console.log("Selected recipient:", recipientUsername);
-                // В будущем здесь можно будет загружать историю сообщений
-                messages.innerHTML = ''; // Очищаем чат при смене собеседника
+                messages.innerHTML = '';
+
+                fetch(`/history/${recipientUsername}`)
+                    .then(response => response.json())
+                    .then(history => {
+                        history.forEach(appendMessage);
+                    });
             }
         });
 
-        // --- Отправка сообщения ---
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value && recipientUsername) {
-                // Отправляем событие private_message с получателем
                 socket.emit('private_message', { 
                     recipient: recipientUsername, 
                     message: input.value 
@@ -89,22 +99,10 @@
             }
         });
 
-        // --- Получение сообщения ---
         socket.on('receive_private_message', function(data) {
-            const item = document.createElement('li');
-            
-            // Если отправитель - я, то показываем сообщение как "To: получатель"
-            if (data.sender === username) {
-                item.textContent = `Вы: ${data.message}`;
-                item.classList.add('my-message');
-            } else {
-            // Если отправитель - кто-то другой
-                item.textContent = `${data.sender}: ${data.message}`;
-                item.classList.add('other-message');
+            if ((data.sender === recipientUsername && username === data.recipient) || (data.sender === username && recipientUsername === data.recipient)) {
+                appendMessage(data);
             }
-            
-            messages.appendChild(item);
-            messages.scrollTop = messages.scrollHeight;
         });
     </script>
 </body>
