@@ -1,3 +1,4 @@
+import os # <-- Добавляем этот импорт
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
@@ -8,16 +9,17 @@ from sqlalchemy import or_
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messenger.db'
+# ИЗМЕНЕНИЕ: Берем адрес базы данных из переменной окружения
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# ... остальной код остается без изменений ...
 user_sids = {}
 
-# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -39,7 +41,6 @@ with app.app_context():
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# --- МАРШРУТЫ (ROUTES) ---
 @app.route('/')
 @login_required
 def index():
@@ -94,7 +95,6 @@ def history(username):
     ]
     return jsonify(messages_json)
 
-# --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
 @login_required
 def handle_connect():
@@ -119,7 +119,6 @@ def handle_private_message(data):
     db.session.commit()
 
     recipient_sid = user_sids.get(recipient_username)
-    # ИСПРАВЛЕНИЕ: Добавляем получателя в данные для отправки
     message_payload = {
         'sender': current_user.username,
         'recipient': recipient_username,
@@ -131,6 +130,5 @@ def handle_private_message(data):
     
     emit('receive_private_message', message_payload, to=request.sid)
 
-# --- ЗАПУСК ПРИЛОЖЕНИЯ ---
 if __name__ == '__main__':
     socketio.run(app, debug=True)
