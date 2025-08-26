@@ -17,9 +17,12 @@
         #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
         #chat-header { padding: 20px; border-bottom: 1px solid #ddd; margin: 0; font-size: 18px; color: #333; }
         #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; }
-        #messages li { padding: 8px 12px; margin-bottom: 10px; border-radius: 18px; width: fit-content; max-width: 70%; }
-        #messages li.my-message { background-color: #0084ff; color: white; margin-left: auto; }
-        #messages li.other-message { background-color: #e4e6eb; color: #050505; }
+        #messages li { padding: 8px 12px; margin-bottom: 10px; border-radius: 18px; width: fit-content; max-width: 70%; display: flex; flex-direction: column; }
+        .message-content { display: block; }
+        .timestamp { font-size: 11px; color: #888; margin-top: 4px; }
+        #messages li.my-message { background-color: #0084ff; color: white; margin-left: auto; align-items: flex-end; }
+        #messages li.my-message .timestamp { color: #e0f0ff; }
+        #messages li.other-message { background-color: #e4e6eb; color: #050505; align-items: flex-start; }
         #form { display: flex; padding: 20px; border-top: 1px solid #ddd; background-color: #fff; }
         #input { border: 1px solid #ccc; padding: 10px; flex-grow: 1; border-radius: 18px; margin-right: 10px; }
         #form button { background: #0084ff; border: none; padding: 10px 15px; color: white; border-radius: 18px; cursor: pointer; }
@@ -43,7 +46,6 @@
 
     <div id="chat-container">
         <h2 id="chat-header">Выберите чат</h2>
-        
         <ul id="messages"></ul>
         <form id="form" action="">
             <input id="input" autocomplete="off" placeholder="Введите сообщение..." />
@@ -58,19 +60,29 @@
         const input = document.getElementById('input');
         const messages = document.getElementById('messages');
         const contactList = document.getElementById('contact-list');
-        
         const username = "{{ current_user.username }}";
         let recipientUsername = null;
 
         function appendMessage(data) {
             const item = document.createElement('li');
+
+            const messageContent = document.createElement('span');
+            messageContent.className = 'message-content';
+            
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp';
+            timestampSpan.textContent = data.timestamp;
+
             if (data.sender === username) {
-                item.textContent = `Вы: ${data.message}`;
+                messageContent.textContent = `Вы: ${data.message}`;
                 item.classList.add('my-message');
             } else {
-                item.textContent = `${data.sender}: ${data.message}`;
+                messageContent.textContent = `${data.sender}: ${data.message}`;
                 item.classList.add('other-message');
             }
+
+            item.appendChild(messageContent);
+            item.appendChild(timestampSpan);
             messages.appendChild(item);
             messages.scrollTop = messages.scrollHeight;
         }

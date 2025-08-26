@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from sqlalchemy import or_
-# НОВЫЙ ИМПОРТ для хеширования
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
@@ -24,12 +23,11 @@ user_sids = {}
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(256), nullable=False) # Увеличим длину для хранения хеша
+    password = db.Column(db.String(256), nullable=False)
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient_user', lazy=True)
 
 class Message(db.Model):
-    # ... (модель без изменений)
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -57,11 +55,8 @@ def register():
         password = request.form['password']
         if User.query.filter_by(username=username).first():
             return "Это имя пользователя уже занято!"
-        
-        # ИЗМЕНЕНИЕ: Хешируем пароль перед сохранением
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, password=hashed_password)
-
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -73,8 +68,6 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-
-        # ИЗМЕНЕНИЕ: Сравниваем не пароли напрямую, а хеш пароля
         if user and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('index'))
@@ -82,7 +75,6 @@ def login():
             return "Неверное имя пользователя или пароль!"
     return render_template('login.html')
 
-# ... (остальной код /logout, /history, websocket... остается без изменений)
 @app.route('/logout')
 @login_required
 def logout():
@@ -99,12 +91,20 @@ def history(username):
             (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id)
         )
     ).order_by(Message.timestamp.asc()).all()
+    
+    # ИЗМЕНЕНИЕ: Добавляем отформатированное время
     messages_json = [
-        {'sender': msg.author.username, 'message': msg.body}
+        {
+            'sender': msg.author.username,
+            'message': msg.body,
+            'timestamp': msg.timestamp.strftime('%H:%M') # Форматируем время в "Часы:Минуты"
+        }
         for msg in messages
     ]
+    
     return jsonify(messages_json)
 
+# --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
 @login_required
 def handle_connect():
@@ -120,20 +120,35 @@ def handle_disconnect():
 def handle_private_message(data):
     recipient_username = data['recipient']
     message_text = data['message']
+    
+    # Создаем время ДО сохранения в базу, чтобы оно было точным
+    timestamp = datetime.utcnow()
+
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
         return
-    new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text)
+
+    new_message = Message(
+        sender_id=current_user.id,
+        recipient_id=recipient_obj.id,
+        body=message_text,
+        timestamp=timestamp
+    )
     db.session.add(new_message)
     db.session.commit()
+
     recipient_sid = user_sids.get(recipient_username)
+    # ИЗМЕНЕНИЕ: Добавляем отформатированное время
     message_payload = {
         'sender': current_user.username,
         'recipient': recipient_username,
-        'message': message_text
+        'message': message_text,
+        'timestamp': timestamp.strftime('%H:%M')
     }
+    
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
+    
     emit('receive_private_message', message_payload, to=request.sid)
 
 if __name__ == '__main__':
