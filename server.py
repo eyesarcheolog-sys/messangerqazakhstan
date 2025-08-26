@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
@@ -20,17 +20,29 @@ login_manager.login_view = 'login'
 user_sids = {}
 
 # --- МОДЕЛИ БАЗЫ ДАННЫХ ---
+group_members = db.Table('group_members',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
+)
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
-    received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient_user', lazy=True)
+    groups = db.relationship('Group', secondary=group_members, lazy='subquery',
+                             backref=db.backref('members', lazy=True))
+
+class Group(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    messages = db.relationship('Message', backref='group', lazy=True)
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     body = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
@@ -46,7 +58,9 @@ def load_user(user_id):
 @login_required
 def index():
     users = User.query.all()
-    return render_template('index.html', current_user=current_user, users=users)
+    # Добавляем группы пользователя в контекст шаблона
+    groups = current_user.groups
+    return render_template('index.html', current_user=current_user, users=users, groups=groups)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -106,11 +120,17 @@ def history(username):
 @login_required
 def handle_connect():
     user_sids[current_user.username] = request.sid
+    # Присоединяем пользователя к "комнатам" всех его групп
+    for group in current_user.groups:
+        join_room(f'group_{group.id}')
     emit('update_online_users', list(user_sids.keys()), broadcast=True)
 
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
+        # Покидаем комнаты всех групп
+        for group in current_user.groups:
+            leave_room(f'group_{group.id}')
         del user_sids[current_user.username]
         emit('update_online_users', list(user_sids.keys()), broadcast=True)
 
