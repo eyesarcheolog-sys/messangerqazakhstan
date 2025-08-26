@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
 login_manager = LoginManager()
@@ -91,17 +91,14 @@ def history(username):
             (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id)
         )
     ).order_by(Message.timestamp.asc()).all()
-    
-    # ИЗМЕНЕНИЕ: Отправляем полный ISO формат времени
     messages_json = [
         {
             'sender': msg.author.username,
             'message': msg.body,
-            'timestamp': msg.timestamp.isoformat() + "Z" 
+            'timestamp': msg.timestamp.isoformat() + "Z"
         }
         for msg in messages
     ]
-    
     return jsonify(messages_json)
 
 # --- ЛОГИКА WEBSOCKET ---
@@ -109,11 +106,13 @@ def history(username):
 @login_required
 def handle_connect():
     user_sids[current_user.username] = request.sid
+    emit('update_online_users', list(user_sids.keys()), broadcast=True)
 
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
         del user_sids[current_user.username]
+        emit('update_online_users', list(user_sids.keys()), broadcast=True)
 
 @socketio.on('private_message')
 @login_required
@@ -128,7 +127,6 @@ def handle_private_message(data):
     db.session.add(new_message)
     db.session.commit()
     recipient_sid = user_sids.get(recipient_username)
-    # ИЗМЕНЕНИЕ: Отправляем полный ISO формат времени
     message_payload = {
         'sender': current_user.username,
         'recipient': recipient_username,
