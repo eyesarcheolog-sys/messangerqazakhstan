@@ -1,15 +1,16 @@
-import os # <-- Добавляем этот импорт
+import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from sqlalchemy import or_
+# НОВЫЙ ИМПОРТ для хеширования
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
-# ИЗМЕНЕНИЕ: Берем адрес базы данных из переменной окружения
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
@@ -17,17 +18,18 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# ... остальной код остается без изменений ...
 user_sids = {}
 
+# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+    password = db.Column(db.String(256), nullable=False) # Увеличим длину для хранения хеша
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient_user', lazy=True)
 
 class Message(db.Model):
+    # ... (модель без изменений)
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -41,6 +43,7 @@ with app.app_context():
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+# --- МАРШРУТЫ (ROUTES) ---
 @app.route('/')
 @login_required
 def index():
@@ -54,7 +57,11 @@ def register():
         password = request.form['password']
         if User.query.filter_by(username=username).first():
             return "Это имя пользователя уже занято!"
-        new_user = User(username=username, password=password)
+        
+        # ИЗМЕНЕНИЕ: Хешируем пароль перед сохранением
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        new_user = User(username=username, password=hashed_password)
+
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -66,13 +73,16 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and user.password == password:
+
+        # ИЗМЕНЕНИЕ: Сравниваем не пароли напрямую, а хеш пароля
+        if user and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('index'))
         else:
             return "Неверное имя пользователя или пароль!"
     return render_template('login.html')
 
+# ... (остальной код /logout, /history, websocket... остается без изменений)
 @app.route('/logout')
 @login_required
 def logout():
@@ -113,21 +123,17 @@ def handle_private_message(data):
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
         return
-
     new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text)
     db.session.add(new_message)
     db.session.commit()
-
     recipient_sid = user_sids.get(recipient_username)
     message_payload = {
         'sender': current_user.username,
         'recipient': recipient_username,
         'message': message_text
     }
-    
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
-    
     emit('receive_private_message', message_payload, to=request.sid)
 
 if __name__ == '__main__':
