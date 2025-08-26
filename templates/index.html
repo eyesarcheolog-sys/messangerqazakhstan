@@ -25,15 +25,21 @@
         .online-indicator.online {
             background-color: #28a745;
         }
+        /* ИЗМЕНЕНИЕ: Стили для счетчика уведомлений */
         .notification-dot {
-            width: 12px;
-            height: 12px;
             background-color: #dc3545;
+            color: white;
             border-radius: 50%;
-            display: none;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            display: none; /* По умолчанию скрыт */
+            place-content: center;
+            padding: 0 4px;
         }
         .notification-dot.visible {
-            display: block;
+            display: grid; /* Используем grid для идеального центрирования цифры */
         }
         #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
         #chat-header { padding: 20px; border-bottom: 1px solid #ddd; margin: 0; font-size: 18px; color: #333; }
@@ -69,7 +75,6 @@
             {% endfor %}
         </ul>
     </div>
-
     <div id="chat-container">
         <h2 id="chat-header">Выберите чат</h2>
         <ul id="messages"></ul>
@@ -88,6 +93,9 @@
         const contactList = document.getElementById('contact-list');
         const username = "{{ current_user.username }}";
         let recipientUsername = null;
+
+        // НОВОЕ: Объект для хранения счетчиков непрочитанных сообщений
+        const unreadCounts = {};
 
         function appendMessage(data) {
             const item = document.createElement('li');
@@ -117,7 +125,9 @@
                 li.classList.add('active');
                 
                 recipientUsername = li.dataset.username;
-                
+
+                // ИЗМЕНЕНИЕ: Сбрасываем счетчик и скрываем индикатор
+                unreadCounts[recipientUsername] = 0;
                 const notifIndicator = document.getElementById(`notif-${recipientUsername}`);
                 if (notifIndicator) {
                     notifIndicator.classList.remove('visible');
@@ -166,10 +176,17 @@
             });
         });
 
+        // ИЗМЕНЕНИЕ: Обновленная логика для счетчика
         socket.on('new_message_notification', function(data) {
             if (data.sender !== recipientUsername) {
-                const notifIndicator = document.getElementById(`notif-${data.sender}`);
+                const sender = data.sender;
+                // Увеличиваем счетчик для отправителя
+                unreadCounts[sender] = (unreadCounts[sender] || 0) + 1;
+                
+                const notifIndicator = document.getElementById(`notif-${sender}`);
                 if (notifIndicator) {
+                    // Показываем счетчик и обновляем цифру
+                    notifIndicator.textContent = unreadCounts[sender];
                     notifIndicator.classList.add('visible');
                 }
             }
