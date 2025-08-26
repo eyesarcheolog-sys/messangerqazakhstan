@@ -6,3 +6,4 @@ Flask-SQLAlchemy
 Flask-Login
 gevent-websocket
 psycopg2-binary
+Flask-Migrate
