@@ -6,12 +6,14 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from datetime import datetime
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
 
 # --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -46,9 +48,6 @@ class Message(db.Model):
     body = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
-with app.app_context():
-    db.create_all()
-
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -58,7 +57,6 @@ def load_user(user_id):
 @login_required
 def index():
     users = User.query.all()
-    # Добавляем группы пользователя в контекст шаблона
     groups = current_user.groups
     return render_template('index.html', current_user=current_user, users=users, groups=groups)
 
@@ -120,7 +118,6 @@ def history(username):
 @login_required
 def handle_connect():
     user_sids[current_user.username] = request.sid
-    # Присоединяем пользователя к "комнатам" всех его групп
     for group in current_user.groups:
         join_room(f'group_{group.id}')
     emit('update_online_users', list(user_sids.keys()), broadcast=True)
@@ -128,7 +125,6 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
-        # Покидаем комнаты всех групп
         for group in current_user.groups:
             leave_room(f'group_{group.id}')
         del user_sids[current_user.username]
