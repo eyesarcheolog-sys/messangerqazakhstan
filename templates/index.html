@@ -13,15 +13,27 @@
         #contact-list li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
         #contact-list li:hover { background-color: #f5f5f5; }
         #contact-list li.active { background-color: #e0f0ff; }
+        .contact-info { display: flex; align-items: center; }
         .online-indicator {
             width: 10px;
             height: 10px;
             background-color: #ccc;
             border-radius: 50%;
             transition: background-color 0.3s;
+            margin-right: 10px;
         }
         .online-indicator.online {
             background-color: #28a745;
+        }
+        .notification-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #dc3545;
+            border-radius: 50%;
+            display: none;
+        }
+        .notification-dot.visible {
+            display: block;
         }
         #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
         #chat-header { padding: 20px; border-bottom: 1px solid #ddd; margin: 0; font-size: 18px; color: #333; }
@@ -47,8 +59,11 @@
             {% for user in users %}
                 {% if user.id != current_user.id %}
                     <li data-username="{{ user.username }}">
-                        <span>{{ user.username }}</span>
-                        <span class="online-indicator" id="status-{{ user.username }}"></span>
+                        <div class="contact-info">
+                            <span class="online-indicator" id="status-{{ user.username }}"></span>
+                            <span>{{ user.username }}</span>
+                        </div>
+                        <span class="notification-dot" id="notif-{{ user.username }}"></span>
                     </li>
                 {% endif %}
             {% endfor %}
@@ -80,10 +95,8 @@
             messageContent.className = 'message-content';
             const timestampSpan = document.createElement('span');
             timestampSpan.className = 'timestamp';
-
             const date = new Date(data.timestamp);
             timestampSpan.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
             if (data.sender === username) {
                 messageContent.textContent = `Вы: ${data.message}`;
                 item.classList.add('my-message');
@@ -98,13 +111,18 @@
         }
 
         contactList.addEventListener('click', function(e) {
-            // Use .closest to handle clicks on child elements like the span or indicator
             const li = e.target.closest('li');
             if (li) {
                 document.querySelectorAll('#contact-list li').forEach(item => item.classList.remove('active'));
                 li.classList.add('active');
                 
                 recipientUsername = li.dataset.username;
+                
+                const notifIndicator = document.getElementById(`notif-${recipientUsername}`);
+                if (notifIndicator) {
+                    notifIndicator.classList.remove('visible');
+                }
+                
                 messages.innerHTML = '';
                 document.getElementById('chat-header').textContent = `Чат с ${recipientUsername}`;
                 fetch(`/history/${recipientUsername}`)
@@ -138,13 +156,23 @@
             document.querySelectorAll('#contact-list li').forEach(li => {
                 const contactUsername = li.dataset.username;
                 const indicator = document.getElementById(`status-${contactUsername}`);
-                
-                if (online_users.includes(contactUsername)) {
-                    indicator.classList.add('online');
-                } else {
-                    indicator.classList.remove('online');
+                if (indicator) {
+                    if (online_users.includes(contactUsername)) {
+                        indicator.classList.add('online');
+                    } else {
+                        indicator.classList.remove('online');
+                    }
                 }
             });
+        });
+
+        socket.on('new_message_notification', function(data) {
+            if (data.sender !== recipientUsername) {
+                const notifIndicator = document.getElementById(`notif-${data.sender}`);
+                if (notifIndicator) {
+                    notifIndicator.classList.add('visible');
+                }
+            }
         });
     </script>
 </body>

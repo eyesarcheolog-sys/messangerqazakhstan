@@ -135,6 +135,8 @@ def handle_private_message(data):
     }
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
+        emit('new_message_notification', {'sender': current_user.username}, to=recipient_sid)
+    
     emit('receive_private_message', message_payload, to=request.sid)
 
 if __name__ == '__main__':
