@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мой Мессенджер</title>
     <style>
+        /* Стили остаются без изменений */
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
         #sidebar { width: 250px; background-color: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
         #user-info { padding: 20px; border-bottom: 1px solid #ddd; }
@@ -29,7 +29,6 @@
     </style>
 </head>
 <body>
-
     <div id="sidebar">
         <div id="user-info">
             <h2>{{ current_user.username }}</h2>
@@ -65,13 +64,14 @@
 
         function appendMessage(data) {
             const item = document.createElement('li');
-
             const messageContent = document.createElement('span');
             messageContent.className = 'message-content';
-            
             const timestampSpan = document.createElement('span');
             timestampSpan.className = 'timestamp';
-            timestampSpan.textContent = data.timestamp;
+
+            // ИЗМЕНЕНИЕ: Конвертируем время UTC в локальное
+            const date = new Date(data.timestamp);
+            timestampSpan.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             if (data.sender === username) {
                 messageContent.textContent = `Вы: ${data.message}`;
@@ -80,7 +80,6 @@
                 messageContent.textContent = `${data.sender}: ${data.message}`;
                 item.classList.add('other-message');
             }
-
             item.appendChild(messageContent);
             item.appendChild(timestampSpan);
             messages.appendChild(item);
@@ -91,12 +90,9 @@
             if (e.target && e.target.nodeName === 'LI') {
                 document.querySelectorAll('#contact-list li').forEach(li => li.classList.remove('active'));
                 e.target.classList.add('active');
-                
                 recipientUsername = e.target.dataset.username;
                 messages.innerHTML = '';
-
                 document.getElementById('chat-header').textContent = `Чат с ${recipientUsername}`;
-
                 fetch(`/history/${recipientUsername}`)
                     .then(response => response.json())
                     .then(history => {

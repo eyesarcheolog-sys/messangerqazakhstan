@@ -92,12 +92,12 @@ def history(username):
         )
     ).order_by(Message.timestamp.asc()).all()
     
-    # ИЗМЕНЕНИЕ: Добавляем отформатированное время
+    # ИЗМЕНЕНИЕ: Отправляем полный ISO формат времени
     messages_json = [
         {
             'sender': msg.author.username,
             'message': msg.body,
-            'timestamp': msg.timestamp.strftime('%H:%M') # Форматируем время в "Часы:Минуты"
+            'timestamp': msg.timestamp.isoformat() + "Z" 
         }
         for msg in messages
     ]
@@ -120,35 +120,23 @@ def handle_disconnect():
 def handle_private_message(data):
     recipient_username = data['recipient']
     message_text = data['message']
-    
-    # Создаем время ДО сохранения в базу, чтобы оно было точным
     timestamp = datetime.utcnow()
-
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
         return
-
-    new_message = Message(
-        sender_id=current_user.id,
-        recipient_id=recipient_obj.id,
-        body=message_text,
-        timestamp=timestamp
-    )
+    new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text, timestamp=timestamp)
     db.session.add(new_message)
     db.session.commit()
-
     recipient_sid = user_sids.get(recipient_username)
-    # ИЗМЕНЕНИЕ: Добавляем отформатированное время
+    # ИЗМЕНЕНИЕ: Отправляем полный ISO формат времени
     message_payload = {
         'sender': current_user.username,
         'recipient': recipient_username,
         'message': message_text,
-        'timestamp': timestamp.strftime('%H:%M')
+        'timestamp': timestamp.isoformat() + "Z"
     }
-    
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
-    
     emit('receive_private_message', message_payload, to=request.sid)
 
 if __name__ == '__main__':
