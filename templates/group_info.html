@@ -8,12 +8,14 @@
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1, h2 { color: #333; }
         ul { list-style-type: none; padding: 0; }
-        li { padding: 8px 0; border-bottom: 1px solid #eee; }
+        li { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         a { color: #0084ff; text-decoration: none; }
         form div { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; }
-        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; }
+        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         button { padding: 10px 15px; background-color: #0084ff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .remove-btn { background-color: #dc3545; font-size: 12px; padding: 5px 10px; }
+        .members-selection { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; }
     </style>
 </head>
 <body>
@@ -31,8 +33,32 @@
         <hr style="margin: 20px 0;">
         
         <h2>Настройки группы</h2>
-        <p><em>(Функции редактирования будут добавлены в следующем шаге)</em></p>
+        
+        <form action="{{ url_for('edit_group_name', group_id=group.id) }}" method="POST">
+            <div>
+                <label for="group_name">Название группы:</label>
+                <input type="text" id="group_name" name="group_name" value="{{ group.name }}" required>
+            </div>
+            <button type="submit">Сохранить название</button>
+        </form>
 
+        <hr style="margin: 20px 0;">
+
+        <form action="{{ url_for('edit_group_members', group_id=group.id) }}" method="POST">
+            <h2>Изменить состав участников</h2>
+            <div class="members-selection">
+                {% for user in all_users %}
+                    {% if user.id != current_user.id %}
+                    <div>
+                        <input type="checkbox" name="members" value="{{ user.id }}" id="member-{{ user.id }}"
+                            {% if user in group.members %}checked{% endif %}>
+                        <label for="member-{{ user.id }}">{{ user.username }}</label>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <button type="submit" style="margin-top: 15px;">Обновить состав</button>
+        </form>
     </div>
 </body>
 </html>

@@ -114,6 +114,39 @@ def create_group():
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/group/<int:group_id>')
+@login_required
+def group_info(group_id):
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return "Группа не найдена или у вас нет доступа", 404
+    all_users = User.query.all()
+    return render_template('group_info.html', group=group, all_users=all_users)
+
+@app.route('/group/<int:group_id>/edit_name', methods=['POST'])
+@login_required
+def edit_group_name(group_id):
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return "Ошибка доступа", 403
+    new_name = request.form.get('group_name')
+    if new_name and not Group.query.filter_by(name=new_name).first():
+        group.name = new_name
+        db.session.commit()
+    return redirect(url_for('group_info', group_id=group_id))
+
+@app.route('/group/<int:group_id>/edit_members', methods=['POST'])
+@login_required
+def edit_group_members(group_id):
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return "Ошибка доступа", 403
+    new_member_ids = {int(id) for id in request.form.getlist('members')}
+    new_member_ids.add(current_user.id)
+    group.members = User.query.filter(User.id.in_(new_member_ids)).all()
+    db.session.commit()
+    return redirect(url_for('group_info', group_id=group_id))
+
 @app.route('/history/<username>')
 @login_required
 def history(username):
@@ -142,15 +175,6 @@ def group_history(group_id):
         for msg in messages
     ]
     return jsonify(messages_json)
-
-@app.route('/group/<int:group_id>')
-@login_required
-def group_info(group_id):
-    group = db.session.get(Group, group_id)
-    if not group or current_user not in group.members:
-        return "Группа не найдена или у вас нет доступа", 404
-    all_users = User.query.all()
-    return render_template('group_info.html', group=group, all_users=all_users)
 
 # --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
