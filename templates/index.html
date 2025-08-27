@@ -14,33 +14,11 @@
         #contact-list li:hover { background-color: #f5f5f5; }
         #contact-list li.active { background-color: #e0f0ff; }
         .contact-info { display: flex; align-items: center; }
-        .online-indicator {
-            width: 10px;
-            height: 10px;
-            background-color: #ccc;
-            border-radius: 50%;
-            transition: background-color 0.3s;
-            margin-right: 10px;
-        }
-        .online-indicator.online {
-            background-color: #28a745;
-        }
-        /* ИЗМЕНЕНИЕ: Стили для счетчика уведомлений */
-        .notification-dot {
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            font-size: 11px;
-            font-weight: bold;
-            min-width: 20px;
-            height: 20px;
-            display: none; /* По умолчанию скрыт */
-            place-content: center;
-            padding: 0 4px;
-        }
-        .notification-dot.visible {
-            display: grid; /* Используем grid для идеального центрирования цифры */
-        }
+        .online-indicator { width: 10px; height: 10px; background-color: #ccc; border-radius: 50%; transition: background-color 0.3s; margin-right: 10px; }
+        .online-indicator.online { background-color: #28a745; }
+        .notification-dot { background-color: #dc3545; color: white; border-radius: 50%; font-size: 11px; font-weight: bold; min-width: 20px; height: 20px; display: none; place-content: center; padding: 0 4px; }
+        .notification-dot.visible { display: grid; }
+        #create-group-btn { margin: 10px; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 5px; cursor: pointer; }
         #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
         #chat-header { padding: 20px; border-bottom: 1px solid #ddd; margin: 0; font-size: 18px; color: #333; }
         #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; }
@@ -53,6 +31,10 @@
         #form { display: flex; padding: 20px; border-top: 1px solid #ddd; background-color: #fff; }
         #input { border: 1px solid #ccc; padding: 10px; flex-grow: 1; border-radius: 18px; margin-right: 10px; }
         #form button { background: #0084ff; border: none; padding: 10px 15px; color: white; border-radius: 18px; cursor: pointer; }
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 8px; }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .members-list { max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -74,7 +56,9 @@
                 {% endif %}
             {% endfor %}
         </ul>
+        <div id="create-group-btn">Создать группу</div>
     </div>
+
     <div id="chat-container">
         <h2 id="chat-header">Выберите чат</h2>
         <ul id="messages"></ul>
@@ -82,6 +66,28 @@
             <input id="input" autocomplete="off" placeholder="Введите сообщение..." />
             <button>Отправить</button>
         </form>
+    </div>
+
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Создание новой группы</h2>
+            <form action="/create_group" method="POST">
+                <input type="text" name="group_name" placeholder="Название группы" required>
+                <h4>Выберите участников:</h4>
+                <div class="members-list">
+                    {% for user in users %}
+                        {% if user.id != current_user.id %}
+                        <div>
+                            <input type="checkbox" name="members" value="{{ user.id }}" id="user-{{ user.id }}">
+                            <label for="user-{{ user.id }}">{{ user.username }}</label>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <button type="submit" style="margin-top: 20px; width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px;">Создать</button>
+            </form>
+        </div>
     </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -93,8 +99,6 @@
         const contactList = document.getElementById('contact-list');
         const username = "{{ current_user.username }}";
         let recipientUsername = null;
-
-        // НОВОЕ: Объект для хранения счетчиков непрочитанных сообщений
         const unreadCounts = {};
 
         function appendMessage(data) {
@@ -126,7 +130,6 @@
                 
                 recipientUsername = li.dataset.username;
 
-                // ИЗМЕНЕНИЕ: Сбрасываем счетчик и скрываем индикатор
                 unreadCounts[recipientUsername] = 0;
                 const notifIndicator = document.getElementById(`notif-${recipientUsername}`);
                 if (notifIndicator) {
@@ -176,21 +179,34 @@
             });
         });
 
-        // ИЗМЕНЕНИЕ: Обновленная логика для счетчика
         socket.on('new_message_notification', function(data) {
             if (data.sender !== recipientUsername) {
                 const sender = data.sender;
-                // Увеличиваем счетчик для отправителя
                 unreadCounts[sender] = (unreadCounts[sender] || 0) + 1;
                 
                 const notifIndicator = document.getElementById(`notif-${sender}`);
                 if (notifIndicator) {
-                    // Показываем счетчик и обновляем цифру
                     notifIndicator.textContent = unreadCounts[sender];
                     notifIndicator.classList.add('visible');
                 }
             }
         });
+
+        const modal = document.getElementById('createGroupModal');
+        const btn = document.getElementById('create-group-btn');
+        const span = document.getElementsByClassName('close-btn')[0];
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
     </script>
 </body>
 </html>

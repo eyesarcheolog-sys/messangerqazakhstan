@@ -93,6 +93,23 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route('/create_group', methods=['POST'])
+@login_required
+def create_group():
+    group_name = request.form.get('group_name')
+    member_ids = request.form.getlist('members')
+    if not group_name or not member_ids:
+        return "Необходимо название и участники", 400
+    new_group = Group(name=group_name)
+    new_group.members.append(current_user)
+    for user_id in member_ids:
+        user = db.session.get(User, int(user_id))
+        if user:
+            new_group.members.append(user)
+    db.session.add(new_group)
+    db.session.commit()
+    return redirect(url_for('index'))
+
 @app.route('/history/<username>')
 @login_required
 def history(username):
