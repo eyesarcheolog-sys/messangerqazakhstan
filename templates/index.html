@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мой Мессенджер</title>
     <style>
         :root {
@@ -11,7 +12,8 @@
             --primary-text-color: #e1e1e1;
             --secondary-text-color: #8e8e93;
             --accent-color: #34b7f1;
-            --notification-badge-color: #25d366;
+            /* ИЗМЕНИЛИ ЦВЕТ ЗДЕСЬ */
+            --notification-badge-color: #00AFCA; /* Голубой цвет флага */
             --my-message-bubble-color: #056162;
             --other-message-bubble-color: #262d31;
             --separator-color: #2a2a2a;
@@ -164,7 +166,7 @@
         #create-group-btn {
             margin: 10px;
             padding: 10px;
-            background-color: var(--notification-badge-color);
+            background-color: var(--notification-badge-color); /* ИСПОЛЬЗУЕМ НОВЫЙ ЦВЕТ */
             color: white;
             text-align: center;
             border-radius: 8px;
@@ -361,7 +363,7 @@
                         {% endif %}
                     {% endfor %}
                 </div>
-                <button type="submit" style="margin-top: 20px; width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px;">Создать</button>
+                <button type="submit" style="margin-top: 20px; width: 100%; padding: 10px; background-color: var(--notification-badge-color); color: white; border: none; border-radius: 5px;">Создать</button>
             </form>
         </div>
     </div>
@@ -425,7 +427,8 @@
                 item.classList.add('other-message');
             }
             item.appendChild(messageContent);
-            item.appendChild(timestampSpan); // Note: Timestamp is now part of the content flow, CSS might need adjustment
+            // Appending timestamp to the message item, not inside the bubble
+            item.appendChild(timestampSpan);
             messages.appendChild(item);
             messages.scrollTop = messages.scrollHeight;
         }
@@ -571,6 +574,8 @@
             // Сбрасываем текущий чат, чтобы не было путаницы
             currentChat = { type: null, id: null, name: null }; 
             document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
+            // Очищаем заголовок
+             document.getElementById('chat-header-link').textContent = "Выберите чат";
         });
     </script>
 </body>
