@@ -14,8 +14,8 @@
         label { display: block; margin-bottom: 5px; }
         input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         button { padding: 10px 15px; background-color: #0084ff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .remove-btn { background-color: #dc3545; font-size: 12px; padding: 5px 10px; }
         .members-selection { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; }
+        .delete-btn { background-color: #dc3545; }
     </style>
 </head>
 <body>
@@ -58,6 +58,12 @@
                 {% endfor %}
             </div>
             <button type="submit" style="margin-top: 15px;">Обновить состав</button>
+        </form>
+
+        <hr style="margin: 20px 0;">
+
+        <form action="{{ url_for('delete_group', group_id=group.id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить эту группу?');">
+            <button type="submit" class="delete-btn">Удалить группу</button>
         </form>
     </div>
 </body>

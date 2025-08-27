@@ -130,7 +130,8 @@ def edit_group_name(group_id):
     if not group or current_user not in group.members:
         return "Ошибка доступа", 403
     new_name = request.form.get('group_name')
-    if new_name and not Group.query.filter_by(name=new_name).first():
+    # Проверяем, что новое имя не пустое и не занято другой группой
+    if new_name and (group.name == new_name or not Group.query.filter_by(name=new_name).first()):
         group.name = new_name
         db.session.commit()
     return redirect(url_for('group_info', group_id=group_id))
@@ -142,10 +143,21 @@ def edit_group_members(group_id):
     if not group or current_user not in group.members:
         return "Ошибка доступа", 403
     new_member_ids = {int(id) for id in request.form.getlist('members')}
-    new_member_ids.add(current_user.id)
+    new_member_ids.add(current_user.id) # Гарантируем, что создатель всегда в группе
     group.members = User.query.filter(User.id.in_(new_member_ids)).all()
     db.session.commit()
     return redirect(url_for('group_info', group_id=group_id))
+
+@app.route('/group/<int:group_id>/delete', methods=['POST'])
+@login_required
+def delete_group(group_id):
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return "Ошибка доступа", 403
+    Message.query.filter_by(group_id=group_id).delete()
+    db.session.delete(group)
+    db.session.commit()
+    return redirect(url_for('index'))
 
 @app.route('/history/<username>')
 @login_required
@@ -177,6 +189,7 @@ def group_history(group_id):
     return jsonify(messages_json)
 
 # --- ЛОГИКА WEBSOCKET ---
+# (WebSocket handlers remain unchanged)
 @socketio.on('connect')
 @login_required
 def handle_connect():
