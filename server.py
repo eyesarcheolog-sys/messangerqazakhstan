@@ -143,6 +143,15 @@ def group_history(group_id):
     ]
     return jsonify(messages_json)
 
+@app.route('/group/<int:group_id>')
+@login_required
+def group_info(group_id):
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return "Группа не найдена или у вас нет доступа", 404
+    all_users = User.query.all()
+    return render_template('group_info.html', group=group, all_users=all_users)
+
 # --- ЛОГИКА WEBSOCKET ---
 @socketio.on('connect')
 @login_required
@@ -157,7 +166,8 @@ def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
         for group in current_user.groups:
             leave_room(f'group_{group.id}')
-        del user_sids[current_user.username]
+        if current_user.username in user_sids:
+            del user_sids[current_user.username]
         emit('update_online_users', list(user_sids.keys()), broadcast=True)
 
 @socketio.on('private_message')
@@ -182,7 +192,6 @@ def handle_private_message(data):
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
         emit('new_message_notification', {'sender': current_user.username}, to=recipient_sid)
-    
     emit('receive_private_message', message_payload, to=request.sid)
 
 @socketio.on('group_message')
@@ -191,15 +200,12 @@ def handle_group_message(data):
     group_id = data['group_id']
     message_text = data['message']
     timestamp = datetime.utcnow()
-    
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
         return
-
     new_message = Message(sender_id=current_user.id, group_id=group_id, body=message_text, timestamp=timestamp)
     db.session.add(new_message)
     db.session.commit()
-
     message_payload = {
         'sender': current_user.username,
         'message': message_text,

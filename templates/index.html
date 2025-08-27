@@ -31,6 +31,7 @@
         #create-group-btn { margin: 10px; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 5px; cursor: pointer; }
         #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
         #chat-header { padding: 20px; border-bottom: 1px solid #ddd; margin: 0; font-size: 18px; color: #333; }
+        #chat-header a { color: inherit; text-decoration: none; }
         #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; }
         #messages li { padding: 8px 12px; margin-bottom: 10px; border-radius: 18px; width: fit-content; max-width: 70%; display: flex; flex-direction: column; }
         .message-content { display: block; }
@@ -85,7 +86,7 @@
     </div>
 
     <div id="chat-container">
-        <h2 id="chat-header">Выберите чат</h2>
+        <h2 id="chat-header"><a id="chat-header-link" href="#">Выберите чат</a></h2>
         <ul id="messages"></ul>
         <form id="form" action="">
             <input id="input" autocomplete="off" placeholder="Введите сообщение..." />
@@ -174,8 +175,14 @@
                     unreadCounts[countKey] = 0;
                     
                     messages.innerHTML = '';
-                    const headerText = currentChat.type === 'group' ? currentChat.name : `Чат с ${currentChat.name}`;
-                    document.getElementById('chat-header').textContent = headerText;
+                    const headerLink = document.getElementById('chat-header-link');
+                    if (currentChat.type === 'group') {
+                        headerLink.href = `/group/${currentChat.id}`;
+                        headerLink.textContent = currentChat.name;
+                    } else {
+                        headerLink.href = '#';
+                        headerLink.textContent = `Чат с ${currentChat.name}`;
+                    }
                     
                     const historyUrl = currentChat.type === 'user' ? `/history/${currentChat.name}` : `/history/group/${currentChat.id}`;
                     fetch(historyUrl)
