@@ -165,14 +165,14 @@
                     currentChat.id = li.dataset.id;
                     currentChat.name = li.dataset.name;
 
+                    const countKey = currentChat.type === 'user' ? currentChat.name : `group_${currentChat.id}`;
+                    unreadCounts[countKey] = 0;
+                    
                     const notifId = currentChat.type === 'user' ? `notif-${currentChat.name}` : `notif-group-${currentChat.id}`;
                     const notifIndicator = document.getElementById(notifId);
                     if (notifIndicator) {
                         notifIndicator.classList.remove('visible');
                     }
-                    
-                    const countKey = currentChat.type === 'user' ? currentChat.name : currentChat.id;
-                    unreadCounts[countKey] = 0;
                     
                     messages.innerHTML = '';
                     const headerLink = document.getElementById('chat-header-link');
@@ -217,14 +217,6 @@
         socket.on('receive_group_message', function(data) {
             if (currentChat.type === 'group' && data.group_id == currentChat.id) {
                 appendMessage(data);
-            } else {
-                const groupId = data.group_id;
-                unreadCounts[groupId] = (unreadCounts[groupId] || 0) + 1;
-                const notifIndicator = document.getElementById(`notif-group-${groupId}`);
-                if (notifIndicator) {
-                    notifIndicator.textContent = unreadCounts[groupId];
-                    notifIndicator.classList.add('visible');
-                }
             }
         });
 
@@ -243,13 +235,28 @@
         });
 
         socket.on('new_message_notification', function(data) {
-            if (currentChat.type !== 'user' || data.sender !== currentChat.name) {
-                const sender = data.sender;
-                unreadCounts[sender] = (unreadCounts[sender] || 0) + 1;
-                const notifIndicator = document.getElementById(`notif-${sender}`);
-                if (notifIndicator) {
-                    notifIndicator.textContent = unreadCounts[sender];
-                    notifIndicator.classList.add('visible');
+            if (data.sender) { // --- Уведомление из личного чата ---
+                if (currentChat.type !== 'user' || data.sender !== currentChat.name) {
+                    const sender = data.sender;
+                    const countKey = sender;
+                    unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
+                    const notifIndicator = document.getElementById(`notif-${sender}`);
+                    if (notifIndicator) {
+                        notifIndicator.textContent = unreadCounts[countKey];
+                        notifIndicator.classList.add('visible');
+                    }
+                }
+            } 
+            else if (data.group_id) { // --- Уведомление из группового чата ---
+                if (currentChat.type !== 'group' || data.group_id != currentChat.id) {
+                    const groupId = data.group_id;
+                    const countKey = `group_${groupId}`;
+                    unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
+                    const notifIndicator = document.getElementById(`notif-group-${groupId}`);
+                    if (notifIndicator) {
+                        notifIndicator.textContent = unreadCounts[countKey];
+                        notifIndicator.classList.add('visible');
+                    }
                 }
             }
         });
