@@ -47,7 +47,7 @@ class Message(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     body = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False, server_default='false')
 
 @login_manager.user_loader
 def load_user(user_id):
