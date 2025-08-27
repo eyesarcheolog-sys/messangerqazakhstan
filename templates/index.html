@@ -126,7 +126,23 @@
         const username = "{{ current_user.username }}";
         
         let currentChat = { type: null, id: null, name: null };
-        const unreadCounts = {};
+        let unreadCounts = {{ unread_counts | tojson }};
+
+        function initializeUnreadCounts() {
+            for (const key in unreadCounts) {
+                if (unreadCounts[key] > 0) {
+                    const isGroup = key.startsWith('group_');
+                    const notifId = isGroup ? `notif-${key.replace('_', '-')}` : `notif-${key}`;
+                    const notifIndicator = document.getElementById(notifId);
+                    if (notifIndicator) {
+                        notifIndicator.textContent = unreadCounts[key];
+                        notifIndicator.classList.add('visible');
+                    }
+                }
+            }
+        }
+    
+        document.addEventListener('DOMContentLoaded', initializeUnreadCounts);
 
         function appendMessage(data) {
             const item = document.createElement('li');
@@ -235,24 +251,22 @@
         });
 
         socket.on('new_message_notification', function(data) {
-            if (data.sender) { // --- Уведомление из личного чата ---
+            if (data.sender) {
                 if (currentChat.type !== 'user' || data.sender !== currentChat.name) {
-                    const sender = data.sender;
-                    const countKey = sender;
+                    const countKey = data.sender;
                     unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
-                    const notifIndicator = document.getElementById(`notif-${sender}`);
+                    const notifIndicator = document.getElementById(`notif-${countKey}`);
                     if (notifIndicator) {
                         notifIndicator.textContent = unreadCounts[countKey];
                         notifIndicator.classList.add('visible');
                     }
                 }
             } 
-            else if (data.group_id) { // --- Уведомление из группового чата ---
+            else if (data.group_id) {
                 if (currentChat.type !== 'group' || data.group_id != currentChat.id) {
-                    const groupId = data.group_id;
-                    const countKey = `group_${groupId}`;
+                    const countKey = `group_${data.group_id}`;
                     unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
-                    const notifIndicator = document.getElementById(`notif-group-${groupId}`);
+                    const notifIndicator = document.getElementById(`notif-group-${data.group_id}`);
                     if (notifIndicator) {
                         notifIndicator.textContent = unreadCounts[countKey];
                         notifIndicator.classList.add('visible');

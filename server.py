@@ -47,6 +47,7 @@ class Message(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     body = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -58,7 +59,19 @@ def load_user(user_id):
 def index():
     users = User.query.all()
     groups = current_user.groups
-    return render_template('index.html', current_user=current_user, users=users, groups=groups)
+    
+    unread_counts = {}
+    private_messages = Message.query.filter_by(recipient_id=current_user.id, is_read=False).all()
+    for msg in private_messages:
+        sender_username = db.session.get(User, msg.sender_id).username
+        unread_counts[sender_username] = unread_counts.get(sender_username, 0) + 1
+        
+    for group in groups:
+         group_unread = Message.query.filter_by(group_id=group.id, is_read=False).filter(Message.sender_id != current_user.id).count()
+         if group_unread > 0:
+            unread_counts[f'group_{group.id}'] = group_unread
+
+    return render_template('index.html', current_user=current_user, users=users, groups=groups, unread_counts=unread_counts)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -130,7 +143,6 @@ def edit_group_name(group_id):
     if not group or current_user not in group.members:
         return "Ошибка доступа", 403
     new_name = request.form.get('group_name')
-    # Проверяем, что новое имя не пустое и не занято другой группой
     if new_name and (group.name == new_name or not Group.query.filter_by(name=new_name).first()):
         group.name = new_name
         db.session.commit()
@@ -143,7 +155,7 @@ def edit_group_members(group_id):
     if not group or current_user not in group.members:
         return "Ошибка доступа", 403
     new_member_ids = {int(id) for id in request.form.getlist('members')}
-    new_member_ids.add(current_user.id) # Гарантируем, что создатель всегда в группе
+    new_member_ids.add(current_user.id)
     group.members = User.query.filter(User.id.in_(new_member_ids)).all()
     db.session.commit()
     return redirect(url_for('group_info', group_id=group_id))
@@ -163,16 +175,13 @@ def delete_group(group_id):
 @login_required
 def history(username):
     peer = User.query.filter_by(username=username).first_or_404()
+    Message.query.filter_by(sender_id=peer.id, recipient_id=current_user.id, is_read=False).update({'is_read': True})
+    db.session.commit()
     messages = db.session.query(Message).filter(
-        or_(
-            (Message.sender_id == current_user.id) & (Message.recipient_id == peer.id),
-            (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id)
-        )
+        or_((Message.sender_id == current_user.id) & (Message.recipient_id == peer.id),
+            (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id))
     ).order_by(Message.timestamp.asc()).all()
-    messages_json = [
-        {'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"}
-        for msg in messages
-    ]
+    messages_json = [{'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"} for msg in messages]
     return jsonify(messages_json)
 
 @app.route('/history/group/<int:group_id>')
@@ -182,14 +191,10 @@ def group_history(group_id):
     if not group or current_user not in group.members:
         return "Группа не найдена или у вас нет доступа", 404
     messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp.asc()).all()
-    messages_json = [
-        {'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"}
-        for msg in messages
-    ]
+    messages_json = [{'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"} for msg in messages]
     return jsonify(messages_json)
 
 # --- ЛОГИКА WEBSOCKET ---
-# (WebSocket handlers remain unchanged)
 @socketio.on('connect')
 @login_required
 def handle_connect():
@@ -237,7 +242,7 @@ def handle_group_message(data):
     group_id = data['group_id']
     message_text = data['message']
     timestamp = datetime.utcnow()
-    group = db.session.get(Group, group_id)
+    group = db.session.get(Group, int(group_id))
     if not group or current_user not in group.members:
         return
     new_message = Message(sender_id=current_user.id, group_id=group_id, body=message_text, timestamp=timestamp)
@@ -247,9 +252,12 @@ def handle_group_message(data):
         'sender': current_user.username,
         'message': message_text,
         'timestamp': timestamp.isoformat() + "Z",
-        'group_id': group_id
+        'group_id': group_id,
+        'group_name': group.name
     }
-    emit('receive_group_message', message_payload, to=f'group_{group_id}')
+    room = f'group_{group_id}'
+    emit('receive_group_message', message_payload, to=room)
+    emit('new_message_notification', {'group_id': group_id, 'group_name': group.name, 'sender': current_user.username}, to=room, skip_sid=request.sid)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
