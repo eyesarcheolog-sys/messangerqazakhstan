@@ -60,6 +60,7 @@
                 {% for group in groups %}
                     <li data-id="{{ group.id }}" data-type="group" data-name="{{ group.name }}">
                         <span># {{ group.name }}</span>
+                        <span class="notification-dot" id="notif-group-{{ group.id }}"></span>
                     </li>
                 {% endfor %}
             </ul>
@@ -139,7 +140,6 @@
                 messageContent.textContent = `Вы: ${data.message}`;
                 item.classList.add('my-message');
             } else {
-                // В групповом чате показываем имя отправителя
                 if (currentChat.type === 'group') {
                     messageContent.textContent = `${data.sender}: ${data.message}`;
                 } else {
@@ -164,13 +164,18 @@
                     currentChat.id = li.dataset.id;
                     currentChat.name = li.dataset.name;
 
-                    const notifIndicator = document.getElementById(`notif-${currentChat.name}`);
+                    const notifId = currentChat.type === 'user' ? `notif-${currentChat.name}` : `notif-group-${currentChat.id}`;
+                    const notifIndicator = document.getElementById(notifId);
                     if (notifIndicator) {
                         notifIndicator.classList.remove('visible');
                     }
                     
+                    const countKey = currentChat.type === 'user' ? currentChat.name : currentChat.id;
+                    unreadCounts[countKey] = 0;
+                    
                     messages.innerHTML = '';
-                    document.getElementById('chat-header').textContent = `Чат с ${currentChat.name}`;
+                    const headerText = currentChat.type === 'group' ? currentChat.name : `Чат с ${currentChat.name}`;
+                    document.getElementById('chat-header').textContent = headerText;
                     
                     const historyUrl = currentChat.type === 'user' ? `/history/${currentChat.name}` : `/history/group/${currentChat.id}`;
                     fetch(historyUrl)
@@ -205,6 +210,14 @@
         socket.on('receive_group_message', function(data) {
             if (currentChat.type === 'group' && data.group_id == currentChat.id) {
                 appendMessage(data);
+            } else {
+                const groupId = data.group_id;
+                unreadCounts[groupId] = (unreadCounts[groupId] || 0) + 1;
+                const notifIndicator = document.getElementById(`notif-group-${groupId}`);
+                if (notifIndicator) {
+                    notifIndicator.textContent = unreadCounts[groupId];
+                    notifIndicator.classList.add('visible');
+                }
             }
         });
 
