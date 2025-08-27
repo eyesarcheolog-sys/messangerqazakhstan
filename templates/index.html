@@ -116,14 +116,14 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
-        // Этот скрипт мы обновим на следующем шаге, чтобы он работал с группами
         const socket = io();
         const form = document.getElementById('form');
         const input = document.getElementById('input');
         const messages = document.getElementById('messages');
-        const contactList = document.getElementById('contact-list');
+        const allLists = document.querySelectorAll('.chat-list');
         const username = "{{ current_user.username }}";
-        let recipientUsername = null;
+        
+        let currentChat = { type: null, id: null, name: null };
         const unreadCounts = {};
 
         function appendMessage(data) {
@@ -134,11 +134,17 @@
             timestampSpan.className = 'timestamp';
             const date = new Date(data.timestamp);
             timestampSpan.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
             if (data.sender === username) {
                 messageContent.textContent = `Вы: ${data.message}`;
                 item.classList.add('my-message');
             } else {
-                messageContent.textContent = `${data.sender}: ${data.message}`;
+                // В групповом чате показываем имя отправителя
+                if (currentChat.type === 'group') {
+                    messageContent.textContent = `${data.sender}: ${data.message}`;
+                } else {
+                    messageContent.textContent = data.message;
+                }
                 item.classList.add('other-message');
             }
             item.appendChild(messageContent);
@@ -147,45 +153,57 @@
             messages.scrollTop = messages.scrollHeight;
         }
 
-        contactList.addEventListener('click', function(e) {
-            const li = e.target.closest('li');
-            if (li) {
-                document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
-                li.classList.add('active');
-                
-                recipientUsername = li.dataset.name;
+        allLists.forEach(list => {
+            list.addEventListener('click', function(e) {
+                const li = e.target.closest('li');
+                if (li) {
+                    document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
+                    li.classList.add('active');
+                    
+                    currentChat.type = li.dataset.type;
+                    currentChat.id = li.dataset.id;
+                    currentChat.name = li.dataset.name;
 
-                unreadCounts[recipientUsername] = 0;
-                const notifIndicator = document.getElementById(`notif-${recipientUsername}`);
-                if (notifIndicator) {
-                    notifIndicator.classList.remove('visible');
+                    const notifIndicator = document.getElementById(`notif-${currentChat.name}`);
+                    if (notifIndicator) {
+                        notifIndicator.classList.remove('visible');
+                    }
+                    
+                    messages.innerHTML = '';
+                    document.getElementById('chat-header').textContent = `Чат с ${currentChat.name}`;
+                    
+                    const historyUrl = currentChat.type === 'user' ? `/history/${currentChat.name}` : `/history/group/${currentChat.id}`;
+                    fetch(historyUrl)
+                        .then(response => response.json())
+                        .then(history => {
+                            history.forEach(appendMessage);
+                        });
                 }
-                
-                messages.innerHTML = '';
-                document.getElementById('chat-header').textContent = `Чат с ${recipientUsername}`;
-                fetch(`/history/${recipientUsername}`)
-                    .then(response => response.json())
-                    .then(history => {
-                        history.forEach(appendMessage);
-                    });
-            }
+            });
         });
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            if (input.value && recipientUsername) {
-                socket.emit('private_message', { 
-                    recipient: recipientUsername, 
-                    message: input.value 
-                });
+            if (input.value && currentChat.type) {
+                if (currentChat.type === 'user') {
+                    socket.emit('private_message', { recipient: currentChat.name, message: input.value });
+                } else if (currentChat.type === 'group') {
+                    socket.emit('group_message', { group_id: currentChat.id, message: input.value });
+                }
                 input.value = '';
-            } else if (!recipientUsername) {
+            } else {
                 alert("Пожалуйста, выберите чат для отправки сообщения.");
             }
         });
 
         socket.on('receive_private_message', function(data) {
-            if (data.sender === recipientUsername || (data.sender === username && data.recipient === recipientUsername)) {
+            if (currentChat.type === 'user' && (data.sender === currentChat.name || (data.sender === username && data.recipient === currentChat.name))) {
+                appendMessage(data);
+            }
+        });
+
+        socket.on('receive_group_message', function(data) {
+            if (currentChat.type === 'group' && data.group_id == currentChat.id) {
                 appendMessage(data);
             }
         });
@@ -205,10 +223,9 @@
         });
 
         socket.on('new_message_notification', function(data) {
-            if (data.sender !== recipientUsername) {
+            if (currentChat.type !== 'user' || data.sender !== currentChat.name) {
                 const sender = data.sender;
                 unreadCounts[sender] = (unreadCounts[sender] || 0) + 1;
-                
                 const notifIndicator = document.getElementById(`notif-${sender}`);
                 if (notifIndicator) {
                     notifIndicator.textContent = unreadCounts[sender];

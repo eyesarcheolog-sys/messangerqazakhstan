@@ -98,27 +98,20 @@ def logout():
 def create_group():
     group_name = request.form.get('group_name')
     member_ids = request.form.getlist('members')
-
     if not group_name or not member_ids:
         return "Необходимо название и участники", 400
-
     if Group.query.filter_by(name=group_name).first():
         return "Группа с таким названием уже существует!", 400
-
     new_group = Group(name=group_name)
     db.session.add(new_group)
     db.session.commit()
-
     creator = db.session.get(User, current_user.id)
     new_group.members.append(creator)
-
     for user_id in member_ids:
         user = db.session.get(User, int(user_id))
         if user:
             new_group.members.append(user)
-    
     db.session.commit()
-    
     return redirect(url_for('index'))
 
 @app.route('/history/<username>')
@@ -132,11 +125,20 @@ def history(username):
         )
     ).order_by(Message.timestamp.asc()).all()
     messages_json = [
-        {
-            'sender': msg.author.username,
-            'message': msg.body,
-            'timestamp': msg.timestamp.isoformat() + "Z"
-        }
+        {'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"}
+        for msg in messages
+    ]
+    return jsonify(messages_json)
+
+@app.route('/history/group/<int:group_id>')
+@login_required
+def group_history(group_id):
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return "Группа не найдена или у вас нет доступа", 404
+    messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp.asc()).all()
+    messages_json = [
+        {'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"}
         for msg in messages
     ]
     return jsonify(messages_json)
@@ -182,6 +184,29 @@ def handle_private_message(data):
         emit('new_message_notification', {'sender': current_user.username}, to=recipient_sid)
     
     emit('receive_private_message', message_payload, to=request.sid)
+
+@socketio.on('group_message')
+@login_required
+def handle_group_message(data):
+    group_id = data['group_id']
+    message_text = data['message']
+    timestamp = datetime.utcnow()
+    
+    group = db.session.get(Group, group_id)
+    if not group or current_user not in group.members:
+        return
+
+    new_message = Message(sender_id=current_user.id, group_id=group_id, body=message_text, timestamp=timestamp)
+    db.session.add(new_message)
+    db.session.commit()
+
+    message_payload = {
+        'sender': current_user.username,
+        'message': message_text,
+        'timestamp': timestamp.isoformat() + "Z",
+        'group_id': group_id
+    }
+    emit('receive_group_message', message_payload, to=f'group_{group_id}')
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
