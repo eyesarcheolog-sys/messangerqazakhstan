@@ -116,7 +116,7 @@
         </div>
     </div>
 
-    <div id="initial-data" data-unread-counts="{{ unread_counts | tojson }}"></div>
+    <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
