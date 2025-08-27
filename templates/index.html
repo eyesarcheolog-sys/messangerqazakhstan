@@ -9,10 +9,20 @@
         #user-info { padding: 20px; border-bottom: 1px solid #ddd; }
         #user-info h2 { margin: 0; font-size: 18px; }
         #user-info a { font-size: 14px; color: #0084ff; text-decoration: none; }
-        #contact-list { list-style-type: none; padding: 0; margin: 0; flex-grow: 1; overflow-y: auto; }
-        #contact-list li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
-        #contact-list li:hover { background-color: #f5f5f5; }
-        #contact-list li.active { background-color: #e0f0ff; }
+        .list-header {
+            padding: 10px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #657786;
+            text-transform: uppercase;
+            background-color: #f5f8fa;
+            border-bottom: 1px solid #e6ecf0;
+        }
+        .chat-list-container { flex-grow: 1; overflow-y: auto; }
+        .chat-list { list-style-type: none; padding: 0; margin: 0; }
+        .chat-list li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+        .chat-list li:hover { background-color: #f5f5f5; }
+        .chat-list li.active { background-color: #e0f0ff; }
         .contact-info { display: flex; align-items: center; }
         .online-indicator { width: 10px; height: 10px; background-color: #ccc; border-radius: 50%; transition: background-color 0.3s; margin-right: 10px; }
         .online-indicator.online { background-color: #28a745; }
@@ -43,19 +53,33 @@
             <h2>{{ current_user.username }}</h2>
             <a href="{{ url_for('logout') }}">Выйти</a>
         </div>
-        <ul id="contact-list">
-            {% for user in users %}
-                {% if user.id != current_user.id %}
-                    <li data-username="{{ user.username }}">
-                        <div class="contact-info">
-                            <span class="online-indicator" id="status-{{ user.username }}"></span>
-                            <span>{{ user.username }}</span>
-                        </div>
-                        <span class="notification-dot" id="notif-{{ user.username }}"></span>
+        
+        <div class="chat-list-container">
+            <div class="list-header">Группы</div>
+            <ul id="group-list" class="chat-list">
+                {% for group in groups %}
+                    <li data-id="{{ group.id }}" data-type="group" data-name="{{ group.name }}">
+                        <span># {{ group.name }}</span>
                     </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+                {% endfor %}
+            </ul>
+
+            <div class="list-header">Личные сообщения</div>
+            <ul id="contact-list" class="chat-list">
+                {% for user in users %}
+                    {% if user.id != current_user.id %}
+                        <li data-id="{{ user.id }}" data-type="user" data-name="{{ user.username }}">
+                            <div class="contact-info">
+                                <span class="online-indicator" id="status-{{ user.username }}"></span>
+                                <span>{{ user.username }}</span>
+                            </div>
+                            <span class="notification-dot" id="notif-{{ user.username }}"></span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        
         <div id="create-group-btn">Создать группу</div>
     </div>
 
@@ -92,6 +116,7 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
+        // Этот скрипт мы обновим на следующем шаге, чтобы он работал с группами
         const socket = io();
         const form = document.getElementById('form');
         const input = document.getElementById('input');
@@ -125,10 +150,10 @@
         contactList.addEventListener('click', function(e) {
             const li = e.target.closest('li');
             if (li) {
-                document.querySelectorAll('#contact-list li').forEach(item => item.classList.remove('active'));
+                document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
                 li.classList.add('active');
                 
-                recipientUsername = li.dataset.username;
+                recipientUsername = li.dataset.name;
 
                 unreadCounts[recipientUsername] = 0;
                 const notifIndicator = document.getElementById(`notif-${recipientUsername}`);
@@ -155,7 +180,7 @@
                 });
                 input.value = '';
             } else if (!recipientUsername) {
-                alert("Пожалуйста, выберите пользователя для отправки сообщения.");
+                alert("Пожалуйста, выберите чат для отправки сообщения.");
             }
         });
 
@@ -167,7 +192,7 @@
 
         socket.on('update_online_users', function(online_users) {
             document.querySelectorAll('#contact-list li').forEach(li => {
-                const contactUsername = li.dataset.username;
+                const contactUsername = li.dataset.name;
                 const indicator = document.getElementById(`status-${contactUsername}`);
                 if (indicator) {
                     if (online_users.includes(contactUsername)) {
