@@ -116,6 +116,8 @@
         </div>
     </div>
 
+    <div id="initial-data" data-unread-counts="{{ unread_counts | tojson }}"></div>
+
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
         const socket = io();
@@ -126,7 +128,10 @@
         const username = "{{ current_user.username }}";
         
         let currentChat = { type: null, id: null, name: null };
-        let unreadCounts = {{ unread_counts | tojson }};
+        
+        // ИСПРАВЛЕНИЕ: Читаем данные из data-атрибута
+        const initialData = document.getElementById('initial-data');
+        let unreadCounts = JSON.parse(initialData.dataset.unreadCounts);
 
         function initializeUnreadCounts() {
             for (const key in unreadCounts) {

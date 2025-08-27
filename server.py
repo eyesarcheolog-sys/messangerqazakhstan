@@ -8,7 +8,7 @@ from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 
-# --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
+# --- APP SETUP ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
@@ -21,7 +21,7 @@ login_manager.login_view = 'login'
 
 user_sids = {}
 
-# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
+# --- DATABASE MODELS ---
 group_members = db.Table('group_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
@@ -53,7 +53,7 @@ class Message(db.Model):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# --- МАРШРУТЫ (ROUTES) ---
+# --- ROUTES ---
 @app.route('/')
 @login_required
 def index():
@@ -79,7 +79,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         if User.query.filter_by(username=username).first():
-            return "Это имя пользователя уже занято!"
+            return "This username is already taken!"
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
@@ -97,7 +97,7 @@ def login():
             login_user(user)
             return redirect(url_for('index'))
         else:
-            return "Неверное имя пользователя или пароль!"
+            return "Invalid username or password!"
     return render_template('login.html')
 
 @app.route('/logout')
@@ -112,9 +112,9 @@ def create_group():
     group_name = request.form.get('group_name')
     member_ids = request.form.getlist('members')
     if not group_name or not member_ids:
-        return "Необходимо название и участники", 400
+        return "Group name and members are required", 400
     if Group.query.filter_by(name=group_name).first():
-        return "Группа с таким названием уже существует!", 400
+        return "A group with this name already exists!", 400
     new_group = Group(name=group_name)
     db.session.add(new_group)
     db.session.commit()
@@ -132,7 +132,7 @@ def create_group():
 def group_info(group_id):
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
-        return "Группа не найдена или у вас нет доступа", 404
+        return "Group not found or you are not a member", 404
     all_users = User.query.all()
     return render_template('group_info.html', group=group, all_users=all_users)
 
@@ -141,7 +141,7 @@ def group_info(group_id):
 def edit_group_name(group_id):
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
-        return "Ошибка доступа", 403
+        return "Access denied", 403
     new_name = request.form.get('group_name')
     if new_name and (group.name == new_name or not Group.query.filter_by(name=new_name).first()):
         group.name = new_name
@@ -153,7 +153,7 @@ def edit_group_name(group_id):
 def edit_group_members(group_id):
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
-        return "Ошибка доступа", 403
+        return "Access denied", 403
     new_member_ids = {int(id) for id in request.form.getlist('members')}
     new_member_ids.add(current_user.id)
     group.members = User.query.filter(User.id.in_(new_member_ids)).all()
@@ -165,7 +165,7 @@ def edit_group_members(group_id):
 def delete_group(group_id):
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
-        return "Ошибка доступа", 403
+        return "Access denied", 403
     Message.query.filter_by(group_id=group_id).delete()
     db.session.delete(group)
     db.session.commit()
@@ -189,12 +189,12 @@ def history(username):
 def group_history(group_id):
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
-        return "Группа не найдена или у вас нет доступа", 404
+        return "Group not found or you are not a member", 404
     messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp.asc()).all()
     messages_json = [{'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z"} for msg in messages]
     return jsonify(messages_json)
 
-# --- ЛОГИКА WEBSOCKET ---
+# --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
 @login_required
 def handle_connect():
