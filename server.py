@@ -98,16 +98,26 @@ def logout():
 def create_group():
     group_name = request.form.get('group_name')
     member_ids = request.form.getlist('members')
+
     if not group_name or not member_ids:
         return "Необходимо название и участники", 400
+
+    # Исправленный порядок: сначала создаем и сохраняем группу
     new_group = Group(name=group_name)
-    new_group.members.append(current_user)
+    db.session.add(new_group)
+    db.session.commit()
+
+    # Теперь, когда у группы есть ID, добавляем участников
+    creator = db.session.get(User, current_user.id)
+    new_group.members.append(creator)
+
     for user_id in member_ids:
         user = db.session.get(User, int(user_id))
         if user:
             new_group.members.append(user)
-    db.session.add(new_group)
+    
     db.session.commit()
+    
     return redirect(url_for('index'))
 
 @app.route('/history/<username>')
