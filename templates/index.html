@@ -12,7 +12,6 @@
             --primary-text-color: #e1e1e1;
             --secondary-text-color: #8e8e93;
             --accent-color: #34b7f1;
-            /* ИЗМЕНИЛИ ЦВЕТ ЗДЕСЬ */
             --notification-badge-color: #00AFCA; /* Голубой цвет флага */
             --my-message-bubble-color: #056162;
             --other-message-bubble-color: #262d31;
@@ -26,7 +25,8 @@
             background-color: var(--background-color);
             color: var(--primary-text-color);
             display: flex;
-            height: 100vh;
+            /* ИЗМЕНЕНИЕ №1: Используем динамическую высоту */
+            height: 100dvh; 
             overflow: hidden;
         }
 
@@ -243,6 +243,8 @@
             background-color: var(--sidebar-color);
             align-items: center;
             gap: 10px;
+            /* ИЗМЕНЕНИЕ №2: Добавляем отступ для системных элементов (home bar на iPhone) */
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
         #input {
             background: var(--input-background);
@@ -268,7 +270,7 @@
         #chat-header-back-btn { display: none; }
 
         @media (max-width: 768px) {
-            body { display: block; position: relative; }
+            body { display: block; position: relative; height: 100dvh;}
             #sidebar { width: 100%; height: 100%; box-sizing: border-box; border-right: none;}
             #chat-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;}
             body.mobile-chat-view #sidebar { display: none; }
@@ -372,6 +374,7 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
+        // JS остается без изменений
         const socket = io();
         const form = document.getElementById('form');
         const input = document.getElementById('input');
