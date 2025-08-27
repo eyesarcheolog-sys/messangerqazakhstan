@@ -4,48 +4,281 @@
     <meta charset="UTF-8">
     <title>Мой Мессенджер</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
-        #sidebar { width: 250px; background-color: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
-        #user-info { padding: 20px; border-bottom: 1px solid #ddd; }
-        #user-info h2 { margin: 0; font-size: 18px; }
-        #user-info a { font-size: 14px; color: #0084ff; text-decoration: none; }
+        :root {
+            --background-color: #121212;
+            --sidebar-color: #1e1e1e;
+            --chat-bg-color: #0d1418;
+            --primary-text-color: #e1e1e1;
+            --secondary-text-color: #8e8e93;
+            --accent-color: #34b7f1;
+            --notification-badge-color: #25d366;
+            --my-message-bubble-color: #056162;
+            --other-message-bubble-color: #262d31;
+            --separator-color: #2a2a2a;
+            --input-background: #2a3942;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--primary-text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- САЙДБАР (СПИСОК ЧАТОВ) --- */
+        #sidebar {
+            width: 350px;
+            min-width: 300px;
+            background-color: var(--sidebar-color);
+            border-right: 1px solid var(--separator-color);
+            display: flex;
+            flex-direction: column;
+        }
+        #user-info {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--separator-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #user-info h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+        #user-info a {
+            font-size: 14px;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
         .list-header {
             padding: 10px 20px;
             font-size: 12px;
             font-weight: bold;
             color: #657786;
             text-transform: uppercase;
-            background-color: #f5f8fa;
-            border-bottom: 1px solid #e6ecf0;
+            background-color: #1e1e1e; /* Match theme */
+            border-bottom: 1px solid var(--separator-color);
         }
-        .chat-list-container { flex-grow: 1; overflow-y: auto; }
-        .chat-list { list-style-type: none; padding: 0; margin: 0; }
-        .chat-list li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
-        .chat-list li:hover { background-color: #f5f5f5; }
-        .chat-list li.active { background-color: #e0f0ff; }
-        .contact-info { display: flex; align-items: center; }
-        .online-indicator { width: 10px; height: 10px; background-color: #ccc; border-radius: 50%; transition: background-color 0.3s; margin-right: 10px; }
-        .online-indicator.online { background-color: #28a745; }
-        .notification-dot { background-color: #dc3545; color: white; border-radius: 50%; font-size: 11px; font-weight: bold; min-width: 20px; height: 20px; display: none; place-content: center; padding: 0 4px; }
-        .notification-dot.visible { display: grid; }
-        #create-group-btn { margin: 10px; padding: 10px; background-color: #28a745; color: white; text-align: center; border-radius: 5px; cursor: pointer; }
-        #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
-        #chat-header { padding: 20px; border-bottom: 1px solid #ddd; margin: 0; font-size: 18px; color: #333; }
-        #chat-header a { color: inherit; text-decoration: none; }
-        #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; }
-        #messages li { padding: 8px 12px; margin-bottom: 10px; border-radius: 18px; width: fit-content; max-width: 70%; display: flex; flex-direction: column; }
+        .chat-list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .chat-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chat-list li {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--separator-color);
+        }
+        .chat-list li:hover {
+            background-color: var(--other-message-bubble-color);
+        }
+        .chat-list li.active {
+            background-color: var(--accent-color);
+        }
+        .chat-list li.active .chat-name,
+        .chat-list li.active .chat-preview,
+        .chat-list li.active .chat-time {
+            color: white;
+        }
+
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #555;
+            color: white;
+            display: grid;
+            place-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .user-avatar .online-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background-color: #8e8e93;
+            border-radius: 50%;
+            border: 2px solid var(--sidebar-color);
+        }
+        .user-avatar .online-indicator.online {
+            background-color: var(--notification-badge-color);
+        }
+
+        .chat-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .chat-name {
+            font-weight: 600;
+            font-size: 17px;
+        }
+        .chat-preview {
+            font-size: 14px;
+            color: var(--secondary-text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-meta {
+            text-align: right;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        .chat-time {
+            font-size: 12px;
+            color: var(--secondary-text-color);
+        }
+        .notification-dot {
+            background-color: var(--notification-badge-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 22px;
+            height: 22px;
+            display: none;
+            place-content: center;
+        }
+        .notification-dot.visible {
+            display: grid;
+        }
+        
+        #create-group-btn {
+            margin: 10px;
+            padding: 10px;
+            background-color: var(--notification-badge-color);
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- ОКНО ЧАТА --- */
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg-color);
+        }
+        #chat-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--separator-color);
+            background-color: var(--sidebar-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #chat-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        #chat-header a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #messages li {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 70%;
+            width: fit-content;
+            position: relative;
+        }
         .message-content { display: block; }
-        .timestamp { font-size: 11px; color: #888; margin-top: 4px; }
-        #messages li.my-message { background-color: #0084ff; color: white; margin-left: auto; align-items: flex-end; }
-        #messages li.my-message .timestamp { color: #e0f0ff; }
-        #messages li.other-message { background-color: #e4e6eb; color: #050505; align-items: flex-start; }
-        #form { display: flex; padding: 20px; border-top: 1px solid #ddd; background-color: #fff; }
-        #input { border: 1px solid #ccc; padding: 10px; flex-grow: 1; border-radius: 18px; margin-right: 10px; }
-        #form button { background: #0084ff; border: none; padding: 10px 15px; color: white; border-radius: 18px; cursor: pointer; }
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 8px; }
+        .timestamp {
+            font-size: 11px;
+            color: var(--secondary-text-color);
+            float: right;
+            margin-left: 10px;
+            margin-top: 8px;
+            user-select: none;
+        }
+
+        #messages li.my-message {
+            background-color: var(--my-message-bubble-color);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        #messages li.other-message {
+            background-color: var(--other-message-bubble-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        #form {
+            display: flex;
+            padding: 10px 16px;
+            border-top: 1px solid var(--separator-color);
+            background-color: var(--sidebar-color);
+            align-items: center;
+            gap: 10px;
+        }
+        #input {
+            background: var(--input-background);
+            border: none;
+            padding: 12px 16px;
+            flex-grow: 1;
+            border-radius: 22px;
+            color: var(--primary-text-color);
+            font-size: 16px;
+        }
+        #input::placeholder { color: var(--secondary-text-color); }
+        #form button {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        /* --- МОБИЛЬНАЯ ВЕРСИЯ (АДАПТИВНОСТЬ) --- */
+        #chat-header-back-btn { display: none; }
+
+        @media (max-width: 768px) {
+            body { display: block; position: relative; }
+            #sidebar { width: 100%; height: 100%; box-sizing: border-box; border-right: none;}
+            #chat-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;}
+            body.mobile-chat-view #sidebar { display: none; }
+            body.mobile-chat-view #chat-container { display: flex; }
+            #chat-header-back-btn { display: inline-block; font-size: 24px; cursor: pointer; border: none; background: none; color: var(--primary-text-color); margin-right: 10px;}
+        }
+
+        /* Модальное окно */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: var(--sidebar-color); margin: 15% auto; padding: 20px; border: 1px solid var(--separator-color); width: 80%; max-width: 400px; border-radius: 8px; color: var(--primary-text-color); }
         .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .members-list { max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+        .members-list { max-height: 150px; overflow-y: auto; border: 1px solid var(--separator-color); padding: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -60,8 +293,15 @@
             <ul id="group-list" class="chat-list">
                 {% for group in groups %}
                     <li data-id="{{ group.id }}" data-type="group" data-name="{{ group.name }}">
-                        <span># {{ group.name }}</span>
-                        <span class="notification-dot" id="notif-group-{{ group.id }}"></span>
+                        <div class="chat-avatar">#</div>
+                        <div class="chat-info">
+                            <div class="chat-name">{{ group.name }}</div>
+                            <div class="chat-preview">Сообщение в группе...</div>
+                        </div>
+                        <div class="chat-meta">
+                            <div class="chat-time"></div>
+                            <span class="notification-dot" id="notif-group-{{ group.id }}"></span>
+                        </div>
                     </li>
                 {% endfor %}
             </ul>
@@ -71,11 +311,18 @@
                 {% for user in users %}
                     {% if user.id != current_user.id %}
                         <li data-id="{{ user.id }}" data-type="user" data-name="{{ user.username }}">
-                            <div class="contact-info">
+                            <div class="chat-avatar user-avatar">
+                                {{ user.username[0] | upper }}
                                 <span class="online-indicator" id="status-{{ user.username }}"></span>
-                                <span>{{ user.username }}</span>
                             </div>
-                            <span class="notification-dot" id="notif-{{ user.username }}"></span>
+                            <div class="chat-info">
+                                <div class="chat-name">{{ user.username }}</div>
+                                <div class="chat-preview">Личное сообщение...</div>
+                            </div>
+                            <div class="chat-meta">
+                                <div class="chat-time"></div>
+                                <span class="notification-dot" id="notif-{{ user.username }}"></span>
+                            </div>
                         </li>
                     {% endif %}
                 {% endfor %}
@@ -86,7 +333,10 @@
     </div>
 
     <div id="chat-container">
-        <h2 id="chat-header"><a id="chat-header-link" href="#">Выберите чат</a></h2>
+        <div id="chat-header">
+            <button id="chat-header-back-btn">&larr;</button>
+            <h2 style="margin: 0;"><a id="chat-header-link" href="#">Выберите чат</a></h2>
+        </div>
         <ul id="messages"></ul>
         <form id="form" action="">
             <input id="input" autocomplete="off" placeholder="Введите сообщение..." />
@@ -129,7 +379,6 @@
         
         let currentChat = { type: null, id: null, name: null };
         
-        // ИСПРАВЛЕНИЕ: Читаем данные из data-атрибута
         const initialData = document.getElementById('initial-data');
         let unreadCounts = JSON.parse(initialData.dataset.unreadCounts);
 
@@ -159,18 +408,24 @@
             timestampSpan.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             if (data.sender === username) {
-                messageContent.textContent = `Вы: ${data.message}`;
+                messageContent.textContent = data.message;
                 item.classList.add('my-message');
             } else {
                 if (currentChat.type === 'group') {
-                    messageContent.textContent = `${data.sender}: ${data.message}`;
-                } else {
-                    messageContent.textContent = data.message;
+                    // В групповом чате можно добавить имя отправителя над сообщением
+                    const senderName = document.createElement('div');
+                    senderName.textContent = data.sender;
+                    senderName.style.fontWeight = 'bold';
+                    senderName.style.fontSize = '13px';
+                    senderName.style.color = 'var(--accent-color)';
+                    senderName.style.marginBottom = '4px';
+                    item.appendChild(senderName);
                 }
+                messageContent.textContent = data.message;
                 item.classList.add('other-message');
             }
             item.appendChild(messageContent);
-            item.appendChild(timestampSpan);
+            item.appendChild(timestampSpan); // Note: Timestamp is now part of the content flow, CSS might need adjustment
             messages.appendChild(item);
             messages.scrollTop = messages.scrollHeight;
         }
@@ -295,6 +550,28 @@
                 modal.style.display = "none";
             }
         }
+        
+        // --- ЛОГИКА ДЛЯ МОБИЛЬНОЙ ВЕРСИИ ---
+        const body = document.body;
+        const backToChatsBtn = document.getElementById('chat-header-back-btn');
+
+        // При клике на любой чат в списке
+        allLists.forEach(list => {
+            list.addEventListener('click', function(e) {
+                const li = e.target.closest('li');
+                if (li && window.innerWidth <= 768) {
+                    body.classList.add('mobile-chat-view');
+                }
+            });
+        });
+
+        // При клике на кнопку "Назад"
+        backToChatsBtn.addEventListener('click', function() {
+            body.classList.remove('mobile-chat-view');
+            // Сбрасываем текущий чат, чтобы не было путаницы
+            currentChat = { type: null, id: null, name: null }; 
+            document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
+        });
     </script>
 </body>
 </html>
