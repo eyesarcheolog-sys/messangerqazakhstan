@@ -102,12 +102,13 @@ def create_group():
     if not group_name or not member_ids:
         return "Необходимо название и участники", 400
 
-    # Исправленный порядок: сначала создаем и сохраняем группу
+    if Group.query.filter_by(name=group_name).first():
+        return "Группа с таким названием уже существует!", 400
+
     new_group = Group(name=group_name)
     db.session.add(new_group)
     db.session.commit()
 
-    # Теперь, когда у группы есть ID, добавляем участников
     creator = db.session.get(User, current_user.id)
     new_group.members.append(creator)
 
