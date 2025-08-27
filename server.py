@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from deepseek.client import DeepSeekClient
 
 # --- APP SETUP ---
 app = Flask(__name__)
@@ -212,8 +213,6 @@ def group_history(group_id):
     } for msg in messages]
     return jsonify(messages_json)
 
-# ОБНОВЛЕННЫЙ МАРШРУТ для приёма аудио и транскрипции
-# ИСПРАВЛЕННЫЙ МАРШРУТ для приёма аудио и транскрипции
 @app.route('/send_audio', methods=['POST'])
 @login_required
 def send_audio():
@@ -277,7 +276,6 @@ def send_audio():
             if recipient_sid:
                 socketio.emit('receive_voice_message', message_payload, to=recipient_sid)
             
-            # ИСПРАВЛЕНИЕ: Находим sid отправителя через user_sids
             sender_sid = user_sids.get(current_user.username)
             if sender_sid:
                 socketio.emit('receive_voice_message', message_payload, to=sender_sid)
@@ -288,6 +286,35 @@ def send_audio():
         return jsonify({"error": "Database error"}), 500
 
     return jsonify({"success": True}), 200
+
+@app.route('/edit_with_ai', methods=['POST'])
+@login_required
+def edit_with_ai():
+    data = request.get_json()
+    original_text = data.get('text')
+
+    if not original_text:
+        return jsonify({'error': 'No text provided'}), 400
+
+    try:
+        # ИСПРАВЛЕНИЕ: Опечатка в имени переменной
+        client = DeepSeekClient(api_key=os.environ.get("DEEPSEEK_API_KEY"))
+        
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "Ты — полезный ассистент, который исправляет грамматические и стилистические ошибки в тексте, сохраняя его основной смысл. Ответ должен содержать только исправленный текст."},
+                {"role": "user", "content": original_text},
+            ],
+            max_tokens=1024,
+            temperature=0.5,
+        )
+        edited_text = response.choices[0].message.content
+        return jsonify({'edited_text': edited_text})
+
+    except Exception as e:
+        print(f"Error calling DeepSeek API: {e}")
+        return jsonify({'error': 'AI service failed'}), 500
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
@@ -329,7 +356,12 @@ def handle_private_message(data):
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
         emit('new_message_notification', {'sender': current_user.username}, to=recipient_sid)
-    emit('receive_private_message', message_payload, to=request.sid)
+    
+    # ИСПРАВЛЕНИЕ: Используем sender_sid вместо request.sid, чтобы избежать падения
+    sender_sid = user_sids.get(current_user.username)
+    if sender_sid:
+        emit('receive_private_message', message_payload, to=sender_sid)
+
 
 @socketio.on('group_message')
 @login_required

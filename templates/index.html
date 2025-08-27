@@ -12,11 +12,12 @@
             --primary-text-color: #e1e1e1;
             --secondary-text-color: #8e8e93;
             --accent-color: #34b7f1;
-            --notification-badge-color: #00AFCA; /* Голубой цвет флага */
+            --notification-badge-color: #00AFCA;
             --my-message-bubble-color: #056162;
             --other-message-bubble-color: #262d31;
             --separator-color: #2a2a2a;
             --input-background: #2a3942;
+            --danger-color: #e53935;
         }
 
         body {
@@ -29,255 +30,44 @@
             overflow: hidden;
         }
 
-        /* --- САЙДБАР (СПИСОК ЧАТОВ) --- */
-        #sidebar {
-            width: 350px;
-            min-width: 300px;
-            background-color: var(--sidebar-color);
-            border-right: 1px solid var(--separator-color);
-            display: flex;
-            flex-direction: column;
-        }
-        #user-info {
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--separator-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #user-info h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-        #user-info a {
-            font-size: 14px;
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-        .list-header {
-            padding: 10px 20px;
-            font-size: 12px;
-            font-weight: bold;
-            color: #657786;
-            text-transform: uppercase;
-            background-color: #1e1e1e; /* Match theme */
-            border-bottom: 1px solid var(--separator-color);
-        }
-        .chat-list-container {
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-        .chat-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-        .chat-list li {
-            padding: 10px 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid var(--separator-color);
-        }
-        .chat-list li:hover {
-            background-color: var(--other-message-bubble-color);
-        }
-        .chat-list li.active {
-            background-color: var(--accent-color);
-        }
-        .chat-list li.active .chat-name,
-        .chat-list li.active .chat-preview,
-        .chat-list li.active .chat-time {
-            color: white;
-        }
-
-        .chat-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #555;
-            color: white;
-            display: grid;
-            place-content: center;
-            font-size: 22px;
-            font-weight: bold;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .user-avatar .online-indicator {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 12px;
-            height: 12px;
-            background-color: #8e8e93;
-            border-radius: 50%;
-            border: 2px solid var(--sidebar-color);
-        }
-        .user-avatar .online-indicator.online {
-            background-color: var(--notification-badge-color);
-        }
-
-        .chat-info {
-            flex-grow: 1;
-            overflow: hidden;
-        }
-        .chat-name {
-            font-weight: 600;
-            font-size: 17px;
-        }
-        .chat-preview {
-            font-size: 14px;
-            color: var(--secondary-text-color);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-meta {
-            text-align: right;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-        .chat-time {
-            font-size: 12px;
-            color: var(--secondary-text-color);
-        }
-        .notification-dot {
-            background-color: var(--notification-badge-color);
-            color: white;
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: bold;
-            min-width: 22px;
-            height: 22px;
-            display: none;
-            place-content: center;
-        }
-        .notification-dot.visible {
-            display: grid;
-        }
-        
-        #create-group-btn {
-            margin: 10px;
-            padding: 10px;
-            background-color: var(--notification-badge-color);
-            color: white;
-            text-align: center;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* --- ОКНО ЧАТА --- */
-        #chat-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--chat-bg-color);
-        }
-        #chat-header {
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--separator-color);
-            background-color: var(--sidebar-color);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        #chat-header h2 {
-            margin: 0;
-            font-size: 18px;
-        }
-        #chat-header a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        #messages {
-            list-style-type: none;
-            margin: 0;
-            padding: 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        #messages li {
-            padding: 8px 12px;
-            border-radius: 12px;
-            max-width: 70%;
-            width: fit-content;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .timestamp {
-            font-size: 11px;
-            color: var(--secondary-text-color);
-            align-self: flex-end;
-            margin-top: 4px;
-        }
-
-        #messages li.my-message {
-            background-color: var(--my-message-bubble-color);
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
-        }
-        #messages li.other-message {
-            background-color: var(--other-message-bubble-color);
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
-        
-        #messages audio {
-            margin-bottom: 5px;
-            max-width: 250px;
-        }
-
-        #form {
-            display: flex;
-            padding: 10px 16px;
-            border-top: 1px solid var(--separator-color);
-            background-color: var(--sidebar-color);
-            align-items: center;
-            gap: 10px;
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
-        }
-        #input {
-            background: var(--input-background);
-            border: none;
-            padding: 12px 16px;
-            flex-grow: 1;
-            border-radius: 22px;
-            color: var(--primary-text-color);
-            font-size: 16px;
-        }
+        /* --- MAIN INTERFACE STYLES --- */
+        #sidebar { width: 350px; min-width: 300px; background-color: var(--sidebar-color); border-right: 1px solid var(--separator-color); display: flex; flex-direction: column; }
+        #user-info { padding: 10px 16px; border-bottom: 1px solid var(--separator-color); display: flex; justify-content: space-between; align-items: center; }
+        #user-info h2 { margin: 0; font-size: 20px; }
+        #user-info a { font-size: 14px; color: var(--accent-color); text-decoration: none; }
+        .list-header { padding: 10px 20px; font-size: 12px; font-weight: bold; color: #657786; text-transform: uppercase; background-color: #1e1e1e; border-bottom: 1px solid var(--separator-color); }
+        .chat-list-container { flex-grow: 1; overflow-y: auto; }
+        .chat-list { list-style-type: none; padding: 0; margin: 0; }
+        .chat-list li { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--separator-color); }
+        .chat-list li:hover { background-color: var(--other-message-bubble-color); }
+        .chat-list li.active { background-color: var(--accent-color); }
+        .chat-list li.active .chat-name, .chat-list li.active .chat-preview, .chat-list li.active .chat-time { color: white; }
+        .chat-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #555; color: white; display: grid; place-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0; position: relative; }
+        .user-avatar .online-indicator { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background-color: #8e8e93; border-radius: 50%; border: 2px solid var(--sidebar-color); }
+        .user-avatar .online-indicator.online { background-color: var(--notification-badge-color); }
+        .chat-info { flex-grow: 1; overflow: hidden; }
+        .chat-name { font-weight: 600; font-size: 17px; }
+        .chat-preview { font-size: 14px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-meta { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .chat-time { font-size: 12px; color: var(--secondary-text-color); }
+        .notification-dot { background-color: var(--notification-badge-color); color: white; border-radius: 50%; font-size: 12px; font-weight: bold; min-width: 22px; height: 22px; display: none; place-content: center; }
+        .notification-dot.visible { display: grid; }
+        #create-group-btn { margin: 10px; padding: 10px; background-color: var(--notification-badge-color); color: white; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #chat-container { flex-grow: 1; display: flex; flex-direction: column; background-color: var(--chat-bg-color); }
+        #chat-header { padding: 10px 16px; border-bottom: 1px solid var(--separator-color); background-color: var(--sidebar-color); display: flex; align-items: center; gap: 15px; }
+        #chat-header h2 { margin: 0; font-size: 18px; }
+        #chat-header a { color: inherit; text-decoration: none; }
+        #messages { list-style-type: none; margin: 0; padding: 20px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 3px; }
+        #messages li { padding: 8px 12px; border-radius: 12px; max-width: 70%; width: fit-content; position: relative; display: flex; flex-direction: column; }
+        .timestamp { font-size: 11px; color: var(--secondary-text-color); align-self: flex-end; margin-top: 4px; }
+        #messages li.my-message { background-color: var(--my-message-bubble-color); align-self: flex-end; border-bottom-right-radius: 2px; }
+        #messages li.other-message { background-color: var(--other-message-bubble-color); align-self: flex-start; border-bottom-left-radius: 2px; }
+        #messages audio { margin-bottom: 5px; max-width: 250px; }
+        #form { display: flex; padding: 10px 16px; border-top: 1px solid var(--separator-color); background-color: var(--sidebar-color); align-items: center; gap: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        #input { background: var(--input-background); border: none; padding: 12px 16px; flex-grow: 1; border-radius: 22px; color: var(--primary-text-color); font-size: 16px; }
         #input::placeholder { color: var(--secondary-text-color); }
-        #form button {
-            background: var(--accent-color);
-            border: none;
-            color: white;
-            font-weight: bold;
-            padding: 10px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        #record-btn {
-            background: none;
-            font-size: 20px;
-            padding: 8px 12px;
-        }
-        
-        /* --- МОБИЛЬНАЯ ВЕРСИЯ (АДАПТИВНОСТЬ) --- */
-        #chat-header-back-btn { display: none; }
-
+        #form button { background: var(--accent-color); border: none; color: white; font-weight: bold; padding: 10px 15px; border-radius: 20px; cursor: pointer; flex-shrink: 0; }
+        #record-btn { background: none; font-size: 20px; padding: 8px 12px; }
         @media (max-width: 768px) {
             body { display: block; position: relative; height: 100dvh;}
             #sidebar { width: 100%; height: 100%; box-sizing: border-box; border-right: none;}
@@ -286,12 +76,29 @@
             body.mobile-chat-view #chat-container { display: flex; }
             #chat-header-back-btn { display: inline-block; font-size: 24px; cursor: pointer; border: none; background: none; color: var(--primary-text-color); margin-right: 10px;}
         }
-
-        /* Модальное окно */
         .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
         .modal-content { background-color: var(--sidebar-color); margin: 15% auto; padding: 20px; border: 1px solid var(--separator-color); width: 80%; max-width: 400px; border-radius: 8px; color: var(--primary-text-color); }
         .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .members-list { max-height: 150px; overflow-y: auto; border: 1px solid var(--separator-color); padding: 10px; margin-top: 10px; }
+        
+        /* --- STYLES FOR VOICE RECORDING MODAL --- */
+        .voice-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .voice-modal-content { background-color: var(--sidebar-color); border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; display: flex; flex-direction: column; gap: 20px; border: 1px solid var(--separator-color); }
+        .voice-modal-content h2 { margin: 0; text-align: center; }
+        #voice-status { text-align: center; font-size: 18px; color: var(--secondary-text-color); min-height: 25px; }
+        #audio-playback-container { display: none; }
+        #audio-playback-container audio { width: 100%; }
+        #transcription-container { display: none; }
+        #transcription-text { width: 100%; min-height: 100px; background-color: var(--input-background); border: 1px solid var(--separator-color); border-radius: 8px; color: var(--primary-text-color); padding: 10px; box-sizing: border-box; resize: vertical; }
+        .voice-modal-controls, .voice-modal-actions { display: flex; justify-content: center; align-items: center; gap: 15px; }
+        .voice-modal-controls button, .voice-modal-actions button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.2s; }
+        .voice-modal-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #start-record-btn { background-color: var(--notification-badge-color); color: white; }
+        #stop-record-btn { background-color: var(--danger-color); color: white; }
+        #edit-ai-btn { background-color: #6a1b9a; color: white; }
+        .voice-modal-actions { justify-content: space-between; }
+        #send-audio-btn, #send-text-btn { background-color: var(--my-message-bubble-color); color: white; flex-grow: 1; }
+        #delete-record-btn { background-color: var(--other-message-bubble-color); color: var(--primary-text-color); }
     </style>
 </head>
 <body>
@@ -380,19 +187,37 @@
         </div>
     </div>
 
+    <div id="voice-modal" class="voice-modal-overlay">
+        <div class="voice-modal-content">
+            <h2 id="voice-modal-title">Запись сообщения</h2>
+            <div id="voice-status">Нажмите "Старт" для начала записи</div>
+            <div id="audio-playback-container"><audio id="audio-playback" controls></audio></div>
+            <div id="transcription-container"><textarea id="transcription-text" placeholder="Здесь появится транскрипция..."></textarea></div>
+            <div class="voice-modal-controls">
+                <button id="start-record-btn">Старт</button>
+                <button id="stop-record-btn" style="display:none;">Стоп</button>
+                <button id="edit-ai-btn" style="display:none;">Улучшить ✨</button>
+            </div>
+            <div class="voice-modal-actions">
+                <button id="delete-record-btn">Отмена</button>
+                <button id="send-text-btn" style="display:none;">Отправить текст</button>
+                <button id="send-audio-btn" style="display:none;">Отправить аудио</button>
+            </div>
+        </div>
+    </div>
+    
     <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
+        // --- CORE JAVASCRIPT ---
         const socket = io();
         const form = document.getElementById('form');
         const input = document.getElementById('input');
         const messages = document.getElementById('messages');
         const allLists = document.querySelectorAll('.chat-list');
         const username = "{{ current_user.username }}";
-        
         let currentChat = { type: null, id: null, name: null };
-        
         const initialData = document.getElementById('initial-data');
         let unreadCounts = JSON.parse(initialData.dataset.unreadCounts);
 
@@ -437,7 +262,7 @@
                 audioPlayer.src = data.audio_url;
                 item.appendChild(audioPlayer);
 
-                if (data.transcription) {
+                if (data.transcription && data.transcription.trim() !== "") {
                     const transcriptionText = document.createElement('p');
                     transcriptionText.textContent = `"${data.transcription}"`;
                     transcriptionText.style.cssText = "margin: 8px 0 0; font-style: italic; opacity: 0.8; max-width: 100%;";
@@ -466,20 +291,15 @@
                 if (li) {
                     document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
                     li.classList.add('active');
-                    
                     currentChat.type = li.dataset.type;
                     currentChat.id = li.dataset.id;
                     currentChat.name = li.dataset.name;
-
                     const countKey = currentChat.type === 'user' ? currentChat.name : `group_${currentChat.id}`;
                     unreadCounts[countKey] = 0;
-                    
                     const notifId = currentChat.type === 'user' ? `notif-${currentChat.name}` : `notif-group-${currentChat.id}`;
-                    const notifIndicator = document.getElementById(notifId);
-                    if (notifIndicator) {
-                        notifIndicator.classList.remove('visible');
+                    if (document.getElementById(notifId)) {
+                        document.getElementById(notifId).classList.remove('visible');
                     }
-                    
                     messages.innerHTML = '';
                     const headerLink = document.getElementById('chat-header-link');
                     if (currentChat.type === 'group') {
@@ -489,13 +309,8 @@
                         headerLink.href = '#';
                         headerLink.textContent = `Чат с ${currentChat.name}`;
                     }
-                    
                     const historyUrl = currentChat.type === 'user' ? `/history/${currentChat.name}` : `/history/group/${currentChat.id}`;
-                    fetch(historyUrl)
-                        .then(response => response.json())
-                        .then(history => {
-                            history.forEach(appendMessage);
-                        });
+                    fetch(historyUrl).then(response => response.json()).then(history => history.forEach(appendMessage));
                 }
             });
         });
@@ -517,222 +332,218 @@
                 appendMessage(data);
             }
         });
-
         socket.on('receive_group_message', function(data) {
             if (currentChat.type === 'group' && data.group_id == currentChat.id) {
                 appendMessage(data);
             }
         });
-
         socket.on('receive_voice_message', function(data) {
             const isGroupChat = data.hasOwnProperty('group_id');
-            
-            if (isGroupChat && currentChat.type === 'group' && data.group_id == currentChat.id) {
-                appendMessage(data);
-            } else if (!isGroupChat && currentChat.type === 'user' && (data.sender === currentChat.name || data.sender === username)) {
+            if ((isGroupChat && currentChat.type === 'group' && data.group_id == currentChat.id) || 
+               (!isGroupChat && currentChat.type === 'user' && (data.sender === currentChat.name || data.sender === username))) {
                 appendMessage(data);
             }
         });
-
         socket.on('update_online_users', function(online_users) {
             document.querySelectorAll('#contact-list li').forEach(li => {
-                const contactUsername = li.dataset.name;
-                const indicator = document.getElementById(`status-${contactUsername}`);
-                if (indicator) {
-                    if (online_users.includes(contactUsername)) {
-                        indicator.classList.add('online');
-                    } else {
-                        indicator.classList.remove('online');
-                    }
-                }
+                const indicator = document.getElementById(`status-${li.dataset.name}`);
+                if (indicator) indicator.classList.toggle('online', online_users.includes(li.dataset.name));
             });
         });
-
         socket.on('new_message_notification', function(data) {
-            if (data.sender) {
-                if (currentChat.type !== 'user' || data.sender !== currentChat.name) {
-                    const countKey = data.sender;
-                    unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
-                    const notifIndicator = document.getElementById(`notif-${countKey}`);
-                    if (notifIndicator) {
-                        notifIndicator.textContent = unreadCounts[countKey];
-                        notifIndicator.classList.add('visible');
-                    }
+            if (data.sender && (currentChat.type !== 'user' || data.sender !== currentChat.name)) {
+                const countKey = data.sender;
+                unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
+                const notifIndicator = document.getElementById(`notif-${countKey}`);
+                if (notifIndicator) {
+                    notifIndicator.textContent = unreadCounts[countKey];
+                    notifIndicator.classList.add('visible');
                 }
-            } 
-            else if (data.group_id) {
-                if (currentChat.type !== 'group' || data.group_id != currentChat.id) {
-                    const countKey = `group_${data.group_id}`;
-                    unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
-                    const notifIndicator = document.getElementById(`notif-group-${data.group_id}`);
-                    if (notifIndicator) {
-                        notifIndicator.textContent = unreadCounts[countKey];
-                        notifIndicator.classList.add('visible');
-                    }
+            } else if (data.group_id && (currentChat.type !== 'group' || data.group_id != currentChat.id)) {
+                const countKey = `group_${data.group_id}`;
+                unreadCounts[countKey] = (unreadCounts[countKey] || 0) + 1;
+                const notifIndicator = document.getElementById(`notif-group-${data.group_id}`);
+                if (notifIndicator) {
+                    notifIndicator.textContent = unreadCounts[countKey];
+                    notifIndicator.classList.add('visible');
                 }
             }
         });
 
+        // --- MODAL AND MOBILE LOGIC ---
         const modal = document.getElementById('createGroupModal');
-        const btn = document.getElementById('create-group-btn');
-        const span = document.getElementsByClassName('close-btn')[0];
-
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-        
-        // --- ЛОГИКА ДЛЯ МОБИЛЬНОЙ ВЕРСИИ ---
+        document.getElementById('create-group-btn').onclick = () => modal.style.display = "block";
+        document.querySelector('.close-btn').onclick = () => modal.style.display = "none";
+        window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
         const body = document.body;
         const backToChatsBtn = document.getElementById('chat-header-back-btn');
-
-        allLists.forEach(list => {
-            list.addEventListener('click', function(e) {
-                const li = e.target.closest('li');
-                if (li && window.innerWidth <= 768) {
-                    body.classList.add('mobile-chat-view');
-                }
-            });
-        });
-
-        backToChatsBtn.addEventListener('click', function() {
+        allLists.forEach(list => list.addEventListener('click', (e) => {
+            if (e.target.closest('li') && window.innerWidth <= 768) body.classList.add('mobile-chat-view');
+        }));
+        backToChatsBtn.addEventListener('click', () => {
             body.classList.remove('mobile-chat-view');
-            currentChat = { type: null, id: null, name: null }; 
+            currentChat = { type: null, id: null, name: null };
             document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
-             document.getElementById('chat-header-link').textContent = "Выберите чат";
+            document.getElementById('chat-header-link').textContent = "Выберите чат";
         });
 
-        // --- ЛОГИКА ДЛЯ ГОЛОСОВЫХ СООБЩЕНИЙ (КЛИК vs УДЕРЖИВАНИЕ) ---
-        const recordBtn = document.getElementById('record-btn');
-        const textInput = document.getElementById('input');
-        
-        let micPressTimer = null;
-        let isRecordingAudio = false;
-        
+        // --- FINAL VOICE MESSAGE LOGIC (MODAL) ---
+        const mainRecordBtn = document.getElementById('record-btn');
+        const voiceModal = document.getElementById('voice-modal');
+        const startBtn = document.getElementById('start-record-btn');
+        const stopBtn = document.getElementById('stop-record-btn');
+        const editAiBtn = document.getElementById('edit-ai-btn');
+        const deleteBtn = document.getElementById('delete-record-btn');
+        const sendAudioBtn = document.getElementById('send-audio-btn');
+        const sendTextBtn = document.getElementById('send-text-btn');
+        const statusDisplay = document.getElementById('voice-status');
+        const playbackContainer = document.getElementById('audio-playback-container');
+        const audioPlayer = document.getElementById('audio-playback');
+        const transcriptionContainer = document.getElementById('transcription-container');
+        const transcriptionText = document.getElementById('transcription-text');
+
         let mediaRecorder;
         let audioChunks = [];
-        let transcribedText = "";
+        let recordedBlob = null;
+        let recognition;
+        let recordingInterval;
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition;
-
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
-            recognition.continuous = false; // Распознаем одну фразу для диктовки
             recognition.lang = 'ru-RU';
-            recognition.interimResults = false;
+            recognition.continuous = true;
+            recognition.interimResults = true;
         }
 
-        // Функция для записи ПОЛНОЦЕННОГО голосового сообщения (удержание)
-        async function startAudioRecording() {
-            if (!currentChat.type) {
-                alert("Пожалуйста, выберите чат.");
-                return;
-            }
-            console.log("Начинаем запись голосового сообщения...");
-            isRecordingAudio = true;
-            recordBtn.textContent = '🔴';
+        function updateUI(state) {
+            startBtn.style.display = (state === 'idle') ? 'block' : 'none';
+            stopBtn.style.display = (state === 'recording') ? 'block' : 'none';
+            playbackContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
+            transcriptionContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
+            editAiBtn.style.display = (state === 'transcribed' && transcriptionText.value) ? 'block' : 'none';
+            sendAudioBtn.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
+            sendTextBtn.style.display = (state === 'transcribed' && transcriptionText.value) ? 'block' : 'none';
 
+            if(state === 'idle') statusDisplay.textContent = "Нажмите 'Старт' для начала записи";
+            if(state === 'recording') statusDisplay.textContent = `Идет запись: 0 сек.`;
+            if(state === 'recorded') statusDisplay.textContent = "Запись завершена";
+            if(state === 'transcribed') statusDisplay.textContent = "Транскрипция готова";
+        }
+
+        function resetModal() {
+            recordedBlob = null;
+            audioChunks = [];
+            transcriptionText.value = "";
+            audioPlayer.src = "";
+            if (recordingInterval) clearInterval(recordingInterval);
+            updateUI('idle');
+        }
+
+        mainRecordBtn.onclick = () => {
+            if (!currentChat.type) { alert("Пожалуйста, выберите чат."); return; }
+            voiceModal.style.display = 'flex';
+            resetModal();
+        };
+
+        deleteBtn.onclick = () => {
+            if (mediaRecorder && mediaRecorder.stream) {
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (recognition && recognition.state === 'listening') recognition.stop();
+            voiceModal.style.display = 'none';
+        };
+
+        startBtn.onclick = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                transcribedText = "";
+                updateUI('recording');
 
-                // Настраиваем распознавание для долгой записи
-                if(recognition) {
-                    recognition.continuous = true;
+                let seconds = 0;
+                recordingInterval = setInterval(() => {
+                    seconds++;
+                    statusDisplay.textContent = `Идет запись: ${seconds} сек.`;
+                }, 1000);
+
+                if (recognition) {
                     recognition.onresult = (event) => {
                         let final_transcript = '';
                         for (let i = event.resultIndex; i < event.results.length; ++i) {
                             final_transcript += event.results[i][0].transcript;
                         }
-                        transcribedText = final_transcript;
+                        transcriptionText.value = final_transcript;
                     };
+                    recognition.onend = () => updateUI('transcribed');
                     recognition.start();
                 }
 
                 mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-                
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const formData = new FormData();
-                    formData.append('audio', audioBlob, 'recording.webm');
-                    formData.append('transcription', transcribedText);
-                    
-                    if (currentChat.type === 'user') {
-                        formData.append('recipient', currentChat.name);
-                    } else if (currentChat.type === 'group') {
-                        formData.append('group_id', currentChat.id);
-                    }
-                    
-                    fetch('/send_audio', { method: 'POST', body: formData })
-                        .catch(err => console.error("Ошибка отправки аудио:", err));
-
+                    clearInterval(recordingInterval);
+                    recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioPlayer.src = URL.createObjectURL(recordedBlob);
+                    if (!recognition) updateUI('recorded');
                     stream.getTracks().forEach(track => track.stop());
                 };
-
+                
                 mediaRecorder.start();
-
             } catch (err) {
-                console.error("Ошибка доступа к микрофону:", err);
-                isRecordingAudio = false;
-                recordBtn.textContent = '🎤';
+                console.error("Ошибка микрофона:", err);
+                resetModal();
             }
-        }
+        };
 
-        // Функция для остановки записи голосового сообщения
-        function stopAudioRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                if (recognition) recognition.stop();
+        stopBtn.onclick = () => {
+            if (mediaRecorder) mediaRecorder.stop();
+            if (recognition) recognition.stop();
+        };
+
+        editAiBtn.onclick = async () => {
+            const text = transcriptionText.value;
+            if (!text) return;
+            const originalStatus = statusDisplay.textContent;
+            statusDisplay.textContent = "ИИ-редактор работает...";
+            editAiBtn.disabled = true;
+            try {
+                const response = await fetch('/edit_with_ai', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+                if (data.edited_text) transcriptionText.value = data.edited_text;
+            } catch (err) {
+                console.error("Ошибка ИИ-редактора:", err);
             }
-            isRecordingAudio = false;
-            recordBtn.textContent = '🎤';
-        }
+            statusDisplay.textContent = originalStatus;
+            editAiBtn.disabled = false;
+        };
 
-        // Функция для диктовки текста (короткий клик)
-        function startDictation() {
-            if (!recognition) return alert("Распознавание речи не поддерживается.");
-            console.log("Начинаем диктовку...");
+        sendAudioBtn.onclick = () => {
+            if(!recordedBlob) return;
+            const formData = new FormData();
+            formData.append('audio', recordedBlob, 'recording.webm');
+            formData.append('transcription', transcriptionText.value);
             
-            recognition.continuous = false; // Одна фраза
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript;
-                textInput.value += transcript; // Добавляем текст в поле ввода
-            };
-            recognition.start();
-        }
+            if (currentChat.type === 'user') formData.append('recipient', currentChat.name);
+            else if (currentChat.type === 'group') formData.append('group_id', currentChat.id);
+            
+            fetch('/send_audio', { method: 'POST', body: formData });
+            voiceModal.style.display = 'none';
+        };
 
-        // Обработчики нажатия и отпускания кнопки
-        function handleMicPress() {
-            micPressTimer = setTimeout(() => {
-                startAudioRecording(); // Если держим долго - запускаем запись
-            }, 300); // 300 миллисекунд - порог для удержания
-        }
-
-        function handleMicRelease() {
-            clearTimeout(micPressTimer);
-            if (isRecordingAudio) {
-                stopAudioRecording(); // Если шла запись - останавливаем
-            } else {
-                // Если запись не успела начаться - это был клик
-                startDictation();
+        sendTextBtn.onclick = () => {
+            const messageText = transcriptionText.value;
+            if (!messageText) return;
+            if (currentChat.type === 'user') {
+                socket.emit('private_message', { recipient: currentChat.name, message: messageText });
+            } else if (currentChat.type === 'group') {
+                socket.emit('group_message', { group_id: currentChat.id, message: messageText });
             }
-        }
-
-        recordBtn.addEventListener('mousedown', handleMicPress);
-        recordBtn.addEventListener('mouseup', handleMicRelease);
-        recordBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleMicPress(); });
-        recordBtn.addEventListener('touchend', handleMicRelease);
-
+            voiceModal.style.display = 'none';
+        };
     </script>
 </body>
 </html>
