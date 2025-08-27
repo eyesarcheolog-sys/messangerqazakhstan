@@ -213,28 +213,24 @@ def group_history(group_id):
     return jsonify(messages_json)
 
 # ОБНОВЛЕННЫЙ МАРШРУТ для приёма аудио и транскрипции
+# ИСПРАВЛЕННЫЙ МАРШРУТ для приёма аудио и транскрипции
 @app.route('/send_audio', methods=['POST'])
 @login_required
 def send_audio():
-    # 1. Получаем все данные из запроса
     audio_file = request.files.get('audio')
     transcription_text = request.form.get('transcription', '[Транскрипция не получена]')
     recipient_username = request.form.get('recipient')
     group_id = request.form.get('group_id')
 
-    # 2. Проверяем, что аудиофайл действительно есть
     if not audio_file:
         return jsonify({"error": "No audio file"}), 400
     
-    # 3. Убедимся, что есть получатель (группа или пользователь)
     if not group_id and not recipient_username:
         return jsonify({"error": "No recipient specified"}), 400
 
-    # Создаем папку для загрузок, если ее нет
     if not os.path.exists('static/uploads'):
         os.makedirs('static/uploads')
 
-    # Сохраняем аудиофайл
     filename = f"{uuid.uuid4()}.webm"
     filepath = os.path.join('static/uploads', filename)
     audio_file.save(filepath)
@@ -242,7 +238,6 @@ def send_audio():
     
     timestamp = datetime.utcnow()
     
-    # 4. Создаем объект сообщения, но пока не добавляем в сессию
     new_message = Message(
         sender_id=current_user.id,
         timestamp=timestamp,
@@ -259,43 +254,40 @@ def send_audio():
     
     try:
         if group_id:
-            # Проверяем, что группа существует и пользователь в ней состоит
             group = db.session.get(Group, int(group_id))
             if not group or current_user not in group.members:
                  return jsonify({"error": "Group not found or access denied"}), 404
             new_message.group_id = group_id
             db.session.add(new_message)
-            db.session.commit() # Сохраняем в БД
+            db.session.commit()
             
-            # Отправляем по сокету ПОСЛЕ успешного сохранения
             message_payload['group_id'] = group_id
             room = f'group_{group_id}'
             socketio.emit('receive_voice_message', message_payload, to=room)
         
         elif recipient_username:
-            # Проверяем, что получатель существует
             recipient_obj = User.query.filter_by(username=recipient_username).first()
             if not recipient_obj:
                 return jsonify({"error": "Recipient not found"}), 404
             new_message.recipient_id = recipient_obj.id
             db.session.add(new_message)
-            db.session.commit() # Сохраняем в БД
+            db.session.commit()
 
-            # Отправляем по сокету ПОСЛЕ успешного сохранения
             recipient_sid = user_sids.get(recipient_username)
             if recipient_sid:
                 socketio.emit('receive_voice_message', message_payload, to=recipient_sid)
-            # Отправляем обратно себе для отображения в интерфейсе
-            socketio.emit('receive_voice_message', message_payload, to=request.sid)
+            
+            # ИСПРАВЛЕНИЕ: Находим sid отправителя через user_sids
+            sender_sid = user_sids.get(current_user.username)
+            if sender_sid:
+                socketio.emit('receive_voice_message', message_payload, to=sender_sid)
 
     except Exception as e:
-        # В случае любой ошибки при сохранении в БД, мы увидим ее в логах
         db.session.rollback()
         print(f"ОШИБКА при сохранении сообщения в БД: {e}")
         return jsonify({"error": "Database error"}), 500
 
     return jsonify({"success": True}), 200
-
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')

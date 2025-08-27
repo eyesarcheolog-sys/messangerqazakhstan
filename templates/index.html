@@ -421,7 +421,6 @@
                 item.classList.add('other-message');
             }
 
-            // В групповом чате можно добавить имя отправителя над сообщением
             if (currentChat.type === 'group' && data.sender !== username) {
                 const senderName = document.createElement('div');
                 senderName.textContent = data.sender;
@@ -432,7 +431,6 @@
                 item.appendChild(senderName);
             }
 
-            // Если это голосовое сообщение
             if (data.audio_url) {
                 const audioPlayer = document.createElement('audio');
                 audioPlayer.controls = true;
@@ -446,7 +444,6 @@
                     item.appendChild(transcriptionText);
                 }
             } 
-            // Если это обычное текстовое сообщение
             else if (data.message) {
                 const messageContent = document.createElement('span');
                 messageContent.textContent = data.message;
@@ -596,7 +593,6 @@
         const body = document.body;
         const backToChatsBtn = document.getElementById('chat-header-back-btn');
 
-        // При клике на любой чат в списке
         allLists.forEach(list => {
             list.addEventListener('click', function(e) {
                 const li = e.target.closest('li');
@@ -606,18 +602,20 @@
             });
         });
 
-        // При клике на кнопку "Назад"
         backToChatsBtn.addEventListener('click', function() {
             body.classList.remove('mobile-chat-view');
-            // Сбрасываем текущий чат, чтобы не было путаницы
             currentChat = { type: null, id: null, name: null }; 
             document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
-            // Очищаем заголовок
              document.getElementById('chat-header-link').textContent = "Выберите чат";
         });
 
-        // --- ГИБРИДНАЯ ЛОГИКА ДЛЯ ГОЛОСОВЫХ СООБЩЕНИЙ (АУДИО + БЕСПЛАТНЫЙ ТЕКСТ) ---
+        // --- ЛОГИКА ДЛЯ ГОЛОСОВЫХ СООБЩЕНИЙ (КЛИК vs УДЕРЖИВАНИЕ) ---
         const recordBtn = document.getElementById('record-btn');
+        const textInput = document.getElementById('input');
+        
+        let micPressTimer = null;
+        let isRecordingAudio = false;
+        
         let mediaRecorder;
         let audioChunks = [];
         let transcribedText = "";
@@ -627,47 +625,47 @@
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
-            recognition.continuous = true;
+            recognition.continuous = false; // Распознаем одну фразу для диктовки
             recognition.lang = 'ru-RU';
             recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                // Собираем все распознанные фрагменты в одну строку
-                let final_transcript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    final_transcript += event.results[i][0].transcript;
-                }
-                transcribedText = final_transcript;
-                console.log("Распознано:", transcribedText);
-            };
-            
-            recognition.onerror = (event) => {
-                console.error("Ошибка распознавания:", event.error);
-                transcribedText = "[Не удалось распознать речь]";
-            }
         }
 
-        async function startRecording() {
+        // Функция для записи ПОЛНОЦЕННОГО голосового сообщения (удержание)
+        async function startAudioRecording() {
             if (!currentChat.type) {
                 alert("Пожалуйста, выберите чат.");
                 return;
             }
+            console.log("Начинаем запись голосового сообщения...");
+            isRecordingAudio = true;
+            recordBtn.textContent = '🔴';
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
-                audioChunks = []; // Очищаем старые данные
-                transcribedText = ""; // Очищаем старый текст
+                audioChunks = [];
+                transcribedText = "";
 
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
+                // Настраиваем распознавание для долгой записи
+                if(recognition) {
+                    recognition.continuous = true;
+                    recognition.onresult = (event) => {
+                        let final_transcript = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            final_transcript += event.results[i][0].transcript;
+                        }
+                        transcribedText = final_transcript;
+                    };
+                    recognition.start();
+                }
+
+                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
                 
-                // Когда запись остановлена, мы упаковываем и отправляем ВСЁ
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const formData = new FormData();
                     formData.append('audio', audioBlob, 'recording.webm');
-                    formData.append('transcription', transcribedText); // Добавляем распознанный текст
+                    formData.append('transcription', transcribedText);
                     
                     if (currentChat.type === 'user') {
                         formData.append('recipient', currentChat.name);
@@ -678,33 +676,63 @@
                     fetch('/send_audio', { method: 'POST', body: formData })
                         .catch(err => console.error("Ошибка отправки аудио:", err));
 
-                    // Выключаем микрофон в браузере
                     stream.getTracks().forEach(track => track.stop());
                 };
 
                 mediaRecorder.start();
-                if (recognition) recognition.start(); // Запускаем и распознавание
-                recordBtn.textContent = '🔴';
-                
+
             } catch (err) {
                 console.error("Ошибка доступа к микрофону:", err);
-            }
-        }
-
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                if (recognition) recognition.stop(); // Останавливаем и распознавание
+                isRecordingAudio = false;
                 recordBtn.textContent = '🎤';
             }
         }
 
-        // Удерживание кнопки для записи
-        recordBtn.addEventListener('mousedown', startRecording);
-        recordBtn.addEventListener('mouseup', stopRecording);
-        // Для мобильных устройств
-        recordBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
-        recordBtn.addEventListener('touchend', stopRecording);
+        // Функция для остановки записи голосового сообщения
+        function stopAudioRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                if (recognition) recognition.stop();
+            }
+            isRecordingAudio = false;
+            recordBtn.textContent = '🎤';
+        }
+
+        // Функция для диктовки текста (короткий клик)
+        function startDictation() {
+            if (!recognition) return alert("Распознавание речи не поддерживается.");
+            console.log("Начинаем диктовку...");
+            
+            recognition.continuous = false; // Одна фраза
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                textInput.value += transcript; // Добавляем текст в поле ввода
+            };
+            recognition.start();
+        }
+
+        // Обработчики нажатия и отпускания кнопки
+        function handleMicPress() {
+            micPressTimer = setTimeout(() => {
+                startAudioRecording(); // Если держим долго - запускаем запись
+            }, 300); // 300 миллисекунд - порог для удержания
+        }
+
+        function handleMicRelease() {
+            clearTimeout(micPressTimer);
+            if (isRecordingAudio) {
+                stopAudioRecording(); // Если шла запись - останавливаем
+            } else {
+                // Если запись не успела начаться - это был клик
+                startDictation();
+            }
+        }
+
+        recordBtn.addEventListener('mousedown', handleMicPress);
+        recordBtn.addEventListener('mouseup', handleMicRelease);
+        recordBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleMicPress(); });
+        recordBtn.addEventListener('touchend', handleMicRelease);
+
     </script>
 </body>
 </html>
