@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -48,7 +48,7 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
-    body = db.Column(db.String(500), nullable=True)
+    body = db.Column(db.Text, nullable=True) # FIX: Changed to Text for long AI responses
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False, nullable=False, server_default='false')
     audio_url = db.Column(db.String(255), nullable=True)
@@ -214,6 +214,12 @@ def group_history(group_id):
     } for msg in messages]
     return jsonify(messages_json)
 
+# FIX: New route to serve uploaded audio files securely
+@app.route('/uploads/<filename>')
+@login_required
+def uploaded_file(filename):
+    return send_from_directory('static/uploads', filename)
+
 @app.route('/send_audio', methods=['POST'])
 @login_required
 def send_audio():
@@ -233,7 +239,8 @@ def send_audio():
     filepath = os.path.join('static/uploads', filename)
     audio_file.save(filepath)
     
-    audio_url = url_for('static', filename=f'uploads/{filename}', _external=True, _scheme='https')
+    # FIX: Use the new 'uploaded_file' route
+    audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
     
     timestamp = datetime.utcnow()
     new_message = Message(
@@ -298,24 +305,35 @@ def edit_with_ai():
 
     try:
         edited_text = ""
+        prompt = f"""
+        Ты — умный ассистент-редактор для чата. Твоя задача — взять сырой текст, который был распознан из голоса, и превратить его в грамотное и содержательное сообщение.
+
+        Твои действия:
+        1.  **Исправь все ошибки:** орфографические, пунктуационные, грамматические.
+        2.  **Улучши стиль:** Сделай текст более читабельным и естественным для общения в мессенджере.
+        3.  **Пойми контекст:** Если текст выглядит как незавершенная мысль или вопрос, логически дополни его. Например, "погода на завтра" преврати в "Какая погода будет завтра?".
+        4.  **ОЧЕНЬ ВАЖНО:** Твой ответ ВСЕГДА должен быть на русском языке.
+        5.  **ФОРМАТ ОТВЕТА:** Твой ответ должен содержать ТОЛЬКО итоговый, отредактированный текст, без каких-либо твоих комментариев, приветствий или объяснений.
+
+        Оригинальный текст: "{original_text}"
+        """
+
         if model_choice == 'gemini':
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            # The user's text is now the full prompt
-            response = model.generate_content(original_text)
+            response = model.generate_content(prompt)
             edited_text = response.text
         else: # deepseek
             api_key = os.environ.get("DEEPSEEK_API_KEY")
             if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
             client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
-            # The user's text is now the user message
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "You are a helpful AI assistant. Respond in Russian unless the user asks for another language."},
-                    {"role": "user", "content": original_text},
+                    {"role": "system", "content": "You are a helpful AI assistant."},
+                    {"role": "user", "content": prompt},
                 ]
             )
             edited_text = response.choices[0].message.content
