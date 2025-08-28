@@ -8,7 +8,8 @@ from datetime import datetime
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
-from openai import OpenAI # CORRECT IMPORT
+from openai import OpenAI
+import google.generativeai as genai
 
 # --- APP SETUP ---
 app = Flask(__name__)
@@ -24,7 +25,6 @@ login_manager.login_view = 'login'
 user_sids = {}
 
 # --- DATABASE MODELS ---
-# ... (Models are correct and unchanged) ...
 group_members = db.Table('group_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
@@ -79,7 +79,6 @@ def index():
 
     return render_template('index.html', current_user=current_user, users=users, groups=groups, unread_counts=unread_counts)
 
-# ... (Other routes like /register, /login, etc. are correct and unchanged) ...
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -219,26 +218,24 @@ def group_history(group_id):
 @login_required
 def send_audio():
     audio_file = request.files.get('audio')
-    transcription_text = request.form.get('transcription', '[Транскрипция не получена]')
+    transcription_text = request.form.get('transcription', '')
     recipient_username = request.form.get('recipient')
     group_id = request.form.get('group_id')
 
     if not audio_file:
         return jsonify({"error": "No audio file"}), 400
-    
     if not group_id and not recipient_username:
         return jsonify({"error": "No recipient specified"}), 400
-
     if not os.path.exists('static/uploads'):
         os.makedirs('static/uploads')
 
     filename = f"{uuid.uuid4()}.webm"
     filepath = os.path.join('static/uploads', filename)
     audio_file.save(filepath)
-    audio_url = url_for('static', filename=f'uploads/{filename}', _external=True)
+    
+    audio_url = url_for('static', filename=f'uploads/{filename}', _external=True, _scheme='https')
     
     timestamp = datetime.utcnow()
-    
     new_message = Message(
         sender_id=current_user.id,
         timestamp=timestamp,
@@ -257,7 +254,7 @@ def send_audio():
         if group_id:
             group = db.session.get(Group, int(group_id))
             if not group or current_user not in group.members:
-                 return jsonify({"error": "Group not found or access denied"}), 404
+                return jsonify({"error": "Group not found or access denied"}), 404
             new_message.group_id = group_id
             db.session.add(new_message)
             db.session.commit()
@@ -284,7 +281,7 @@ def send_audio():
 
     except Exception as e:
         db.session.rollback()
-        print(f"ОШИБКА при сохранении сообщения в БД: {e}")
+        print(f"DATABASE ERROR while saving message: {e}")
         return jsonify({"error": "Database error"}), 500
 
     return jsonify({"success": True}), 200
@@ -294,27 +291,41 @@ def send_audio():
 def edit_with_ai():
     data = request.get_json()
     original_text = data.get('text')
+    model_choice = data.get('model', 'deepseek')
 
     if not original_text:
         return jsonify({'error': 'No text provided'}), 400
 
     try:
-        # CORRECT CLIENT INITIALIZATION
-        client = OpenAI(api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com/v1")
+        edited_text = ""
+        if model_choice == 'gemini':
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY environment variable not set")
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"Исправь грамматические и стилистические ошибки в этом тексте, сохранив основной смысл. Ответь только исправленным текстом, без комментариев. Текст: \"{original_text}\""
+            response = model.generate_content(prompt)
+            edited_text = response.text
+        else:
+            api_key = os.environ.get("DEEPSEEK_API_KEY")
+            if not api_key:
+                raise ValueError("DEEPSEEK_API_KEY environment variable not set")
+            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "Ты — полезный ассистент, который исправляет грамматические и стилистические ошибки в тексте, сохраняя его основной смысл. Ответ должен содержать только исправленный текст."},
+                    {"role": "user", "content": original_text},
+                ]
+            )
+            edited_text = response.choices[0].message.content
         
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that corrects grammatical and stylistic errors in text, preserving its main meaning. The response should only contain the corrected text."},
-                {"role": "user", "content": original_text},
-            ]
-        )
-        edited_text = response.choices[0].message.content
         return jsonify({'edited_text': edited_text})
 
     except Exception as e:
-        print(f"Error calling DeepSeek API: {e}")
-        return jsonify({'error': 'AI service failed'}), 500
+        print(f"Error calling {model_choice} API: {e}")
+        return jsonify({'error': f'{model_choice} service failed'}), 500
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
