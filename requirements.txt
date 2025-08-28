@@ -1,12 +1,11 @@
 Flask
 Flask-SocketIO
 gunicorn
-simple-websocket
 Flask-SQLAlchemy
 Flask-Login
-gevent-websocket
 psycopg2-binary
 Flask-Migrate
 openai
 google-generativeai
 python-dotenv
+gevent

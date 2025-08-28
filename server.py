@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import os
 import uuid
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
@@ -5,7 +8,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from openai import OpenAI
@@ -13,7 +16,8 @@ import google.generativeai as genai
 
 # --- APP SETUP ---
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'a-super-secret-key-that-no-one-knows'
+# Улучшение безопасности: ключ берется из переменных окружения
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -65,19 +69,39 @@ def load_user(user_id):
 def index():
     users = User.query.all()
     groups = current_user.groups
-    
     unread_counts = {}
-    private_messages = Message.query.filter_by(recipient_id=current_user.id, is_read=False).all()
-    for msg in private_messages:
-        sender_username = db.session.get(User, msg.sender_id).username
-        unread_counts[sender_username] = unread_counts.get(sender_username, 0) + 1
+
+    # Оптимизация производительности: один запрос для всех личных сообщений
+    private_unread = db.session.query(
+        Message.sender_id, func.count(Message.id)
+    ).join(User, User.id == Message.sender_id).filter(
+        Message.recipient_id == current_user.id,
+        Message.is_read == False
+    ).group_by(Message.sender_id).all()
+    
+    # Создаем словарь {sender_id: username} для быстрого доступа
+    user_map = {user.id: user.username for user in users}
+    for sender_id, count in private_unread:
+        sender_username = user_map.get(sender_id)
+        if sender_username:
+            unread_counts[sender_username] = count
+
+    # Оптимизация производительности: один запрос для всех групповых сообщений
+    if groups:
+        group_ids = [g.id for g in groups]
+        group_unread = db.session.query(
+            Message.group_id, func.count(Message.id)
+        ).filter(
+            Message.group_id.in_(group_ids),
+            Message.is_read == False,
+            Message.sender_id != current_user.id
+        ).group_by(Message.group_id).all()
         
-    for group in groups:
-         group_unread = Message.query.filter_by(group_id=group.id, is_read=False).filter(Message.sender_id != current_user.id).count()
-         if group_unread > 0:
-            unread_counts[f'group_{group.id}'] = group_unread
+        for group_id, count in group_unread:
+            unread_counts[f'group_{group_id}'] = count
 
     return render_template('index.html', current_user=current_user, users=users, groups=groups, unread_counts=unread_counts)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -217,7 +241,9 @@ def group_history(group_id):
 @app.route('/uploads/<filename>')
 @login_required
 def uploaded_file(filename):
-    return send_from_directory('static/uploads', filename)
+    # Улучшение: используем безопасный путь к директории static
+    upload_dir = os.path.join(app.static_folder, 'uploads')
+    return send_from_directory(upload_dir, filename)
 
 @app.route('/send_audio', methods=['POST'])
 @login_required
@@ -231,14 +257,18 @@ def send_audio():
         return jsonify({"error": "No audio file"}), 400
     if not group_id and not recipient_username:
         return jsonify({"error": "No recipient specified"}), 400
-    if not os.path.exists('static/uploads'):
-        os.makedirs('static/uploads')
+    
+    # Улучшение: используем безопасный путь к директории static
+    upload_dir = os.path.join(app.static_folder, 'uploads')
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
 
     filename = f"{uuid.uuid4()}.webm"
-    filepath = os.path.join('static/uploads', filename)
+    filepath = os.path.join(upload_dir, filename)
     audio_file.save(filepath)
     
-    audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
+    # Используем относительный путь для URL, Flask разберется
+    audio_url = url_for('static', filename=f'uploads/{filename}')
     
     timestamp = datetime.utcnow()
     new_message = Message(
@@ -392,7 +422,8 @@ def handle_disconnect():
     if current_user.is_authenticated and current_user.username in user_sids:
         for group in current_user.groups:
             leave_room(f'group_{group.id}')
-        if current_user.username in user_sids:
+        # Добавлена проверка на случай, если sid уже удален
+        if user_sids.get(current_user.username) == request.sid:
             del user_sids[current_user.username]
         emit('update_online_users', list(user_sids.keys()), broadcast=True)
 
