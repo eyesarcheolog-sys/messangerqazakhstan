@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>Мой Мессенджер</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
 </head>
 <body data-username="{{ current_user.username }}">
     
@@ -136,7 +136,7 @@
     <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=3"></script>
+    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=4"></script>
 
 </body>
 </html>
