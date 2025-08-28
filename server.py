@@ -48,7 +48,7 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
-    body = db.Column(db.Text, nullable=True) # FIX: Changed to Text for long AI responses
+    body = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False, nullable=False, server_default='false')
     audio_url = db.Column(db.String(255), nullable=True)
@@ -214,7 +214,6 @@ def group_history(group_id):
     } for msg in messages]
     return jsonify(messages_json)
 
-# FIX: New route to serve uploaded audio files securely
 @app.route('/uploads/<filename>')
 @login_required
 def uploaded_file(filename):
@@ -239,7 +238,6 @@ def send_audio():
     filepath = os.path.join('static/uploads', filename)
     audio_file.save(filepath)
     
-    # FIX: Use the new 'uploaded_file' route
     audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
     
     timestamp = datetime.utcnow()
@@ -299,32 +297,44 @@ def edit_with_ai():
     data = request.get_json()
     original_text = data.get('text')
     model_choice = data.get('model', 'gemini')
+    task_type = data.get('task_type', 'generate')
 
     if not original_text:
         return jsonify({'error': 'No text provided'}), 400
 
     try:
         edited_text = ""
-        prompt = f"""
-        Ты — умный ассистент-редактор для чата. Твоя задача — взять сырой текст, который был распознан из голоса, и превратить его в грамотное и содержательное сообщение.
+        
+        if task_type == 'improve':
+            prompt = f"""
+            Ты — умный ассистент-редактор. Твоя задача — взять текст пользователя и улучшить его.
+            - Исправь все орфографические, пунктуационные и грамматические ошибки.
+            - Улучши стиль и ясность, чтобы текст звучал естественно и грамотно.
+            - **Не меняй основной смысл текста и не добавляй новой информации от себя.**
+            - Твой ответ ВСЕГДА должен быть на том же языке, что и оригинальный текст.
+            - ФОРМАТ ОТВЕТА: Только итоговый, отредактированный текст, без твоих комментариев.
 
-        Твои действия:
-        1.  **Исправь все ошибки:** орфографические, пунктуационные, грамматические.
-        2.  **Улучши стиль:** Сделай текст более читабельным и естественным для общения в мессенджере.
-        3.  **Пойми контекст:** Если текст выглядит как незавершенная мысль или вопрос, логически дополни его. Например, "погода на завтра" преврати в "Какая погода будет завтра?".
-        4.  **ОЧЕНЬ ВАЖНО:** Твой ответ ВСЕГДА должен быть на русском языке.
-        5.  **ФОРМАТ ОТВЕТА:** Твой ответ должен содержать ТОЛЬКО итоговый, отредактированный текст, без каких-либо твоих комментариев, приветствий или объяснений.
-
-        Оригинальный текст: "{original_text}"
-        """
+            Оригинальный текст: "{original_text}"
+            """
+        else: # 'generate'
+            prompt = original_text
 
         if model_choice == 'gemini':
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            model = genai.GenerativeModel(
+                'gemini-1.5-flash-latest',
+                system_instruction="Ты — полезный ИИ-ассистент в чате. Отвечай на русском языке, если не указано иное."
+            )
             response = model.generate_content(prompt)
-            edited_text = response.text
+            
+            try:
+                edited_text = response.text
+            except ValueError:
+                print("Gemini response blocked by safety settings.")
+                edited_text = "[Ответ был заблокирован из-за настроек безопасности]"
+
         else: # deepseek
             api_key = os.environ.get("DEEPSEEK_API_KEY")
             if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
@@ -332,7 +342,7 @@ def edit_with_ai():
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "You are a helpful AI assistant."},
+                    {"role": "system", "content": "You are a helpful AI assistant. Respond in Russian unless the user asks for another language."},
                     {"role": "user", "content": prompt},
                 ]
             )
@@ -371,9 +381,11 @@ def handle_private_message(data):
     recipient_obj = User.query.filter_by(username=recipient_username).first()
     if not recipient_obj:
         return
+    
     new_message = Message(sender_id=current_user.id, recipient_id=recipient_obj.id, body=message_text, timestamp=timestamp)
     db.session.add(new_message)
     db.session.commit()
+    
     recipient_sid = user_sids.get(recipient_username)
     message_payload = {
         'sender': current_user.username,

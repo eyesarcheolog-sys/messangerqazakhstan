@@ -94,11 +94,12 @@
         #transcription-container { display: none; }
         #transcription-text { width: 100%; min-height: 100px; background-color: var(--input-background); border: 1px solid var(--separator-color); border-radius: 8px; color: var(--primary-text-color); padding: 10px; box-sizing: border-box; resize: vertical; }
         .voice-modal-controls, .voice-modal-actions { display: flex; justify-content: center; align-items: center; gap: 15px; }
-        .voice-modal-controls button, .voice-modal-actions button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.2s; }
+        .voice-modal-controls button, .voice-modal-actions button { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.2s; }
         .voice-modal-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
         #start-record-btn { background-color: var(--notification-badge-color); color: white; }
         #stop-record-btn { background-color: var(--danger-color); color: white; }
-        #edit-ai-btn { background-color: #6a1b9a; color: white; }
+        #improve-ai-btn { background-color: #6a1b9a; color: white; }
+        #generate-ai-btn { background-color: #8e24aa; color: white; }
         #ai-model-select { background-color: var(--input-background); color: var(--primary-text-color); border: 1px solid var(--separator-color); padding: 5px; border-radius: 5px; }
         .voice-modal-actions { justify-content: space-between; }
         #send-audio-btn, #send-text-btn { background-color: var(--my-message-bubble-color); color: white; flex-grow: 1; }
@@ -196,17 +197,16 @@
             <h2 id="voice-modal-title">Запись сообщения</h2>
             <div id="voice-status">Нажмите "Старт" для начала записи</div>
             <div id="audio-playback-container"><audio id="audio-playback" controls></audio></div>
-            <div id="transcription-container">
-                <textarea id="transcription-text" placeholder="Здесь появится транскрипция..."></textarea>
-            </div>
+            <div id="transcription-container"><textarea id="transcription-text" placeholder="Здесь появится транскрипция..."></textarea></div>
             <div class="voice-modal-controls">
                 <button id="start-record-btn">Старт</button>
                 <button id="stop-record-btn" style="display:none;">Стоп</button>
                 <select id="ai-model-select" style="display:none;">
-                    <option value="deepseek">DeepSeek</option>
                     <option value="gemini">Gemini</option>
+                    <option value="deepseek">DeepSeek</option>
                 </select>
-                <button id="edit-ai-btn" style="display:none;">Улучшить ✨</button>
+                <button id="improve-ai-btn" style="display:none;">Улучшить текст ✍️</button>
+                <button id="generate-ai-btn" style="display:none;">Сгенерировать ответ 🤖</button>
             </div>
             <div class="voice-modal-actions">
                 <button id="delete-record-btn">Отмена</button>
@@ -220,6 +220,7 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
+        // --- CORE JAVASCRIPT ---
         const socket = io();
         const form = document.getElementById('form');
         const input = document.getElementById('input');
@@ -388,6 +389,7 @@
             }
         });
 
+        // --- MODAL AND MOBILE LOGIC ---
         const modal = document.getElementById('createGroupModal');
         document.getElementById('create-group-btn').onclick = () => modal.style.display = "block";
         document.querySelector('.close-btn').onclick = () => modal.style.display = "none";
@@ -409,7 +411,8 @@
         const voiceModal = document.getElementById('voice-modal');
         const startBtn = document.getElementById('start-record-btn');
         const stopBtn = document.getElementById('stop-record-btn');
-        const editAiBtn = document.getElementById('edit-ai-btn');
+        const improveAiBtn = document.getElementById('improve-ai-btn');
+        const generateAiBtn = document.getElementById('generate-ai-btn');
         const aiModelSelect = document.getElementById('ai-model-select');
         const deleteBtn = document.getElementById('delete-record-btn');
         const sendAudioBtn = document.getElementById('send-audio-btn');
@@ -439,8 +442,12 @@
             stopBtn.style.display = (state === 'recording') ? 'block' : 'none';
             playbackContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
             transcriptionContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
-            aiModelSelect.style.display = (state === 'transcribed' && transcriptionText.value) ? 'inline-block' : 'none';
-            editAiBtn.style.display = (state === 'transcribed' && transcriptionText.value) ? 'block' : 'none';
+            
+            const showAiButtons = (state === 'transcribed' && transcriptionText.value);
+            aiModelSelect.style.display = showAiButtons ? 'inline-block' : 'none';
+            improveAiBtn.style.display = showAiButtons ? 'block' : 'none';
+            generateAiBtn.style.display = showAiButtons ? 'block' : 'none';
+            
             sendAudioBtn.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
             sendTextBtn.style.display = (state === 'transcribed' && transcriptionText.value) ? 'block' : 'none';
 
@@ -470,7 +477,10 @@
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
             if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-            if (recognition && recognition.state === 'listening') recognition.stop();
+            if (recognition) {
+                 // Check if recognition is actually running before trying to stop it
+                try { recognition.stop(); } catch(e) { /* ignore */ }
+            }
             voiceModal.style.display = 'none';
         };
 
@@ -516,32 +526,47 @@
 
         stopBtn.onclick = () => {
             if (mediaRecorder) mediaRecorder.stop();
-            if (recognition) recognition.stop();
+            if (recognition) {
+                try { recognition.stop(); } catch(e) { /* ignore */ }
+            }
         };
-
-        editAiBtn.onclick = async () => {
+        
+        async function callAI(taskType) {
             const text = transcriptionText.value;
             const selectedModel = aiModelSelect.value;
             if (!text) return;
+            
             const originalStatus = statusDisplay.textContent;
-            statusDisplay.textContent = "ИИ-редактор работает...";
-            editAiBtn.disabled = true;
+            statusDisplay.textContent = "ИИ работает...";
+            improveAiBtn.disabled = true;
+            generateAiBtn.disabled = true;
             aiModelSelect.disabled = true;
+
             try {
                 const response = await fetch('/edit_with_ai', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ text, model: selectedModel })
+                    body: JSON.stringify({ text, model: selectedModel, task_type: taskType })
                 });
                 const data = await response.json();
-                if (data.edited_text) transcriptionText.value = data.edited_text;
+                if (data.edited_text) {
+                    transcriptionText.value = data.edited_text;
+                } else if (data.error) {
+                    console.error("AI Error:", data.error);
+                    alert("Произошла ошибка при обращении к ИИ.");
+                }
             } catch (err) {
-                console.error("Ошибка ИИ-редактора:", err);
+                console.error("Ошибка ИИ:", err);
             }
+            
             statusDisplay.textContent = originalStatus;
-            editAiBtn.disabled = false;
+            improveAiBtn.disabled = false;
+            generateAiBtn.disabled = false;
             aiModelSelect.disabled = false;
-        };
+        }
+
+        improveAiBtn.onclick = () => callAI('improve');
+        generateAiBtn.onclick = () => callAI('generate');
 
         sendAudioBtn.onclick = () => {
             if(!recordedBlob) return;
