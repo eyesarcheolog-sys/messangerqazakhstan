@@ -291,32 +291,39 @@ def send_audio():
 def edit_with_ai():
     data = request.get_json()
     original_text = data.get('text')
-    model_choice = data.get('model', 'deepseek')
+    model_choice = data.get('model', 'gemini')
 
     if not original_text:
         return jsonify({'error': 'No text provided'}), 400
 
     try:
         edited_text = ""
+        prompt = f"""
+        You are a helpful chat assistant. Your task is to take the user's transcribed text, understand its core meaning and intent, and improve it.
+        - Correct any grammar and spelling mistakes.
+        - Improve the style and clarity to make it sound natural and well-written.
+        - If the text is a question or an incomplete thought, complete it logically based on the context.
+        - Your final response must ONLY be the improved text, with no additional commentary or explanations.
+
+        Original text: "{original_text}"
+        """
+
         if model_choice == 'gemini':
             api_key = os.environ.get("GEMINI_API_KEY")
-            if not api_key:
-                raise ValueError("GEMINI_API_KEY environment variable not set")
+            if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
-            prompt = f"Исправь грамматические и стилистические ошибки в этом тексте, сохранив основной смысл. Ответь только исправленным текстом, без комментариев. Текст: \"{original_text}\""
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             response = model.generate_content(prompt)
             edited_text = response.text
-        else:
+        else: # deepseek
             api_key = os.environ.get("DEEPSEEK_API_KEY")
-            if not api_key:
-                raise ValueError("DEEPSEEK_API_KEY environment variable not set")
+            if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
             client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "Ты — полезный ассистент, который исправляет грамматические и стилистические ошибки в тексте, сохраняя его основной смысл. Ответ должен содержать только исправленный текст."},
-                    {"role": "user", "content": original_text},
+                    {"role": "system", "content": "You are a helpful chat assistant."},
+                    {"role": "user", "content": prompt},
                 ]
             )
             edited_text = response.choices[0].message.content
