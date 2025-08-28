@@ -298,32 +298,24 @@ def edit_with_ai():
 
     try:
         edited_text = ""
-        prompt = f"""
-        You are a helpful chat assistant. Your task is to take the user's transcribed text, understand its core meaning and intent, and improve it.
-        - Correct any grammar and spelling mistakes.
-        - Improve the style and clarity to make it sound natural and well-written.
-        - If the text is a question or an incomplete thought, complete it logically based on the context.
-        - Your final response must ONLY be the improved text, with no additional commentary or explanations.
-
-        Original text: "{original_text}"
-        """
-
         if model_choice == 'gemini':
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            response = model.generate_content(prompt)
+            # The user's text is now the full prompt
+            response = model.generate_content(original_text)
             edited_text = response.text
         else: # deepseek
             api_key = os.environ.get("DEEPSEEK_API_KEY")
             if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
             client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
+            # The user's text is now the user message
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "You are a helpful chat assistant."},
-                    {"role": "user", "content": prompt},
+                    {"role": "system", "content": "You are a helpful AI assistant. Respond in Russian unless the user asks for another language."},
+                    {"role": "user", "content": original_text},
                 ]
             )
             edited_text = response.choices[0].message.content
