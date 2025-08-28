@@ -354,6 +354,30 @@ def edit_with_ai():
         print(f"Error calling {model_choice} API: {e}")
         return jsonify({'error': f'{model_choice} service failed'}), 500
 
+# NEW ROUTE FOR THE AI ASSISTANT
+@app.route('/chat_with_assistant', methods=['POST'])
+@login_required
+def chat_with_assistant():
+    data = request.get_json()
+    user_prompt = data.get('prompt')
+
+    if not user_prompt:
+        return jsonify({'error': 'No prompt provided'}), 400
+
+    try:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key: raise ValueError("GEMINI_API_KEY is not set")
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        
+        response = model.generate_content(user_prompt)
+        
+        return jsonify({'response': response.text})
+
+    except Exception as e:
+        print(f"Error calling Gemini Assistant API: {e}")
+        return jsonify({'error': 'AI Assistant service failed'}), 500
+
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
 @login_required
