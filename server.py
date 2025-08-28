@@ -19,6 +19,13 @@ app = Flask(__name__)
 # Улучшение безопасности: ключ берется из переменных окружения
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
+
+# ИСПРАВЛЕНИЕ: Добавлены настройки для стабильного соединения с БД
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+}
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 socketio = SocketIO(app)
