@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
-from deepseek.client import DeepSeekClient
+from openai import OpenAI # CORRECT IMPORT
 
 # --- APP SETUP ---
 app = Flask(__name__)
@@ -24,6 +24,7 @@ login_manager.login_view = 'login'
 user_sids = {}
 
 # --- DATABASE MODELS ---
+# ... (Models are correct and unchanged) ...
 group_members = db.Table('group_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
@@ -78,6 +79,7 @@ def index():
 
     return render_template('index.html', current_user=current_user, users=users, groups=groups, unread_counts=unread_counts)
 
+# ... (Other routes like /register, /login, etc. are correct and unchanged) ...
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -297,17 +299,15 @@ def edit_with_ai():
         return jsonify({'error': 'No text provided'}), 400
 
     try:
-        # ИСПРАВЛЕНИЕ: Опечатка в имени переменной
-        client = DeepSeekClient(api_key=os.environ.get("DEEPSEEK_API_KEY"))
+        # CORRECT CLIENT INITIALIZATION
+        client = OpenAI(api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com/v1")
         
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[
-                {"role": "system", "content": "Ты — полезный ассистент, который исправляет грамматические и стилистические ошибки в тексте, сохраняя его основной смысл. Ответ должен содержать только исправленный текст."},
+                {"role": "system", "content": "You are a helpful assistant that corrects grammatical and stylistic errors in text, preserving its main meaning. The response should only contain the corrected text."},
                 {"role": "user", "content": original_text},
-            ],
-            max_tokens=1024,
-            temperature=0.5,
+            ]
         )
         edited_text = response.choices[0].message.content
         return jsonify({'edited_text': edited_text})
@@ -357,7 +357,6 @@ def handle_private_message(data):
         emit('receive_private_message', message_payload, to=recipient_sid)
         emit('new_message_notification', {'sender': current_user.username}, to=recipient_sid)
     
-    # ИСПРАВЛЕНИЕ: Используем sender_sid вместо request.sid, чтобы избежать падения
     sender_sid = user_sids.get(current_user.username)
     if sender_sid:
         emit('receive_private_message', message_payload, to=sender_sid)
