@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body data-username="{{ current_user.username }}">
+    
     <div id="sidebar">
         <div id="user-info">
             <h2>{{ current_user.username }}</h2>
@@ -99,7 +100,6 @@
             <div id="voice-status">Нажмите "Старт" для начала записи</div>
             <div id="audio-playback-container"><audio id="audio-playback" controls></audio></div>
             <div id="transcription-container"><textarea id="transcription-text" placeholder="Здесь появится транскрипция..."></textarea></div>
-            
             <div class="voice-modal-controls">
                 <button id="start-record-btn">Старт</button>
                 <button id="stop-record-btn" style="display:none;">Стоп</button>
@@ -110,7 +110,6 @@
                 <button id="improve-ai-btn" style="display:none;">Улучшить текст ✍️</button>
                 <button id="generate-ai-btn" style="display:none;">Сгенерировать ответ 🤖</button>
             </div>
-            
             <div class="voice-modal-actions">
                 <button id="delete-record-btn">Отмена</button>
                 <button id="send-text-btn" style="display:none;">Отправить текст</button>
@@ -138,5 +137,6 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 </html>
