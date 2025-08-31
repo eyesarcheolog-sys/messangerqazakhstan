@@ -33,13 +33,15 @@ app.config['LANGUAGES'] = {
     'ru': 'Русский',
     'kk': 'Қазақша'
 }
-babel = Babel(app)
 
-@babel.localeselector
+# 1. Define the function to get the locale WITHOUT a decorator
 def get_locale():
     if 'language' in session and session['language'] in app.config['LANGUAGES']:
         return session['language']
     return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
+
+# 2. Initialize Babel and PASS the function to it directly
+babel = Babel(app, locale_selector=get_locale)
 
 
 # --- INITIALIZE EXTENSIONS ---
