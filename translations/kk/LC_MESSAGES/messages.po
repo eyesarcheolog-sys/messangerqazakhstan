@@ -1,0 +1,120 @@
+# Kazakh translations for My Messenger
+msgid ""
+msgstr ""
+"Project-Id-Version: My Messenger\n"
+"POT-Creation-Date: 2025-08-31 12:00+0000\n"
+"PO-Revision-Date: 2025-08-31 12:00+0000\n"
+"Last-Translator: Your Name <email@example.com>\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+msgid "Мой Мессенджер"
+msgstr "Менің Мессенджерім"
+
+msgid "Выйти"
+msgstr "Шығу"
+
+msgid "ИИ-Помощник"
+msgstr "AI Көмекші"
+
+msgid "Группы"
+msgstr "Топтар"
+
+msgid "Личные сообщения"
+msgstr "Жеке хабарламалар"
+
+msgid "Создать группу"
+msgstr "Топ құру"
+
+msgid "Выберите чат"
+msgstr "Чатты таңдаңыз"
+
+msgid "Введите сообщение..."
+msgstr "Хабарлама енгізіңіз..."
+
+msgid "Записать голосовое сообщение"
+msgstr "Дауыстық хабарлама жазу"
+
+msgid "Отправить"
+msgstr "Жіберу"
+
+msgid "Создание новой группы"
+msgstr "Жаңа топ құру"
+
+msgid "Название группы"
+msgstr "Топ атауы"
+
+msgid "Выберите участников:"
+msgstr "Қатысушыларды таңдаңыз:"
+
+msgid "Создать"
+msgstr "Құру"
+
+msgid "Запись сообщения"
+msgstr "Хабарлама жазу"
+
+msgid "Нажмите \"Старт\" для начала записи"
+msgstr "Жазуды бастау үшін \"Старт\" басыңыз"
+
+msgid "Здесь появится транскрипция..."
+msgstr "Транскрипция осында пайда болады..."
+
+msgid "Старт"
+msgstr "Старт"
+
+msgid "Стоп"
+msgstr "Стоп"
+
+msgid "Улучшить текст"
+msgstr "Мәтінді жақсарту"
+
+msgid "Сгенерировать ответ"
+msgstr "Жауапты генерациялау"
+
+msgid "Отмена"
+msgstr "Болдырмау"
+
+msgid "Отправить текст"
+msgstr "Мәтінді жіберу"
+
+msgid "Отправить аудио"
+msgstr "Аудионы жіберу"
+
+msgid "Здравствуйте! Чем могу помочь?"
+msgstr "Сәлеметсіз бе! Қалай көмектесе аламын?"
+
+msgid "Спросите что-нибудь..."
+msgstr "Бірдеңе сұраңыз..."
+
+msgid "Отправить последний ответ в чат"
+msgstr "Соңғы жауапты чатқа жіберу"
+
+msgid "Закрыть"
+msgstr "Жабу"
+
+msgid "This username is already taken!"
+msgstr "Бұл пайдаланушы аты бос емес!"
+
+msgid "Invalid username or password!"
+msgstr "Қате пайдаланушы аты немесе құпия сөз!"
+
+msgid "Group name and members are required"
+msgstr "Топ атауы мен қатысушылары қажет"
+
+msgid "A group with this name already exists!"
+msgstr "Бұл атаумен топ бар!"
+
+msgid "Group not found or you are not a member"
+msgstr "Топ табылмады немесе сіз мүше емессіз"
+
+msgid "Access denied"
+msgstr "Рұқсат жоқ"
+
+msgid "Сообщение в группе..."
+msgstr "Топтағы хабарлама..."
+
+msgid "Личное сообщение..."
+msgstr "Жеке хабарлама..."

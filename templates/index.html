@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ session.get('language', 'ru') }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
-    <title>Мой Мессенджер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ _('Мой Мессенджер') }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
 </head>
 <body data-username="{{ current_user.username }}">
@@ -11,18 +11,24 @@
     <div id="sidebar">
         <div id="user-info">
             <h2>{{ current_user.username }}</h2>
-            <a href="{{ url_for('logout') }}">Выйти</a>
+            <a href="{{ url_for('logout') }}">{{ _('Выйти') }}</a>
+        </div>
+        
+        <div class="language-switcher" style="padding: 10px 16px; text-align: center; border-bottom: 1px solid var(--separator-color);">
+            <a href="{{ url_for('set_language', lang='ru') }}" style="color: var(--secondary-text-color); text-decoration: none; margin: 0 5px;">RU</a> |
+            <a href="{{ url_for('set_language', lang='en') }}" style="color: var(--secondary-text-color); text-decoration: none; margin: 0 5px;">EN</a> |
+            <a href="{{ url_for('set_language', lang='kk') }}" style="color: var(--secondary-text-color); text-decoration: none; margin: 0 5px;">KZ</a>
         </div>
         
         <div class="chat-list-container">
-            <div class="list-header">Группы</div>
+            <div class="list-header">{{ _('Группы') }}</div>
             <ul id="group-list" class="chat-list">
                 {% for group in groups %}
                     <li data-id="{{ group.id }}" data-type="group" data-name="{{ group.name }}">
                         <div class="chat-avatar">#</div>
                         <div class="chat-info">
                             <div class="chat-name">{{ group.name }}</div>
-                            <div class="chat-preview">Сообщение в группе...</div>
+                            <div class="chat-preview">{{ _('Сообщение в группе...') }}</div>
                         </div>
                         <div class="chat-meta">
                             <div class="chat-time"></div>
@@ -32,7 +38,7 @@
                 {% endfor %}
             </ul>
 
-            <div class="list-header">Личные сообщения</div>
+            <div class="list-header">{{ _('Личные сообщения') }}</div>
             <ul id="contact-list" class="chat-list">
                 {% for user in users %}
                     {% if user.id != current_user.id %}
@@ -43,7 +49,7 @@
                             </div>
                             <div class="chat-info">
                                 <div class="chat-name">{{ user.username }}</div>
-                                <div class="chat-preview">Личное сообщение...</div>
+                                <div class="chat-preview">{{ _('Личное сообщение...') }}</div>
                             </div>
                             <div class="chat-meta">
                                 <div class="chat-time"></div>
@@ -55,30 +61,30 @@
             </ul>
         </div>
         
-        <div id="create-group-btn">Создать группу</div>
+        <div id="create-group-btn">{{ _('Создать группу') }}</div>
     </div>
 
     <div id="chat-container">
         <div id="chat-header">
             <button id="chat-header-back-btn">&larr;</button>
-            <h2 style="margin: 0;"><a id="chat-header-link" href="#">Выберите чат</a></h2>
+            <h2 style="margin: 0;"><a id="chat-header-link" href="#">{{ _('Выберите чат') }}</a></h2>
         </div>
         <ul id="messages"></ul>
         <form id="form" action="">
-            <input id="input" autocomplete="off" placeholder="Введите сообщение..." />
-            <button id="assistant-btn" type="button" title="ИИ-Ассистент">✨</button>
-            <button id="record-btn" type="button">🎤</button>
-            <button id="send-btn" type="submit">Отправить</button>
+            <input id="input" autocomplete="off" placeholder="{{ _('Введите сообщение...') }}" />
+            <button id="assistant-btn" type="button" title="{{ _('ИИ-Ассистент') }}">✨</button>
+            <button id="record-btn" type="button" title="{{ _('Записать голосовое сообщение') }}">🎤</button>
+            <button id="send-btn" type="submit">{{ _('Отправить') }}</button>
         </form>
     </div>
 
     <div id="createGroupModal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h2>Создание новой группы</h2>
+            <h2>{{ _('Создание новой группы') }}</h2>
             <form action="/create_group" method="POST">
-                <input type="text" name="group_name" placeholder="Название группы" required>
-                <h4>Выберите участников:</h4>
+                <input type="text" name="group_name" placeholder="{{ _('Название группы') }}" required>
+                <h4>{{ _('Выберите участников:') }}</h4>
                 <div class="members-list">
                     {% for user in users %}
                         {% if user.id != current_user.id %}
@@ -89,47 +95,47 @@
                         {% endif %}
                     {% endfor %}
                 </div>
-                <button type="submit" style="margin-top: 20px; width: 100%; padding: 10px; background-color: var(--notification-badge-color); color: white; border: none; border-radius: 5px;">Создать</button>
+                <button type="submit" style="margin-top: 20px; width: 100%; padding: 10px; background-color: var(--notification-badge-color); color: white; border: none; border-radius: 5px;">{{ _('Создать') }}</button>
             </form>
         </div>
     </div>
 
     <div id="voice-modal" class="voice-modal-overlay">
         <div class="voice-modal-content">
-            <h2 id="voice-modal-title">Запись сообщения</h2>
-            <div id="voice-status">Нажмите "Старт" для начала записи</div>
+            <h2 id="voice-modal-title">{{ _('Запись сообщения') }}</h2>
+            <div id="voice-status">{{ _('Нажмите "Старт" для начала записи') }}</div>
             <div id="audio-playback-container"><audio id="audio-playback" controls></audio></div>
-            <div id="transcription-container"><textarea id="transcription-text" placeholder="Здесь появится транскрипция..."></textarea></div>
+            <div id="transcription-container"><textarea id="transcription-text" placeholder="{{ _('Здесь появится транскрипция...') }}"></textarea></div>
             <div class="voice-modal-controls">
-                <button id="start-record-btn">Старт</button>
-                <button id="stop-record-btn" style="display:none;">Стоп</button>
+                <button id="start-record-btn">{{ _('Старт') }}</button>
+                <button id="stop-record-btn" style="display:none;">{{ _('Стоп') }}</button>
                 <select id="ai-model-select" style="display:none;">
                     <option value="gemini">Gemini</option>
                     <option value="deepseek">DeepSeek</option>
                 </select>
-                <button id="improve-ai-btn" style="display:none;">Улучшить текст ✍️</button>
-                <button id="generate-ai-btn" style="display:none;">Сгенерировать ответ 🤖</button>
+                <button id="improve-ai-btn" style="display:none;">{{ _('Улучшить текст') }} ✍️</button>
+                <button id="generate-ai-btn" style="display:none;">{{ _('Сгенерировать ответ') }} 🤖</button>
             </div>
             <div class="voice-modal-actions">
-                <button id="delete-record-btn">Отмена</button>
-                <button id="send-text-btn" style="display:none;">Отправить текст</button>
-                <button id="send-audio-btn" style="display:none;">Отправить аудио</button>
+                <button id="delete-record-btn">{{ _('Отмена') }}</button>
+                <button id="send-text-btn" style="display:none;">{{ _('Отправить текст') }}</button>
+                <button id="send-audio-btn" style="display:none;">{{ _('Отправить аудио') }}</button>
             </div>
         </div>
     </div>
 
     <div id="assistant-modal" class="voice-modal-overlay">
         <div class="voice-modal-content">
-            <h2>ИИ-Ассистент</h2>
+            <h2>{{ _('ИИ-Ассистент') }}</h2>
             <div id="assistant-messages">
-                <div class="assistant-bubble assistant">Здравствуйте! Чем могу помочь?</div>
+                <div class="assistant-bubble assistant">{{ _('Здравствуйте! Чем могу помочь?') }}</div>
             </div>
             <form id="assistant-form">
-                <input id="assistant-input" autocomplete="off" placeholder="Спросите что-нибудь..." />
+                <input id="assistant-input" autocomplete="off" placeholder="{{ _('Спросите что-нибудь...') }}" />
                 <button id="assistant-send-btn" type="submit">➢</button>
             </form>
-            <button id="send-to-chat-btn" class="voice-modal-actions">Отправить последний ответ в чат</button>
-            <button id="close-assistant-btn" class="voice-modal-actions">Закрыть</button>
+            <button id="send-to-chat-btn" class="voice-modal-actions">{{ _('Отправить последний ответ в чат') }}</button>
+            <button id="close-assistant-btn" class="voice-modal-actions">{{ _('Закрыть') }}</button>
         </div>
     </div>
     

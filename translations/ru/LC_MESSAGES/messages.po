@@ -1,0 +1,120 @@
+# Russian translations for My Messenger
+msgid ""
+msgstr ""
+"Project-Id-Version: My Messenger\n"
+"POT-Creation-Date: 2025-08-31 12:00+0000\n"
+"PO-Revision-Date: 2025-08-31 12:00+0000\n"
+"Last-Translator: Your Name <email@example.com>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+msgid "Мой Мессенджер"
+msgstr "Мой Мессенджер"
+
+msgid "Выйти"
+msgstr "Выйти"
+
+msgid "ИИ-Помощник"
+msgstr "ИИ-Помощник"
+
+msgid "Группы"
+msgstr "Группы"
+
+msgid "Личные сообщения"
+msgstr "Личные сообщения"
+
+msgid "Создать группу"
+msgstr "Создать группу"
+
+msgid "Выберите чат"
+msgstr "Выберите чат"
+
+msgid "Введите сообщение..."
+msgstr "Введите сообщение..."
+
+msgid "Записать голосовое сообщение"
+msgstr "Записать голосовое сообщение"
+
+msgid "Отправить"
+msgstr "Отправить"
+
+msgid "Создание новой группы"
+msgstr "Создание новой группы"
+
+msgid "Название группы"
+msgstr "Название группы"
+
+msgid "Выберите участников:"
+msgstr "Выберите участников:"
+
+msgid "Создать"
+msgstr "Создать"
+
+msgid "Запись сообщения"
+msgstr "Запись сообщения"
+
+msgid "Нажмите \"Старт\" для начала записи"
+msgstr "Нажмите \"Старт\" для начала записи"
+
+msgid "Здесь появится транскрипция..."
+msgstr "Здесь появится транскрипция..."
+
+msgid "Старт"
+msgstr "Старт"
+
+msgid "Стоп"
+msgstr "Стоп"
+
+msgid "Улучшить текст"
+msgstr "Улучшить текст"
+
+msgid "Сгенерировать ответ"
+msgstr "Сгенерировать ответ"
+
+msgid "Отмена"
+msgstr "Отмена"
+
+msgid "Отправить текст"
+msgstr "Отправить текст"
+
+msgid "Отправить аудио"
+msgstr "Отправить аудио"
+
+msgid "Здравствуйте! Чем могу помочь?"
+msgstr "Здравствуйте! Чем могу помочь?"
+
+msgid "Спросите что-нибудь..."
+msgstr "Спросите что-нибудь..."
+
+msgid "Отправить последний ответ в чат"
+msgstr "Отправить последний ответ в чат"
+
+msgid "Закрыть"
+msgstr "Закрыть"
+
+msgid "This username is already taken!"
+msgstr "Это имя пользователя уже занято!"
+
+msgid "Invalid username or password!"
+msgstr "Неверное имя пользователя или пароль!"
+
+msgid "Group name and members are required"
+msgstr "Требуется название группы и участники"
+
+msgid "A group with this name already exists!"
+msgstr "Группа с таким названием уже существует!"
+
+msgid "Group not found or you are not a member"
+msgstr "Группа не найдена или вы не являетесь участником"
+
+msgid "Access denied"
+msgstr "Доступ запрещен"
+
+msgid "Сообщение в группе..."
+msgstr "Сообщение в группе..."
+
+msgid "Личное сообщение..."
+msgstr "Личное сообщение..."

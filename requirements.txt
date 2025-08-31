@@ -9,3 +9,6 @@ openai
 google-generativeai
 python-dotenv
 gevent
+requests
+beautifulsoup4
+Flask-Babel
