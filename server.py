@@ -3,7 +3,7 @@ monkey.patch_all()
 
 import os
 import uuid
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, session 
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -15,9 +15,9 @@ from openai import OpenAI
 import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
-from flask_babel import Babel, gettext as _
+from flask_babel import Babel, gettext as _ 
 
-# --- НАСТРОЙКА ПРИЛОЖЕНИЯ ---
+# --- APP SETUP ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
@@ -26,7 +26,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_recycle": 300,
 }
 
-# --- НАСТРОЙКА BABEL ДЛЯ ПЕРЕВОДОВ ---
+# --- BABEL SETUP ---
 app.config['LANGUAGES'] = {
     'en': 'English',
     'ru': 'Русский',
@@ -34,13 +34,14 @@ app.config['LANGUAGES'] = {
 }
 babel = Babel(app)
 
-@babel.localeselector
+# CORRECTED SYNTAX FOR BABEL'S LOCALE SELECTOR
+@babel.init_app(app)
 def get_locale():
     if 'language' in session and session['language'] in app.config['LANGUAGES']:
         return session['language']
     return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
 
-# --- ИНИЦИАЛИЗАЦИЯ РАСШИРЕНИЙ ---
+# --- INITIALIZE EXTENSIONS ---
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -50,7 +51,7 @@ login_manager.login_view = 'login'
 
 user_sids = {}
 
-# --- МОДЕЛИ БАЗЫ ДАННЫХ ---
+# --- DATABASE MODELS ---
 group_members = db.Table('group_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
@@ -85,7 +86,7 @@ class Message(db.Model):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# --- МАРШРУТЫ ---
+# --- ROUTES ---
 
 @app.route('/set_language/<lang>')
 def set_language(lang):
@@ -362,6 +363,53 @@ def chat_with_assistant():
     except Exception as e:
         print(f"Error calling Gemini Assistant API: {e}")
         return jsonify({'error': _('AI Assistant service failed')}), 500
+        
+@app.route('/assistant')
+@login_required
+def assistant():
+    return render_template('assistant.html')
+
+@app.route('/assistant/summarize-url', methods=['POST'])
+@login_required
+def summarize_url():
+    data = request.get_json()
+    url = data.get('url')
+
+    if not url:
+        return jsonify({'error': _('URL not provided')}), 400
+
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
+        page_response = requests.get(url, headers=headers, timeout=10)
+        page_response.raise_for_status()
+
+        soup = BeautifulSoup(page_response.content, 'html.parser')
+        for script_or_style in soup(['script', 'style']):
+            script_or_style.decompose()
+        
+        text = ' '.join(t.strip() for t in soup.stripped_strings)
+        
+        if not text:
+             return jsonify({'error': _('Could not extract text from the page')}), 400
+
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key: raise ValueError("GEMINI_API_KEY is not set")
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        
+        prompt = _("Summarize the content of this webpage concisely but informatively. Highlight the key points. Respond in the current user's language. Page text: '{text}'").format(text=text[:8000])
+        
+        response = model.generate_content(prompt)
+        
+        return jsonify({'summary': response.text})
+
+    except requests.RequestException as e:
+        print(f"Error requesting URL: {e}")
+        return jsonify({'error': _('Failed to access the link: {error}').format(error=e)}), 500
+    except Exception as e:
+        print(f"Error summarizing link: {e}")
+        return jsonify({'error': _('An internal server error occurred')}), 500
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
