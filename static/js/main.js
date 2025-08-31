@@ -1,15 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CORE JAVASCRIPT ---
     const socket = io();
+    const initialData = document.getElementById('initial-data');
+
+    // Safely parse translations from the data attribute
+    const translations = JSON.parse(initialData.dataset.translations);
+    
+    // The rest of the variable declarations
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     const messages = document.getElementById('messages');
     const allLists = document.querySelectorAll('.chat-list');
-    
     const username = document.body.dataset.username;
-
     let currentChat = { type: null, id: null, name: null };
-    const initialData = document.getElementById('initial-data');
     let unreadCounts = JSON.parse(initialData.dataset.unreadCounts);
 
     function initializeUnreadCounts() {
@@ -172,8 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MODAL AND MOBILE LOGIC ---
     const modal = document.getElementById('createGroupModal');
-    document.getElementById('create-group-btn').onclick = () => modal.style.display = "block";
-    // This needs to handle multiple close buttons
+    if (document.getElementById('create-group-btn')) {
+        document.getElementById('create-group-btn').onclick = () => modal.style.display = "block";
+    }
     document.querySelectorAll('.close-btn').forEach(btn => {
         btn.onclick = () => {
             const parentModal = btn.closest('.modal, .voice-modal-overlay');
@@ -226,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUI(state) {
-        if (!startBtn) return; // Exit if elements don't exist
+        if (!startBtn) return;
         startBtn.style.display = (state === 'idle') ? 'block' : 'none';
         stopBtn.style.display = (state === 'recording') ? 'block' : 'none';
         
