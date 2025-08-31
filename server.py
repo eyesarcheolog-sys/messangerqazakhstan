@@ -34,8 +34,8 @@ app.config['LANGUAGES'] = {
 }
 babel = Babel(app)
 
-# CORRECTED SYNTAX FOR BABEL'S LOCALE SELECTOR
-@babel.init_app(app)
+# Corrected decorator for selecting the language
+@babel.localeselector
 def get_locale():
     if 'language' in session and session['language'] in app.config['LANGUAGES']:
         return session['language']
@@ -85,9 +85,8 @@ class Message(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
-
+    
 # --- ROUTES ---
-
 @app.route('/set_language/<lang>')
 def set_language(lang):
     if lang in app.config['LANGUAGES']:
@@ -410,6 +409,7 @@ def summarize_url():
     except Exception as e:
         print(f"Error summarizing link: {e}")
         return jsonify({'error': _('An internal server error occurred')}), 500
+
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
