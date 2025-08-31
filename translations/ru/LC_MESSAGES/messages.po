@@ -1,120 +1,592 @@
-# Russian translations for My Messenger
+# Russian translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: My Messenger\n"
-"POT-Creation-Date: 2025-08-31 12:00+0000\n"
-"PO-Revision-Date: 2025-08-31 12:00+0000\n"
-"Last-Translator: Your Name <email@example.com>\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-09-01 00:27+0800\n"
+"PO-Revision-Date: 2025-09-01 00:30+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
+"Language-Team: ru <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-msgid "Мой Мессенджер"
-msgstr "Мой Мессенджер"
+#: server.py:64
+msgid "Please log in to access this page."
+msgstr "Пожалуйста, войдите, чтобы получить доступ к этой странице."
 
-msgid "Выйти"
-msgstr "Выйти"
-
-msgid "ИИ-Помощник"
-msgstr "ИИ-Помощник"
-
-msgid "Группы"
-msgstr "Группы"
-
-msgid "Личные сообщения"
-msgstr "Личные сообщения"
-
-msgid "Создать группу"
-msgstr "Создать группу"
-
-msgid "Выберите чат"
-msgstr "Выберите чат"
-
-msgid "Введите сообщение..."
-msgstr "Введите сообщение..."
-
-msgid "Записать голосовое сообщение"
-msgstr "Записать голосовое сообщение"
-
-msgid "Отправить"
-msgstr "Отправить"
-
-msgid "Создание новой группы"
-msgstr "Создание новой группы"
-
-msgid "Название группы"
-msgstr "Название группы"
-
-msgid "Выберите участников:"
-msgstr "Выберите участников:"
-
-msgid "Создать"
-msgstr "Создать"
-
-msgid "Запись сообщения"
-msgstr "Запись сообщения"
-
-msgid "Нажмите \"Старт\" для начала записи"
-msgstr "Нажмите \"Старт\" для начала записи"
-
-msgid "Здесь появится транскрипция..."
-msgstr "Здесь появится транскрипция..."
-
-msgid "Старт"
-msgstr "Старт"
-
-msgid "Стоп"
-msgstr "Стоп"
-
-msgid "Улучшить текст"
-msgstr "Улучшить текст"
-
-msgid "Сгенерировать ответ"
-msgstr "Сгенерировать ответ"
-
-msgid "Отмена"
-msgstr "Отмена"
-
-msgid "Отправить текст"
-msgstr "Отправить текст"
-
-msgid "Отправить аудио"
-msgstr "Отправить аудио"
-
-msgid "Здравствуйте! Чем могу помочь?"
-msgstr "Здравствуйте! Чем могу помочь?"
-
-msgid "Спросите что-нибудь..."
-msgstr "Спросите что-нибудь..."
-
-msgid "Отправить последний ответ в чат"
-msgstr "Отправить последний ответ в чат"
-
-msgid "Закрыть"
-msgstr "Закрыть"
-
+#: server.py:146
 msgid "This username is already taken!"
 msgstr "Это имя пользователя уже занято!"
 
+#: server.py:164
 msgid "Invalid username or password!"
 msgstr "Неверное имя пользователя или пароль!"
 
+#: server.py:179
 msgid "Group name and members are required"
 msgstr "Требуется название группы и участники"
 
+#: server.py:181
 msgid "A group with this name already exists!"
 msgstr "Группа с таким названием уже существует!"
 
+#: server.py:199 server.py:263
 msgid "Group not found or you are not a member"
 msgstr "Группа не найдена или вы не являетесь участником"
 
+#: server.py:208 server.py:220 server.py:232
 msgid "Access denied"
 msgstr "Доступ запрещен"
 
+#: server.py:290
+msgid "No audio file"
+msgstr "Нет аудиофайла"
+
+#: server.py:292
+msgid "No recipient specified"
+msgstr "Не указан получатель"
+
+#: server.py:323
+msgid "Group not found or access denied"
+msgstr "Группа не найдена или доступ запрещен"
+
+#: server.py:335
+msgid "Recipient not found"
+msgstr "Получатель не найден"
+
+#: server.py:351
+msgid "Database error"
+msgstr "Ошибка базы данных"
+
+#: server.py:364
+msgid "No text provided"
+msgstr "Текст не предоставлен"
+
+#: server.py:394
+#, python-brace-format
+msgid "{model_choice} service failed"
+msgstr "Сервис {model_choice} неисправен"
+
+#: server.py:404
+msgid "No prompt provided"
+msgstr "Запрос не предоставлен"
+
+#: server.py:418
+msgid "AI Assistant service failed"
+msgstr "Сервис ИИ-Ассистента неисправен"
+
+#: server.py:426
+msgid "Please select a chat."
+msgstr "Пожалуйста, выберите чат."
+
+#: server.py:427
+#, python-brace-format
+msgid "Recording: {seconds} sec."
+msgstr "Запись: {seconds} сек."
+
+#: server.py:428
+msgid "Recording finished"
+msgstr "Запись завершена"
+
+#: server.py:429
+msgid "Transcription ready"
+msgstr "Транскрипция готова"
+
+#: server.py:430
+msgid "Press 'Start' to begin recording"
+msgstr "Нажмите 'Старт' для начала записи"
+
+#: server.py:431
+msgid "AI is working..."
+msgstr "ИИ работает..."
+
+#: server.py:432
+msgid "AI Error:"
+msgstr "Ошибка ИИ:"
+
+#: server.py:433
+msgid "An error occurred while contacting the AI."
+msgstr "Произошла ошибка при обращении к ИИ."
+
+#: server.py:434
+msgid "Thinking..."
+msgstr "Думаю..."
+
+#: server.py:435
+msgid "Could not get a response from the AI."
+msgstr "Не удалось получить ответ от ИИ."
+
+#: server.py:436
+msgid "A network error has occurred. Please try again."
+msgstr "Произошла ошибка сети. Попробуйте снова."
+
+#: server.py:437
+msgid "Show text"
+msgstr "Показать текст"
+
+#: server.py:438
+msgid "Hide text"
+msgstr "Скрыть текст"
+
+#: server.py:439
+#, python-brace-format
+msgid "Chat with {name}"
+msgstr "Чат с {name}"
+
+#: templates/index.html:6
+msgid "Мой Мессенджер"
+msgstr "Мой Мессенджер"
+
+#: templates/index.html:20
+msgid "Выйти"
+msgstr "Выйти"
+
+#: templates/index.html:24
+msgid "Группы"
+msgstr "Группы"
+
+#: templates/index.html:31
 msgid "Сообщение в группе..."
 msgstr "Сообщение в группе..."
 
+#: templates/index.html:41
+msgid "Личные сообщения"
+msgstr "Личные сообщения"
+
+#: templates/index.html:52
 msgid "Личное сообщение..."
 msgstr "Личное сообщение..."
+
+#: templates/index.html:64
+msgid "Создать группу"
+msgstr "Создать группу"
+
+#: templates/index.html:70
+msgid "Выберите чат"
+msgstr "Выберите чат"
+
+#: templates/index.html:74
+msgid "Введите сообщение..."
+msgstr "Введите сообщение..."
+
+#: templates/index.html:75 templates/index.html:129
+msgid "ИИ-Ассистент"
+msgstr "ИИ-Ассистент"
+
+#: templates/index.html:77
+msgid "Отправить"
+msgstr "Отправить"
+
+#: templates/index.html:84
+msgid "Создание новой группы"
+msgstr "Создание новой группы"
+
+#: templates/index.html:86
+msgid "Название группы"
+msgstr "Название группы"
+
+#: templates/index.html:87
+msgid "Выберите участников:"
+msgstr "Выберите участников:"
+
+#: templates/index.html:98
+msgid "Создать"
+msgstr "Создать"
+
+#: templates/index.html:105
+msgid "Запись сообщения"
+msgstr "Запись сообщения"
+
+#: templates/index.html:106
+msgid "Нажмите \"Старт\" для начала записи"
+msgstr "Нажмите \"Старт\" для начала записи"
+
+#: templates/index.html:108
+msgid "Здесь появится транскрипция..."
+msgstr "Здесь появится транскрипция..."
+
+#: templates/index.html:110
+msgid "Старт"
+msgstr "Старт"
+
+#: templates/index.html:111
+msgid "Стоп"
+msgstr "Стоп"
+
+#: templates/index.html:116
+msgid "Улучшить текст"
+msgstr "Улучшить текст"
+
+#: templates/index.html:117
+msgid "Сгенерировать ответ"
+msgstr "Сгенерировать ответ"
+
+#: templates/index.html:120
+msgid "Отмена"
+msgstr "Отмена"
+
+#: templates/index.html:121
+msgid "Отправить текст"
+msgstr "Отправить текст"
+
+#: templates/index.html:122
+msgid "Отправить аудио"
+msgstr "Отправить аудио"
+
+#: templates/index.html:131
+msgid "Здравствуйте! Чем могу помочь?"
+msgstr "Здравствуйте! Чем могу помочь?"
+
+#: templates/index.html:134
+msgid "Спросите что-нибудь..."
+msgstr "Спросите что-нибудь..."
+
+#: templates/index.html:137
+msgid "Отправить последний ответ в чат"
+msgstr "Отправить последний ответ в чат"
+
+#: templates/index.html:138
+msgid "Закрыть"
+msgstr "Закрыть"
+
+#: venv/lib/python3.9/site-packages/click/_termui_impl.py:556
+#, python-brace-format
+msgid "{editor}: Editing failed"
+msgstr "{editor}: Ошибка редактирования"
+
+#: venv/lib/python3.9/site-packages/click/_termui_impl.py:560
+#, python-brace-format
+msgid "{editor}: Editing failed: {e}"
+msgstr "{editor}: Ошибка редактирования: {e}"
+
+#: venv/lib/python3.9/site-packages/click/core.py:1124
+msgid "Aborted!"
+msgstr "Прервано!"
+
+#: venv/lib/python3.9/site-packages/click/core.py:1349
+#: venv/lib/python3.9/site-packages/click/core.py:1379
+#, python-brace-format
+msgid "(Deprecated) {text}"
+msgstr "(Устарело) {text}"
+
+#: venv/lib/python3.9/site-packages/click/core.py:1396
+msgid "Options"
+msgstr "Опции"
+
+#: venv/lib/python3.9/site-packages/click/core.py:1422
+#, python-brace-format
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] "Получен непредвиденный дополнительный аргумент ({args})"
+msgstr[1] "Получены непредвиденные дополнительные аргументы ({args})"
+msgstr[2] "Получено непредвиденных дополнительных аргументов ({args})"
+
+#: venv/lib/python3.9/site-packages/click/core.py:1438
+#, python-brace-format
+msgid "DeprecationWarning: The command {name!r} is deprecated."
+msgstr "DeprecationWarning: Команда {name!r} устарела."
+
+#: venv/lib/python3.9/site-packages/click/core.py:1645
+msgid "Commands"
+msgstr "Команды"
+
+#: venv/lib/python3.9/site-packages/click/core.py:1677
+msgid "Missing command."
+msgstr "Отсутствует команда."
+
+#: venv/lib/python3.9/site-packages/click/core.py:1755
+#, python-brace-format
+msgid "No such command {name!r}."
+msgstr "Нет такой команды {name!r}."
+
+#: venv/lib/python3.9/site-packages/click/core.py:2313
+msgid "Value must be an iterable."
+msgstr "Значение должно быть итерируемым."
+
+#: venv/lib/python3.9/site-packages/click/core.py:2334
+#, python-brace-format
+msgid "Takes {nargs} values but 1 was given."
+msgid_plural "Takes {nargs} values but {len} were given."
+msgstr[0] "Принимает {nargs} значение, но было дано 1."
+msgstr[1] "Принимает {nargs} значения, но было дано {len}."
+msgstr[2] "Принимает {nargs} значений, но было дано {len}."
+
+#: venv/lib/python3.9/site-packages/click/core.py:2783
+#, python-brace-format
+msgid "env var: {var}"
+msgstr "переменная окружения: {var}"
+
+#: venv/lib/python3.9/site-packages/click/core.py:2813
+msgid "(dynamic)"
+msgstr "(динамический)"
+
+#: venv/lib/python3.9/site-packages/click/core.py:2828
+#, python-brace-format
+msgid "default: {default}"
+msgstr "по умолчанию: {default}"
+
+#: venv/lib/python3.9/site-packages/click/core.py:2841
+msgid "required"
+msgstr "обязательно"
+
+#: venv/lib/python3.9/site-packages/click/decorators.py:457
+#, python-format
+msgid "%(prog)s, version %(version)s"
+msgstr "%(prog)s, версия %(version)s"
+
+#: venv/lib/python3.9/site-packages/click/decorators.py:520
+msgid "Show the version and exit."
+msgstr "Показать версию и выйти."
+
+#: venv/lib/python3.9/site-packages/click/decorators.py:541
+msgid "Show this message and exit."
+msgstr "Показать это сообщение и выйти."
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:49
+#: venv/lib/python3.9/site-packages/click/exceptions.py:88
+#, python-brace-format
+msgid "Error: {message}"
+msgstr "Ошибка: {message}"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:80
+#, python-brace-format
+msgid "Try '{command} {option}' for help."
+msgstr "Попробуйте '{command} {option}' для получения справки."
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:129
+#, python-brace-format
+msgid "Invalid value: {message}"
+msgstr "Недопустимое значение: {message}"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:131
+#, python-brace-format
+msgid "Invalid value for {param_hint}: {message}"
+msgstr "Недопустимое значение для {param_hint}: {message}"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:187
+msgid "Missing argument"
+msgstr "Отсутствует аргумент"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:189
+msgid "Missing option"
+msgstr "Отсутствует опция"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:191
+msgid "Missing parameter"
+msgstr "Отсутствует параметр"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:193
+#, python-brace-format
+msgid "Missing {param_type}"
+msgstr "Отсутствует {param_type}"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:200
+#, python-brace-format
+msgid "Missing parameter: {param_name}"
+msgstr "Отсутствует параметр: {param_name}"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:220
+#, python-brace-format
+msgid "No such option: {name}"
+msgstr "Нет такой опции: {name}"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:232
+#, python-brace-format
+msgid "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0] "Вы имели в виду {possibility}?"
+msgstr[1] "(Возможные варианты: {possibilities})"
+msgstr[2] "(Возможные варианты: {possibilities})"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:270
+msgid "unknown error"
+msgstr "неизвестная ошибка"
+
+#: venv/lib/python3.9/site-packages/click/exceptions.py:277
+#, python-brace-format
+msgid "Could not open file {filename!r}: {message}"
+msgstr "Не удалось открыть файл {filename!r}: {message}"
+
+#: venv/lib/python3.9/site-packages/click/parser.py:233
+#, python-brace-format
+msgid "Argument {name!r} takes {nargs} values."
+msgstr "Аргумент {name!r} принимает {nargs} значений."
+
+#: venv/lib/python3.9/site-packages/click/parser.py:415
+#, python-brace-format
+msgid "Option {name!r} does not take a value."
+msgstr "Опция {name!r} не принимает значение."
+
+#: venv/lib/python3.9/site-packages/click/parser.py:476
+#, python-brace-format
+msgid "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0] "Опция {name!r} требует аргумент."
+msgstr[1] "Опция {name!r} требует {nargs} аргумента."
+msgstr[2] "Опция {name!r} требует {nargs} аргументов."
+
+#: venv/lib/python3.9/site-packages/click/shell_completion.py:326
+msgid "Shell completion is not supported for Bash versions older than 4.4."
+msgstr "Автодополнение командной строки не поддерживается для версий Bash старше 4.4."
+
+#: venv/lib/python3.9/site-packages/click/shell_completion.py:333
+msgid "Couldn't detect Bash version, shell completion is not supported."
+msgstr "Не удалось определить версию Bash, автодополнение командной строки не поддерживается."
+
+#: venv/lib/python3.9/site-packages/click/termui.py:158
+msgid "Repeat for confirmation"
+msgstr "Повторите для подтверждения"
+
+#: venv/lib/python3.9/site-packages/click/termui.py:174
+msgid "Error: The value you entered was invalid."
+msgstr "Ошибка: Введенное значение недействительно."
+
+#: venv/lib/python3.9/site-packages/click/termui.py:176
+#, python-brace-format
+msgid "Error: {e.message}"
+msgstr "Ошибка: {e.message}"
+
+#: venv/lib/python3.9/site-packages/click/termui.py:187
+msgid "Error: The two entered values do not match."
+msgstr "Ошибка: Два введенных значения не совпадают."
+
+#: venv/lib/python3.9/site-packages/click/termui.py:243
+msgid "Error: invalid input"
+msgstr "Ошибка: неверный ввод"
+
+#: venv/lib/python3.9/site-packages/click/termui.py:773
+msgid "Press any key to continue..."
+msgstr "Нажмите любую клавишу для продолжения..."
+
+#: venv/lib/python3.9/site-packages/click/types.py:267
+#, python-brace-format
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+"Выберите из:\n"
+"\t{choices}"
+
+#: venv/lib/python3.9/site-packages/click/types.py:299
+#, python-brace-format
+msgid "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0] "{value!r} не является {choice}."
+msgstr[1] "{value!r} не является одним из {choices}."
+msgstr[2] "{value!r} не является одним из {choices}."
+
+#: venv/lib/python3.9/site-packages/click/types.py:393
+#, python-brace-format
+msgid "{value!r} does not match the format {format}."
+msgid_plural "{value!r} does not match the formats {formats}."
+msgstr[0] "{value!r} не соответствует формату {format}."
+msgstr[1] "{value!r} не соответствует форматам {formats}."
+msgstr[2] "{value!r} не соответствует форматам {formats}."
+
+#: venv/lib/python3.9/site-packages/click/types.py:415
+#, python-brace-format
+msgid "{value!r} is not a valid {number_type}."
+msgstr "{value!r} не является допустимым {number_type}."
+
+#: venv/lib/python3.9/site-packages/click/types.py:471
+#, python-brace-format
+msgid "{value} is not in the range {range}."
+msgstr "{value} не входит в диапазон {range}."
+
+#: venv/lib/python3.9/site-packages/click/types.py:612
+#, python-brace-format
+msgid "{value!r} is not a valid boolean."
+msgstr "{value!r} не является допустимым булевым значением."
+
+#: venv/lib/python3.9/site-packages/click/types.py:636
+#, python-brace-format
+msgid "{value!r} is not a valid UUID."
+msgstr "{value!r} не является допустимым UUID."
+
+#: venv/lib/python3.9/site-packages/click/types.py:826
+msgid "file"
+msgstr "файл"
+
+#: venv/lib/python3.9/site-packages/click/types.py:828
+msgid "directory"
+msgstr "каталог"
+
+#: venv/lib/python3.9/site-packages/click/types.py:830
+msgid "path"
+msgstr "путь"
+
+#: venv/lib/python3.9/site-packages/click/types.py:881
+#, python-brace-format
+msgid "{name} {filename!r} does not exist."
+msgstr "{name} {filename!r} не существует."
+
+#: venv/lib/python3.9/site-packages/click/types.py:890
+#, python-brace-format
+msgid "{name} {filename!r} is a file."
+msgstr "{name} {filename!r} является файлом."
+
+#: venv/lib/python3.9/site-packages/click/types.py:898
+#, python-brace-format
+msgid "{name} {filename!r} is a directory."
+msgstr "{name} {filename!r} является каталогом."
+
+#: venv/lib/python3.9/site-packages/click/types.py:907
+#, python-brace-format
+msgid "{name} {filename!r} is not readable."
+msgstr "{name} {filename!r} не доступен для чтения."
+
+#: venv/lib/python3.9/site-packages/click/types.py:916
+#, python-brace-format
+msgid "{name} {filename!r} is not writable."
+msgstr "{name} {filename!r} не доступен для записи."
+
+#: venv/lib/python3.9/site-packages/click/types.py:925
+#, python-brace-format
+msgid "{name} {filename!r} is not executable."
+msgstr "{name} {filename!r} не является исполняемым."
+
+#: venv/lib/python3.9/site-packages/click/types.py:992
+#, python-brace-format
+msgid "{len_type} values are required, but {len_value} was given."
+msgid_plural "{len_type} values are required, but {len_value} were given."
+msgstr[0] "Требуется {len_type} значение, но было дано {len_value}."
+msgstr[1] "Требуется {len_type} значения, но было дано {len_value}."
+msgstr[2] "Требуется {len_type} значений, но было дано {len_value}."
+
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:408
+#, python-format
+msgid "Content purported to be compressed with %s but failed to decompress."
+msgstr "Заявлено сжатие с помощью %s, но распаковка не удалась."
+
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:572
+#, python-format
+msgid "Unsupported value for qop: %s."
+msgstr "Неподдерживаемое значение для qop: %s."
+
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:576
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:654
+#, python-format
+msgid "Unsupported value for algorithm: %s.algorithm"
+msgstr "Неподдерживаемое значение для алгоритма: %s.algorithm"
+
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:649
+msgid "The challenge doesn't contain a server nonce, or this one is empty."
+msgstr "Запрос не содержит серверного nonce, или он пуст."
+
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:659
+#, python-format
+msgid "Unsupported value for pw-algorithm: %s.pw-algorithm"
+msgstr "Неподдерживаемое значение для pw-algorithm: %s.pw-algorithm"
+
+#: venv/lib/python3.9/site-packages/httplib2/__init__.py:1468
+msgid "Redirected but the response is missing a Location: header."
+msgstr "Выполнено перенаправление, но в ответе отсутствует заголовок Location."

@@ -1,18 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CORE JAVASCRIPT ---
     const socket = io();
-    const initialData = document.getElementById('initial-data');
-
-    // Safely parse translations from the data attribute
-    const translations = JSON.parse(initialData.dataset.translations);
-    
-    // The rest of the variable declarations
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     const messages = document.getElementById('messages');
     const allLists = document.querySelectorAll('.chat-list');
+    
+    // Получаем имя пользователя из data-атрибута тега body
     const username = document.body.dataset.username;
+
     let currentChat = { type: null, id: null, name: null };
+    const initialData = document.getElementById('initial-data');
     let unreadCounts = JSON.parse(initialData.dataset.unreadCounts);
 
     function initializeUnreadCounts() {
@@ -63,10 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const toggleBtn = document.createElement('button');
                 toggleBtn.className = 'toggle-transcription-btn';
-                toggleBtn.textContent = translations.show_text;
+                toggleBtn.textContent = 'Показать текст';
                 toggleBtn.onclick = () => {
                     transcriptionP.classList.toggle('visible');
-                    toggleBtn.textContent = transcriptionP.classList.contains('visible') ? translations.hide_text : translations.show_text;
+                    toggleBtn.textContent = transcriptionP.classList.contains('visible') ? 'Скрыть текст' : 'Показать текст';
                 };
                 item.appendChild(toggleBtn);
                 item.appendChild(transcriptionP);
@@ -110,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headerLink.textContent = currentChat.name;
                 } else {
                     headerLink.href = '#';
-                    headerLink.textContent = `${translations.chat_with} ${currentChat.name}`;
+                    headerLink.textContent = `Чат с ${currentChat.name}`;
                 }
                 const historyUrl = currentChat.type === 'user' ? `/history/${currentChat.name}` : `/history/group/${currentChat.id}`;
                 fetch(historyUrl).then(response => response.json()).then(history => history.forEach(appendMessage));
@@ -175,31 +173,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MODAL AND MOBILE LOGIC ---
     const modal = document.getElementById('createGroupModal');
-    if (document.getElementById('create-group-btn')) {
-        document.getElementById('create-group-btn').onclick = () => modal.style.display = "block";
-    }
-    document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.onclick = () => {
-            const parentModal = btn.closest('.modal, .voice-modal-overlay');
-            if (parentModal) parentModal.style.display = "none";
-        };
-    });
-    window.onclick = (event) => { if (event.target.classList.contains('modal')) event.target.style.display = "none"; };
-    
+    document.getElementById('create-group-btn').onclick = () => modal.style.display = "block";
+    document.querySelector('.close-btn').onclick = () => modal.style.display = "none";
+    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
     const body = document.body;
     const backToChatsBtn = document.getElementById('chat-header-back-btn');
     allLists.forEach(list => list.addEventListener('click', (e) => {
         if (e.target.closest('li') && window.innerWidth <= 768) body.classList.add('mobile-chat-view');
     }));
-
-    if (backToChatsBtn) {
-        backToChatsBtn.addEventListener('click', () => {
-            body.classList.remove('mobile-chat-view');
-            currentChat = { type: null, id: null, name: null };
-            document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
-            document.getElementById('chat-header-link').textContent = translations.select_a_chat;
-        });
-    }
+    backToChatsBtn.addEventListener('click', () => {
+        body.classList.remove('mobile-chat-view');
+        currentChat = { type: null, id: null, name: null };
+        document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
+        document.getElementById('chat-header-link').textContent = "Выберите чат";
+    });
 
     // --- VOICE MESSAGE MODAL LOGIC ---
     const mainRecordBtn = document.getElementById('record-btn');
@@ -213,6 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendAudioBtn = document.getElementById('send-audio-btn');
     const sendTextBtn = document.getElementById('send-text-btn');
     const statusDisplay = document.getElementById('voice-status');
+    const playbackContainer = document.getElementById('audio-playback-container');
+    const audioPlayer = document.getElementById('audio-playback');
+    const transcriptionContainer = document.getElementById('transcription-container');
     const transcriptionText = document.getElementById('transcription-text');
 
     let mediaRecorder;
@@ -224,132 +214,111 @@ document.addEventListener('DOMContentLoaded', () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        
-        const currentLang = document.body.dataset.lang;
-        if (currentLang === 'kk') {
-            recognition.lang = 'kk-KZ';
-        } else if (currentLang === 'en') {
-            recognition.lang = 'en-US';
-        } else {
-            recognition.lang = 'ru-RU';
-        }
-
+        recognition.lang = 'ru-RU';
         recognition.continuous = true;
         recognition.interimResults = true;
     }
 
     function updateUI(state) {
-        if (!startBtn) return;
         startBtn.style.display = (state === 'idle') ? 'block' : 'none';
         stopBtn.style.display = (state === 'recording') ? 'block' : 'none';
-        
-        const showPlayback = (state === 'recorded' || state === 'transcribed');
-        document.getElementById('audio-playback-container').style.display = showPlayback ? 'block' : 'none';
-        document.getElementById('transcription-container').style.display = showPlayback ? 'block' : 'none';
+        playbackContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
+        transcriptionContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
         
         const showAiButtons = (state === 'transcribed' && transcriptionText.value);
         aiModelSelect.style.display = showAiButtons ? 'inline-block' : 'none';
         improveAiBtn.style.display = showAiButtons ? 'block' : 'none';
         generateAiBtn.style.display = showAiButtons ? 'block' : 'none';
         
-        sendAudioBtn.style.display = showPlayback ? 'block' : 'none';
-        sendTextBtn.style.display = showAiButtons ? 'block' : 'none';
+        sendAudioBtn.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
+        sendTextBtn.style.display = (state === 'transcribed' && transcriptionText.value) ? 'block' : 'none';
 
-        if(state === 'idle') statusDisplay.textContent = translations.press_start_to_record;
-        if(state === 'recording') statusDisplay.textContent = `${translations.recording_in_progress} 0 ${translations.seconds}`;
-        if(state === 'recorded') statusDisplay.textContent = translations.recording_finished;
-        if(state === 'transcribed') statusDisplay.textContent = translations.transcription_ready;
+        if(state === 'idle') statusDisplay.textContent = "Нажмите 'Старт' для начала записи";
+        if(state === 'recording') statusDisplay.textContent = `Идет запись: 0 сек.`;
+        if(state === 'recorded') statusDisplay.textContent = "Запись завершена";
+        if(state === 'transcribed') statusDisplay.textContent = "Транскрипция готова";
     }
 
     function resetModal() {
         recordedBlob = null;
         audioChunks = [];
-        if (transcriptionText) transcriptionText.value = "";
-        const audioPlayer = document.getElementById('audio-playback');
-        if (audioPlayer) audioPlayer.src = "";
+        transcriptionText.value = "";
+        audioPlayer.src = "";
         if (recordingInterval) clearInterval(recordingInterval);
         updateUI('idle');
     }
 
-    if (mainRecordBtn) {
-        mainRecordBtn.onclick = () => {
-            if (!currentChat.type) { alert(translations.please_select_chat); return; }
-            if (voiceModal) voiceModal.style.display = 'flex';
-            resetModal();
-        };
-    }
+    mainRecordBtn.onclick = () => {
+        if (!currentChat.type) { alert("Пожалуйста, выберите чат."); return; }
+        voiceModal.style.display = 'flex';
+        resetModal();
+    };
 
-    if (deleteBtn) {
-        deleteBtn.onclick = () => {
-            if (mediaRecorder && mediaRecorder.stream) {
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            }
-            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-            if (recognition) {
-                    try { recognition.stop(); } catch(e) { /* ignore */ }
-            }
-            if (voiceModal) voiceModal.style.display = 'none';
-        };
-    }
-    
-    if (startBtn) {
-        startBtn.onclick = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                updateUI('recording');
-
-                let seconds = 0;
-                recordingInterval = setInterval(() => {
-                    seconds++;
-                    statusDisplay.textContent = `${translations.recording_in_progress} ${seconds} ${translations.seconds}`;
-                }, 1000);
-
-                if (recognition) {
-                    recognition.onresult = (event) => {
-                        let final_transcript = '';
-                        for (let i = event.resultIndex; i < event.results.length; ++i) {
-                            final_transcript += event.results[i][0].transcript;
-                        }
-                        if (transcriptionText) transcriptionText.value = final_transcript;
-                    };
-                    recognition.onend = () => updateUI('transcribed');
-                    recognition.start();
-                }
-
-                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-                mediaRecorder.onstop = () => {
-                    clearInterval(recordingInterval);
-                    recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioPlayer = document.getElementById('audio-playback');
-                    if(audioPlayer) audioPlayer.src = URL.createObjectURL(recordedBlob);
-                    if (!recognition) updateUI('recorded');
-                    stream.getTracks().forEach(track => track.stop());
-                };
-                
-                mediaRecorder.start();
-            } catch (err) {
-                console.error("Microphone error:", err);
-                resetModal();
-            }
-        };
-    }
-
-    if (stopBtn) {
-        stopBtn.onclick = () => {
-            if (mediaRecorder) mediaRecorder.stop();
-            if (recognition) {
+    deleteBtn.onclick = () => {
+        if (mediaRecorder && mediaRecorder.stream) {
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+        if (recognition) {
                 try { recognition.stop(); } catch(e) { /* ignore */ }
+        }
+        voiceModal.style.display = 'none';
+    };
+
+    startBtn.onclick = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            updateUI('recording');
+
+            let seconds = 0;
+            recordingInterval = setInterval(() => {
+                seconds++;
+                statusDisplay.textContent = `Идет запись: ${seconds} сек.`;
+            }, 1000);
+
+            if (recognition) {
+                recognition.onresult = (event) => {
+                    let final_transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        final_transcript += event.results[i][0].transcript;
+                    }
+                    transcriptionText.value = final_transcript;
+                };
+                recognition.onend = () => updateUI('transcribed');
+                recognition.start();
             }
-        };
-    }
+
+            mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+            mediaRecorder.onstop = () => {
+                clearInterval(recordingInterval);
+                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioPlayer.src = URL.createObjectURL(recordedBlob);
+                if (!recognition) updateUI('recorded');
+                stream.getTracks().forEach(track => track.stop());
+            };
+            
+            mediaRecorder.start();
+        } catch (err) {
+            console.error("Ошибка микрофона:", err);
+            resetModal();
+        }
+    };
+
+    stopBtn.onclick = () => {
+        if (mediaRecorder) mediaRecorder.stop();
+        if (recognition) {
+            try { recognition.stop(); } catch(e) { /* ignore */ }
+        }
+    };
     
     async function callAI(taskType) {
         const text = transcriptionText.value;
-        if (!text || !improveAiBtn) return;
+        const selectedModel = aiModelSelect.value;
+        if (!text) return;
         
         const originalStatus = statusDisplay.textContent;
-        statusDisplay.textContent = translations.ai_is_working;
+        statusDisplay.textContent = "ИИ работает...";
         improveAiBtn.disabled = true;
         generateAiBtn.disabled = true;
         aiModelSelect.disabled = true;
@@ -358,17 +327,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/edit_with_ai', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ text, model: aiModelSelect.value, task_type: taskType })
+                body: JSON.stringify({ text, model: selectedModel, task_type: taskType })
             });
             const data = await response.json();
             if (data.edited_text) {
                 transcriptionText.value = data.edited_text;
             } else if (data.error) {
                 console.error("AI Error:", data.error);
-                alert("An error occurred while contacting the AI.");
+                alert("Произошла ошибка при обращении к ИИ.");
             }
         } catch (err) {
-            console.error("AI fetch error:", err);
+            console.error("Ошибка ИИ:", err);
         }
         
         statusDisplay.textContent = originalStatus;
@@ -377,36 +346,32 @@ document.addEventListener('DOMContentLoaded', () => {
         aiModelSelect.disabled = false;
     }
 
-    if (improveAiBtn) improveAiBtn.onclick = () => callAI('improve');
-    if (generateAiBtn) generateAiBtn.onclick = () => callAI('generate');
+    improveAiBtn.onclick = () => callAI('improve');
+    generateAiBtn.onclick = () => callAI('generate');
 
-    if (sendAudioBtn) {
-        sendAudioBtn.onclick = () => {
-            if(!recordedBlob) return;
-            const formData = new FormData();
-            formData.append('audio', recordedBlob, 'recording.webm');
-            formData.append('transcription', transcriptionText.value.trim());
-            
-            if (currentChat.type === 'user') formData.append('recipient', currentChat.name);
-            else if (currentChat.type === 'group') formData.append('group_id', currentChat.id);
-            
-            fetch('/send_audio', { method: 'POST', body: formData });
-            if (voiceModal) voiceModal.style.display = 'none';
-        };
-    }
+    sendAudioBtn.onclick = () => {
+        if(!recordedBlob) return;
+        const formData = new FormData();
+        formData.append('audio', recordedBlob, 'recording.webm');
+        formData.append('transcription', transcriptionText.value.trim());
+        
+        if (currentChat.type === 'user') formData.append('recipient', currentChat.name);
+        else if (currentChat.type === 'group') formData.append('group_id', currentChat.id);
+        
+        fetch('/send_audio', { method: 'POST', body: formData });
+        voiceModal.style.display = 'none';
+    };
 
-    if (sendTextBtn) {
-        sendTextBtn.onclick = () => {
-            const messageText = transcriptionText.value;
-            if (!messageText) return;
-            if (currentChat.type === 'user') {
-                socket.emit('private_message', { recipient: currentChat.name, message: messageText });
-            } else if (currentChat.type === 'group') {
-                socket.emit('group_message', { group_id: currentChat.id, message: messageText });
-            }
-            if (voiceModal) voiceModal.style.display = 'none';
-        };
-    }
+    sendTextBtn.onclick = () => {
+        const messageText = transcriptionText.value;
+        if (!messageText) return;
+        if (currentChat.type === 'user') {
+            socket.emit('private_message', { recipient: currentChat.name, message: messageText });
+        } else if (currentChat.type === 'group') {
+            socket.emit('group_message', { group_id: currentChat.id, message: messageText });
+        }
+        voiceModal.style.display = 'none';
+    };
 
     // --- AI ASSISTANT MODAL LOGIC ---
     const assistantModal = document.getElementById('assistant-modal');
@@ -417,60 +382,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const assistantMessages = document.getElementById('assistant-messages');
     const sendToChatBtn = document.getElementById('send-to-chat-btn');
     
-    if (openAssistantBtn) {
-        openAssistantBtn.onclick = () => {
-            if (assistantModal) assistantModal.style.display = 'flex';
-        };
-    }
+    openAssistantBtn.onclick = () => {
+        assistantModal.style.display = 'flex';
+    };
 
-    if (closeAssistantBtn) {
-        closeAssistantBtn.onclick = () => {
-            if (assistantModal) assistantModal.style.display = 'none';
-        };
-    }
+    closeAssistantBtn.onclick = () => {
+        assistantModal.style.display = 'none';
+    };
 
-    if (assistantForm) {
-        assistantForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const userPrompt = assistantInput.value;
-            if (!userPrompt) return;
+    assistantForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const userPrompt = assistantInput.value;
+        if (!userPrompt) return;
 
-            addAssistantMessage(userPrompt, 'user');
-            assistantInput.value = '';
-            
-            const thinkingBubble = addAssistantMessage('...', 'assistant');
+        addAssistantMessage(userPrompt, 'user');
+        assistantInput.value = '';
+        
+        const thinkingBubble = addAssistantMessage('Думаю...', 'assistant');
 
-            try {
-                const response = await fetch('/chat_with_assistant', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ prompt: userPrompt })
-                });
+        try {
+            const response = await fetch('/chat_with_assistant', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt: userPrompt })
+            });
 
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                thinkingBubble.textContent = data.response || "Failed to get AI response.";
-
-            } catch (error) {
-                console.error("Error with AI Assistant:", error);
-                thinkingBubble.textContent = "Network error. Please try again.";
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
             }
-            assistantMessages.scrollTop = assistantMessages.scrollHeight;
-        };
-    }
 
-    if (sendToChatBtn) {
-        sendToChatBtn.onclick = () => {
-            const lastAssistantResponse = assistantMessages.querySelector('.assistant-bubble.assistant:last-child');
-            if (lastAssistantResponse && lastAssistantResponse.textContent !== "...") {
-                input.value = lastAssistantResponse.textContent;
-                if (assistantModal) assistantModal.style.display = 'none';
-            }
-        };
-    }
+            const data = await response.json();
+            thinkingBubble.textContent = data.response || "Не удалось получить ответ от ИИ.";
+
+        } catch (error) {
+            console.error("Error with AI Assistant:", error);
+            thinkingBubble.textContent = "Произошла ошибка сети. Попробуйте снова.";
+        }
+        assistantMessages.scrollTop = assistantMessages.scrollHeight;
+    };
+
+    sendToChatBtn.onclick = () => {
+        const lastAssistantResponse = assistantMessages.querySelector('.assistant-bubble.assistant:last-child');
+        if (lastAssistantResponse && lastAssistantResponse.textContent !== "Думаю...") {
+            input.value = lastAssistantResponse.textContent;
+            assistantModal.style.display = 'none';
+        }
+    };
 
     function addAssistantMessage(text, role) {
         const bubble = document.createElement('div');

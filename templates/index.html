@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('language', 'ru') }}">
+<html lang="{{ CURRENT_LANGUAGE }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>{{ _('Мой Мессенджер') }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
 </head>
-<body data-username="{{ current_user.username }}" data-lang="{{ session.get('language', 'ru') }}">
+<body data-username="{{ current_user.username }}">
     
     <div id="sidebar">
         <div id="user-info">
             <h2>{{ current_user.username }}</h2>
+            <div class="lang-switcher">
+                {% for lang, name in AVAILABLE_LANGUAGES.items() %}
+                    <a href="?lang={{ lang }}" {% if lang == CURRENT_LANGUAGE %} style="font-weight:bold; text-decoration:underline;" {% endif %}>{{ name }}</a>
+                    {% if not loop.last %} | {% endif %}
+                {% endfor %}
+            </div>
             <a href="{{ url_for('logout') }}">{{ _('Выйти') }}</a>
-        </div>
-        
-        <div class="language-switcher" style="padding: 10px 16px; text-align: center; border-bottom: 1px solid var(--separator-color);">
-            <a href="{{ url_for('set_language', lang='ru') }}" style="color: var(--secondary-text-color); text-decoration: none; margin: 0 5px;">RU</a> |
-            <a href="{{ url_for('set_language', lang='en') }}" style="color: var(--secondary-text-color); text-decoration: none; margin: 0 5px;">EN</a> |
-            <a href="{{ url_for('set_language', lang='kk') }}" style="color: var(--secondary-text-color); text-decoration: none; margin: 0 5px;">KZ</a>
         </div>
         
         <div class="chat-list-container">
@@ -72,8 +72,8 @@
         <ul id="messages"></ul>
         <form id="form" action="">
             <input id="input" autocomplete="off" placeholder="{{ _('Введите сообщение...') }}" />
-            <button id="assistant-btn" type="button" title="{{ _('ИИ-АссистенТ') }}">✨</button>
-            <button id="record-btn" type="button" title="{{ _('Записать голосовое сообщение') }}">🎤</button>
+            <button id="assistant-btn" type="button" title="{{ _('ИИ-Ассистент') }}">✨</button>
+            <button id="record-btn" type="button">🎤</button>
             <button id="send-btn" type="submit">{{ _('Отправить') }}</button>
         </form>
     </div>
@@ -139,12 +139,11 @@
         </div>
     </div>
     
-    <div id="initial-data" 
-         data-unread-counts='{{ unread_counts | tojson | safe }}'
-         data-translations='{{ translations | tojson | safe }}'>
-    </div>
+    <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=7"></script>
+    <script src="{{ url_for('js_translations') }}?lang={{ CURRENT_LANGUAGE }}"></script>
+    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=5"></script>
+
 </body>
 </html>
