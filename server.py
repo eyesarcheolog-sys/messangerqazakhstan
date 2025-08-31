@@ -35,16 +35,16 @@ app.config['LANGUAGES'] = {
     'kk': 'Қазақша'
 }
 app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
-babel = Babel(app)
 
-@babel.localeselector
 def get_locale():
-    # Проверяем, был ли язык передан в URL
+    # Эта функция теперь определяется до инициализации Babel
     lang = request.args.get('lang')
     if lang in app.config['LANGUAGES']:
         return lang
-    # Если нет, используем язык из заголовков браузера
     return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
+
+# Передаем функцию выбора языка прямо при создании объекта Babel
+babel = Babel(app, locale_selector=get_locale)
 
 @app.context_processor
 def inject_conf_var():
