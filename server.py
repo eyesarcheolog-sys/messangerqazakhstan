@@ -34,13 +34,13 @@ app.config['LANGUAGES'] = {
     'kk': 'Қазақша'
 }
 
-# 1. Функция определяется БЕЗ декоратора
+# 1. Define the function to get the locale WITHOUT a decorator
 def get_locale():
     if 'language' in session and session['language'] in app.config['LANGUAGES']:
         return session['language']
     return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
 
-# 2. Функция передается напрямую при инициализации Babel
+# 2. Initialize Babel and PASS the function to it directly
 babel = Babel(app, locale_selector=get_locale)
 
 
