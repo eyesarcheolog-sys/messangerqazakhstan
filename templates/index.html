@@ -139,13 +139,12 @@
         </div>
     </div>
     
-    <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>
+    <div id="initial-data" 
+         data-unread-counts='{{ unread_counts | tojson | safe }}'
+         data-translations='{{ translations_json | safe }}'>
+    </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
-    <script>
-        const translations = JSON.parse('{{ translations_json | safe }}');
-    </script>
     
     <script defer src="{{ url_for('static', filename='js/main.js') }}?v=6"></script>
 </body>

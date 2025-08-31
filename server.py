@@ -112,6 +112,7 @@ def index():
         group_unread = db.session.query(Message.group_id, func.count(Message.id)).filter(Message.group_id.in_(group_ids), Message.is_read == False, Message.sender_id != current_user.id).group_by(Message.group_id).all()
         for group_id, count in group_unread: unread_counts[f'group_{group_id}'] = count
     
+    # Create the dictionary of translations for JavaScript
     translations_dict = {
         "chat_with": _("Чат с"),
         "select_a_chat": _("Выберите чат"),
