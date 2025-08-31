@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('Мой Мессенджер') }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5">
 </head>
 <body data-username="{{ current_user.username }}">
     
@@ -142,7 +142,24 @@
     <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=4"></script>
 
+<script>
+        const translations = {
+            chat_with: "{{ _('Чат с') }}",
+            select_a_chat: "{{ _('Выберите чат') }}",
+            recording_message: "{{ _('Запись сообщения') }}",
+            press_start_to_record: "{{ _('Нажмите \"Старт\" для начала записи') }}",
+            recording_in_progress: "{{ _('Идет запись:') }}",
+            seconds: "{{ _('сек.') }}",
+            recording_finished: "{{ _('Запись завершена') }}",
+            transcription_ready: "{{ _('Транскрипция готова') }}",
+            please_select_chat: "{{ _('Пожалуйста, выберите чат.') }}",
+            ai_is_working: "{{ _('ИИ работает...') }}",
+            show_text: "{{ _('Показать текст') }}",
+            hide_text: "{{ _('Скрыть текст') }}"
+        };
+    </script>
+    
+    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=5"></script>
 </body>
 </html>
