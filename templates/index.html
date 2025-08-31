@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('Мой Мессенджер') }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
 </head>
-<body data-username="{{ current_user.username }}">
+<body data-username="{{ current_user.username }}" data-lang="{{ session.get('language', 'ru') }}">
     
     <div id="sidebar">
         <div id="user-info">
@@ -72,7 +72,7 @@
         <ul id="messages"></ul>
         <form id="form" action="">
             <input id="input" autocomplete="off" placeholder="{{ _('Введите сообщение...') }}" />
-            <button id="assistant-btn" type="button" title="{{ _('ИИ-Ассистент') }}">✨</button>
+            <button id="assistant-btn" type="button" title="{{ _('ИИ-АссистенТ') }}">✨</button>
             <button id="record-btn" type="button" title="{{ _('Записать голосовое сообщение') }}">🎤</button>
             <button id="send-btn" type="submit">{{ _('Отправить') }}</button>
         </form>
@@ -141,11 +141,10 @@
     
     <div id="initial-data" 
          data-unread-counts='{{ unread_counts | tojson | safe }}'
-         data-translations='{{ translations_json | safe }}'>
+         data-translations='{{ translations | tojson | safe }}'>
     </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    
-    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=6"></script>
+    <script defer src="{{ url_for('static', filename='js/main.js') }}?v=7"></script>
 </body>
 </html>

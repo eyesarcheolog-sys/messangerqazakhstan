@@ -224,7 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.lang = 'ru-RU';
+        
+        const currentLang = document.body.dataset.lang;
+        if (currentLang === 'kk') {
+            recognition.lang = 'kk-KZ';
+        } else if (currentLang === 'en') {
+            recognition.lang = 'en-US';
+        } else {
+            recognition.lang = 'ru-RU';
+        }
+
         recognition.continuous = true;
         recognition.interimResults = true;
     }
