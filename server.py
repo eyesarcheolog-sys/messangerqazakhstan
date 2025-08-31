@@ -3,6 +3,7 @@ monkey.patch_all()
 
 import os
 import uuid
+import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, session 
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
@@ -33,7 +34,7 @@ app.config['LANGUAGES'] = {
     'kk': 'Қазақша'
 }
 
-# 1. Define the function WITHOUT a decorator
+# 1. Define the function to get the locale WITHOUT a decorator
 def get_locale():
     if 'language' in session and session['language'] in app.config['LANGUAGES']:
         return session['language']
@@ -41,6 +42,7 @@ def get_locale():
 
 # 2. Initialize Babel and PASS the function to it directly
 babel = Babel(app, locale_selector=get_locale)
+
 
 # --- INITIALIZE EXTENSIONS ---
 db = SQLAlchemy(app)
@@ -109,7 +111,30 @@ def index():
         group_ids = [g.id for g in groups]
         group_unread = db.session.query(Message.group_id, func.count(Message.id)).filter(Message.group_id.in_(group_ids), Message.is_read == False, Message.sender_id != current_user.id).group_by(Message.group_id).all()
         for group_id, count in group_unread: unread_counts[f'group_{group_id}'] = count
-    return render_template('index.html', current_user=current_user, users=users, groups=groups, unread_counts=unread_counts)
+    
+    translations_dict = {
+        "chat_with": _("Чат с"),
+        "select_a_chat": _("Выберите чат"),
+        "press_start_to_record": _('Нажмите "Старт" для начала записи'),
+        "recording_in_progress": _("Идет запись:"),
+        "seconds": _("сек."),
+        "recording_finished": _("Запись завершена"),
+        "transcription_ready": _("Транскрипция готова"),
+        "please_select_chat": _("Пожалуйста, выберите чат."),
+        "ai_is_working": _("ИИ работает..."),
+        "show_text": _("Показать текст"),
+        "hide_text": _("Скрыть текст")
+    }
+    translations_json = json.dumps(translations_dict)
+
+    return render_template(
+        'index.html',
+        current_user=current_user,
+        users=users,
+        groups=groups,
+        unread_counts=unread_counts,
+        translations_json=translations_json
+    )
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
