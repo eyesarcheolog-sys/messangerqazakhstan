@@ -34,13 +34,13 @@ app.config['LANGUAGES'] = {
     'kk': 'Қазақша'
 }
 
-# 1. Define the function to get the locale WITHOUT a decorator
+# 1. Функция определяется БЕЗ декоратора
 def get_locale():
     if 'language' in session and session['language'] in app.config['LANGUAGES']:
         return session['language']
     return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
 
-# 2. Initialize Babel and PASS the function to it directly
+# 2. Функция передается напрямую при инициализации Babel
 babel = Babel(app, locale_selector=get_locale)
 
 
@@ -126,15 +126,15 @@ def index():
         "show_text": _("Показать текст"),
         "hide_text": _("Скрыть текст")
     }
-    translations_json = json.dumps(translations_dict)
 
+    # ИСПРАВЛЕНИЕ: Передаем словарь напрямую с правильным именем 'translations'
     return render_template(
         'index.html',
         current_user=current_user,
         users=users,
         groups=groups,
         unread_counts=unread_counts,
-        translations_json=translations_json
+        translations=translations_dict
     )
 
 @app.route('/register', methods=['GET', 'POST'])
