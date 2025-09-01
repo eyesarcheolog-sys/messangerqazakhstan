@@ -18,11 +18,8 @@ from flask_babel import Babel, gettext as _
 
 # --- APP SETUP ---
 app = Flask(__name__)
-# Улучшение безопасности: ключ берется из переменных окружения
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
-
-# ИСПРАВЛЕНИЕ: Добавлены настройки для стабильного соединения с БД
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
@@ -37,18 +34,15 @@ app.config['LANGUAGES'] = {
 app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
 
 def get_locale():
-    # Эта функция теперь определяется до инициализации Babel
     lang = request.args.get('lang')
     if lang in app.config['LANGUAGES']:
         return lang
     return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
 
-# Передаем функцию выбора языка прямо при создании объекта Babel
 babel = Babel(app, locale_selector=get_locale)
 
 @app.context_processor
 def inject_conf_var():
-    # Делаем список языков доступным во всех шаблонах
     return dict(
         AVAILABLE_LANGUAGES=app.config['LANGUAGES'],
         CURRENT_LANGUAGE=get_locale()
@@ -61,7 +55,7 @@ socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-login_manager.login_message = _("Please log in to access this page.") # Переводимое сообщение
+login_manager.login_message = _("Please log in to access this page.")
 
 user_sids = {}
 
@@ -420,27 +414,35 @@ def chat_with_assistant():
 @app.route('/js/translations.js')
 def js_translations():
     """
-    Предоставляет переводы для использования в JavaScript.
+    Предоставляет все необходимые переводы для использования в JavaScript.
     """
     translations = {
+        # Для уведомлений и алертов
         "Please select a chat.": _("Please select a chat."),
+        "Microphone error:": _("Microphone error:"),
+        "AI Error:": _("AI Error:"),
+        "An error occurred while contacting the AI.": _("An error occurred while contacting the AI."),
+        "A network error has occurred. Please try again.": _("A network error has occurred. Please try again."),
+        "Could not get a response from the AI.": _("Could not get a response from the AI."),
+        
+        # Для интерфейса модальных окон
         "Recording: {seconds} sec.": _("Recording: {seconds} sec."),
         "Recording finished": _("Recording finished"),
         "Transcription ready": _("Transcription ready"),
         "Press 'Start' to begin recording": _("Press 'Start' to begin recording"),
         "AI is working...": _("AI is working..."),
-        "AI Error:": _("AI Error:"),
-        "An error occurred while contacting the AI.": _("An error occurred while contacting the AI."),
         "Thinking...": _("Thinking..."),
-        "Could not get a response from the AI.": _("Could not get a response from the AI."),
-        "A network error has occurred. Please try again.": _("A network error has occurred. Please try again."),
         "Show text": _("Show text"),
         "Hide text": _("Hide text"),
+
+        # Для заголовков чата
         "Chat with {name}": _("Chat with {name}"),
+        "Select a chat": _("Выберите чат")
     }
     # Преобразуем словарь в JS-объект
     js_code = f"window.translations = {json.dumps(translations)};"
     return Response(js_code, mimetype='application/javascript')
+
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')

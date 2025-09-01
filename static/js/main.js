@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CORE JAVASCRIPT ---
 
-    // Функция-помощник для переводов. Берет переводы из window.translations (которые загружаются из server.py)
+    // Функция-помощник для переводов.
     function __(key, replacements = {}) {
         let text = window.translations[key] || key;
         for (const placeholder in replacements) {
@@ -113,21 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 messages.innerHTML = '';
                 const headerLink = document.getElementById('chat-header-link');
                 
-                // === ИЗМЕНЕННЫЙ БЛОК ДЛЯ ИСПРАВЛЕНИЯ ОШИБКИ НАВИГАЦИИ ===
                 let historyUrl;
                 if (currentChat.type === 'group') {
-                    // Берем готовую ссылку из data-атрибута, который мы добавили в index.html
                     const groupUrl = li.dataset.url; 
                     headerLink.href = groupUrl;
                     headerLink.textContent = currentChat.name;
                     historyUrl = `/history/group/${currentChat.id}`;
-                } else { // для личных чатов
+                } else { 
                     headerLink.href = '#';
-                    // Используем функцию перевода для текста заголовка
                     headerLink.textContent = __("Chat with {name}", {name: currentChat.name}); 
                     historyUrl = `/history/${currentChat.name}`;
                 }
-                // =======================================================
                 
                 fetch(historyUrl).then(response => response.json()).then(history => history.forEach(appendMessage));
             }
@@ -232,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.lang = document.documentElement.lang; // Используем язык страницы
+        recognition.lang = document.documentElement.lang;
         recognition.continuous = true;
         recognition.interimResults = true;
     }
