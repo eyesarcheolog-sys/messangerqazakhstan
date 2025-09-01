@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-09-01 18:04+0800\n"
+"POT-Creation-Date: 2025-09-01 21:19+0800\n"
 "PO-Revision-Date: 2025-09-01 00:30+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,402 +19,555 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
+#: server.py:58
 msgid "Please log in to access this page."
 msgstr "Пожалуйста, войдите, чтобы получить доступ к этой странице."
 
+#: server.py:140
 msgid "This username is already taken!"
 msgstr "Это имя пользователя уже занято!"
 
+#: server.py:158
 msgid "Invalid username or password!"
 msgstr "Неверное имя пользователя или пароль!"
 
+#: server.py:173
 msgid "Group name and members are required"
 msgstr "Требуется название группы и участники"
 
+#: server.py:175
 msgid "A group with this name already exists!"
 msgstr "Группа с таким названием уже существует!"
 
+#: server.py:193 server.py:257
 msgid "Group not found or you are not a member"
 msgstr "Группа не найдена или вы не являетесь участником"
 
+#: server.py:202 server.py:214 server.py:226
 msgid "Access denied"
 msgstr "Доступ запрещен"
 
+#: server.py:284
 msgid "No audio file"
 msgstr "Нет аудиофайла"
 
+#: server.py:286
 msgid "No recipient specified"
 msgstr "Не указан получатель"
 
+#: server.py:317
 msgid "Group not found or access denied"
 msgstr "Группа не найдена или доступ запрещен"
 
+#: server.py:329
 msgid "Recipient not found"
 msgstr "Получатель не найден"
 
+#: server.py:345
 msgid "Database error"
 msgstr "Ошибка базы данных"
 
+#: server.py:358
 msgid "No text provided"
 msgstr "Текст не предоставлен"
 
+#: server.py:388
+#, python-brace-format
 msgid "{model_choice} service failed"
 msgstr "Сервис {model_choice} неисправен"
 
+#: server.py:398
 msgid "No prompt provided"
 msgstr "Запрос не предоставлен"
 
+#: server.py:412
 msgid "AI Assistant service failed"
 msgstr "Сервис ИИ-Ассистента неисправен"
 
+#: server.py:421
 msgid "Please select a chat."
 msgstr "Пожалуйста, выберите чат."
 
-msgid "Recording: {seconds} sec."
-msgstr "Запись: {seconds} сек."
+#: server.py:422
+#, fuzzy
+msgid "Microphone error:"
+msgstr "Ошибка ИИ:"
 
-msgid "Recording finished"
-msgstr "Запись завершена"
-
-msgid "Transcription ready"
-msgstr "Транскрипция готова"
-
-msgid "Press 'Start' to begin recording"
-msgstr "Нажмите 'Старт' для начала записи"
-
-msgid "AI is working..."
-msgstr "ИИ работает..."
-
+#: server.py:423
 msgid "AI Error:"
 msgstr "Ошибка ИИ:"
 
+#: server.py:424
 msgid "An error occurred while contacting the AI."
 msgstr "Произошла ошибка при обращении к ИИ."
 
-msgid "Thinking..."
-msgstr "Думаю..."
-
-msgid "Could not get a response from the AI."
-msgstr "Не удалось получить ответ от ИИ."
-
+#: server.py:425
 msgid "A network error has occurred. Please try again."
 msgstr "Произошла ошибка сети. Попробуйте снова."
 
+#: server.py:426
+msgid "Could not get a response from the AI."
+msgstr "Не удалось получить ответ от ИИ."
+
+#: server.py:429
+#, python-brace-format
+msgid "Recording: {seconds} sec."
+msgstr "Запись: {seconds} сек."
+
+#: server.py:430
+msgid "Recording finished"
+msgstr "Запись завершена"
+
+#: server.py:431
+msgid "Transcription ready"
+msgstr "Транскрипция готова"
+
+#: server.py:432
+msgid "Press 'Start' to begin recording"
+msgstr "Нажмите 'Старт' для начала записи"
+
+#: server.py:433
+msgid "AI is working..."
+msgstr "ИИ работает..."
+
+#: server.py:434
+msgid "Thinking..."
+msgstr "Думаю..."
+
+#: server.py:435
 msgid "Show text"
 msgstr "Показать текст"
 
+#: server.py:436
 msgid "Hide text"
 msgstr "Скрыть текст"
 
+#: server.py:439
+#, python-brace-format
 msgid "Chat with {name}"
 msgstr "Чат с {name}"
 
-msgid "Мой Мессенджер"
-msgstr "Мой Мессенджер"
-
-msgid "Выйти"
-msgstr "Выйти"
-
-msgid "Группы"
-msgstr "Группы"
-
-msgid "Сообщение в группе..."
-msgstr "Сообщение в группе..."
-
-msgid "Личные сообщения"
-msgstr "Личные сообщения"
-
-msgid "Личное сообщение..."
-msgstr "Личное сообщение..."
-
-msgid "Создать группу"
-msgstr "Создать группу"
-
+#: server.py:440 templates/index.html:71
 msgid "Выберите чат"
 msgstr "Выберите чат"
 
+#: templates/assistant_widget.html:10
+msgid "Настроить"
+msgstr ""
+
+#: templates/assistants.html:6
+msgid "Панель управления ассистентами"
+msgstr ""
+
+#: templates/assistants.html:13
+msgid "Мой ИИ"
+msgstr ""
+
+#: templates/assistants.html:16 templates/assistants.html:27
+#: templates/index.html:20
+msgid "Панель управления"
+msgstr ""
+
+#: templates/assistants.html:17
+#, fuzzy
+msgid "Мои ассистенты"
+msgstr "ИИ-Ассистент"
+
+#: templates/assistants.html:18
+msgid "База знаний"
+msgstr ""
+
+#: templates/assistants.html:19
+msgid "Настройки"
+msgstr ""
+
+#: templates/assistants.html:21
+#, fuzzy
+msgid "Вернуться в мессенджер"
+msgstr "Мой Мессенджер"
+
+#: templates/group_info.html:5
+msgid "Информация о группе"
+msgstr ""
+
+#: templates/group_info.html:23
+msgid "Назад к чатам"
+msgstr ""
+
+#: templates/group_info.html:26
+msgid "Участники"
+msgstr ""
+
+#: templates/group_info.html:35
+#, fuzzy
+msgid "Настройки группы"
+msgstr "Название группы"
+
+#: templates/group_info.html:39
+#, fuzzy
+msgid "Название группы:"
+msgstr "Название группы"
+
+#: templates/group_info.html:42
+msgid "Сохранить название"
+msgstr ""
+
+#: templates/group_info.html:48
+#, fuzzy
+msgid "Изменить состав участников"
+msgstr "Выберите участников:"
+
+#: templates/group_info.html:60
+msgid "Обновить состав"
+msgstr ""
+
+#: templates/group_info.html:66
+msgid "Вы уверены, что хотите удалить эту группу?"
+msgstr ""
+
+#: templates/group_info.html:66
+#, fuzzy
+msgid "Удалить группу"
+msgstr "Создать группу"
+
+#: templates/index.html:6
+msgid "Мой Мессенджер"
+msgstr "Мой Мессенджер"
+
+#: templates/index.html:21
+msgid "Выйти"
+msgstr "Выйти"
+
+#: templates/index.html:25
+msgid "Группы"
+msgstr "Группы"
+
+#: templates/index.html:32
+msgid "Сообщение в группе..."
+msgstr "Сообщение в группе..."
+
+#: templates/index.html:42
+msgid "Личные сообщения"
+msgstr "Личные сообщения"
+
+#: templates/index.html:53
+msgid "Личное сообщение..."
+msgstr "Личное сообщение..."
+
+#: templates/index.html:65
+msgid "Создать группу"
+msgstr "Создать группу"
+
+#: templates/index.html:75
 msgid "Введите сообщение..."
 msgstr "Введите сообщение..."
 
+#: templates/index.html:76 templates/index.html:130
 msgid "ИИ-Ассистент"
 msgstr "ИИ-Ассистент"
 
+#: templates/index.html:78
 msgid "Отправить"
 msgstr "Отправить"
 
+#: templates/index.html:85
 msgid "Создание новой группы"
 msgstr "Создание новой группы"
 
+#: templates/index.html:87
 msgid "Название группы"
 msgstr "Название группы"
 
+#: templates/index.html:88
 msgid "Выберите участников:"
 msgstr "Выберите участников:"
 
+#: templates/index.html:99
 msgid "Создать"
 msgstr "Создать"
 
+#: templates/index.html:106
 msgid "Запись сообщения"
 msgstr "Запись сообщения"
 
+#: templates/index.html:107
 msgid "Нажмите \"Старт\" для начала записи"
 msgstr "Нажмите \"Старт\" для начала записи"
 
+#: templates/index.html:109
 msgid "Здесь появится транскрипция..."
 msgstr "Здесь появится транскрипция..."
 
+#: templates/index.html:111
 msgid "Старт"
 msgstr "Старт"
 
+#: templates/index.html:112
 msgid "Стоп"
 msgstr "Стоп"
 
+#: templates/index.html:117
 msgid "Улучшить текст"
 msgstr "Улучшить текст"
 
+#: templates/index.html:118
 msgid "Сгенерировать ответ"
 msgstr "Сгенерировать ответ"
 
+#: templates/index.html:121
 msgid "Отмена"
 msgstr "Отмена"
 
+#: templates/index.html:122
 msgid "Отправить текст"
 msgstr "Отправить текст"
 
+#: templates/index.html:123
 msgid "Отправить аудио"
 msgstr "Отправить аудио"
 
+#: templates/index.html:132
 msgid "Здравствуйте! Чем могу помочь?"
 msgstr "Здравствуйте! Чем могу помочь?"
 
+#: templates/index.html:135
 msgid "Спросите что-нибудь..."
 msgstr "Спросите что-нибудь..."
 
+#: templates/index.html:138
 msgid "Отправить последний ответ в чат"
 msgstr "Отправить последний ответ в чат"
 
+#: templates/index.html:139
 msgid "Закрыть"
 msgstr "Закрыть"
 
-msgid "{editor}: Editing failed"
-msgstr "{editor}: Ошибка редактирования"
+#~ msgid "{editor}: Editing failed"
+#~ msgstr "{editor}: Ошибка редактирования"
 
-msgid "{editor}: Editing failed: {e}"
-msgstr "{editor}: Ошибка редактирования: {e}"
+#~ msgid "{editor}: Editing failed: {e}"
+#~ msgstr "{editor}: Ошибка редактирования: {e}"
 
-msgid "Aborted!"
-msgstr "Прервано!"
+#~ msgid "Aborted!"
+#~ msgstr "Прервано!"
 
-msgid "(Deprecated) {text}"
-msgstr "(Устарело) {text}"
+#~ msgid "(Deprecated) {text}"
+#~ msgstr "(Устарело) {text}"
 
-msgid "Options"
-msgstr "Опции"
+#~ msgid "Options"
+#~ msgstr "Опции"
 
-msgid "Got unexpected extra argument ({args})"
-msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] "Получен непредвиденный дополнительный аргумент ({args})"
-msgstr[1] "Получены непредвиденные дополнительные аргументы ({args})"
-msgstr[2] "Получено непредвиденных дополнительных аргументов ({args})"
+#~ msgid "Got unexpected extra argument ({args})"
+#~ msgid_plural "Got unexpected extra arguments ({args})"
+#~ msgstr[0] "Получен непредвиденный дополнительный аргумент ({args})"
+#~ msgstr[1] "Получены непредвиденные дополнительные аргументы ({args})"
+#~ msgstr[2] "Получено непредвиденных дополнительных аргументов ({args})"
 
-msgid "DeprecationWarning: The command {name!r} is deprecated."
-msgstr "DeprecationWarning: Команда {name!r} устарела."
+#~ msgid "DeprecationWarning: The command {name!r} is deprecated."
+#~ msgstr "DeprecationWarning: Команда {name!r} устарела."
 
-msgid "Commands"
-msgstr "Команды"
+#~ msgid "Commands"
+#~ msgstr "Команды"
 
-msgid "Missing command."
-msgstr "Отсутствует команда."
+#~ msgid "Missing command."
+#~ msgstr "Отсутствует команда."
 
-msgid "No such command {name!r}."
-msgstr "Нет такой команды {name!r}."
+#~ msgid "No such command {name!r}."
+#~ msgstr "Нет такой команды {name!r}."
 
-msgid "Value must be an iterable."
-msgstr "Значение должно быть итерируемым."
+#~ msgid "Value must be an iterable."
+#~ msgstr "Значение должно быть итерируемым."
 
-msgid "Takes {nargs} values but 1 was given."
-msgid_plural "Takes {nargs} values but {len} were given."
-msgstr[0] "Принимает {nargs} значение, но было дано 1."
-msgstr[1] "Принимает {nargs} значения, но было дано {len}."
-msgstr[2] "Принимает {nargs} значений, но было дано {len}."
+#~ msgid "Takes {nargs} values but 1 was given."
+#~ msgid_plural "Takes {nargs} values but {len} were given."
+#~ msgstr[0] "Принимает {nargs} значение, но было дано 1."
+#~ msgstr[1] "Принимает {nargs} значения, но было дано {len}."
+#~ msgstr[2] "Принимает {nargs} значений, но было дано {len}."
 
-msgid "env var: {var}"
-msgstr "переменная окружения: {var}"
+#~ msgid "env var: {var}"
+#~ msgstr "переменная окружения: {var}"
 
-msgid "(dynamic)"
-msgstr "(динамический)"
+#~ msgid "(dynamic)"
+#~ msgstr "(динамический)"
 
-msgid "default: {default}"
-msgstr "по умолчанию: {default}"
+#~ msgid "default: {default}"
+#~ msgstr "по умолчанию: {default}"
 
-msgid "required"
-msgstr "обязательно"
+#~ msgid "required"
+#~ msgstr "обязательно"
 
-msgid "%(prog)s, version %(version)s"
-msgstr "%(prog)s, версия %(version)s"
+#~ msgid "%(prog)s, version %(version)s"
+#~ msgstr "%(prog)s, версия %(version)s"
 
-msgid "Show the version and exit."
-msgstr "Показать версию и выйти."
+#~ msgid "Show the version and exit."
+#~ msgstr "Показать версию и выйти."
 
-msgid "Show this message and exit."
-msgstr "Показать это сообщение и выйти."
+#~ msgid "Show this message and exit."
+#~ msgstr "Показать это сообщение и выйти."
 
-msgid "Error: {message}"
-msgstr "Ошибка: {message}"
+#~ msgid "Error: {message}"
+#~ msgstr "Ошибка: {message}"
 
-msgid "Try '{command} {option}' for help."
-msgstr "Попробуйте '{command} {option}' для получения справки."
+#~ msgid "Try '{command} {option}' for help."
+#~ msgstr "Попробуйте '{command} {option}' для получения справки."
 
-msgid "Invalid value: {message}"
-msgstr "Недопустимое значение: {message}"
+#~ msgid "Invalid value: {message}"
+#~ msgstr "Недопустимое значение: {message}"
 
-msgid "Invalid value for {param_hint}: {message}"
-msgstr "Недопустимое значение для {param_hint}: {message}"
+#~ msgid "Invalid value for {param_hint}: {message}"
+#~ msgstr "Недопустимое значение для {param_hint}: {message}"
 
-msgid "Missing argument"
-msgstr "Отсутствует аргумент"
+#~ msgid "Missing argument"
+#~ msgstr "Отсутствует аргумент"
 
-msgid "Missing option"
-msgstr "Отсутствует опция"
+#~ msgid "Missing option"
+#~ msgstr "Отсутствует опция"
 
-msgid "Missing parameter"
-msgstr "Отсутствует параметр"
+#~ msgid "Missing parameter"
+#~ msgstr "Отсутствует параметр"
 
-msgid "Missing {param_type}"
-msgstr "Отсутствует {param_type}"
+#~ msgid "Missing {param_type}"
+#~ msgstr "Отсутствует {param_type}"
 
-msgid "Missing parameter: {param_name}"
-msgstr "Отсутствует параметр: {param_name}"
+#~ msgid "Missing parameter: {param_name}"
+#~ msgstr "Отсутствует параметр: {param_name}"
 
-msgid "No such option: {name}"
-msgstr "Нет такой опции: {name}"
+#~ msgid "No such option: {name}"
+#~ msgstr "Нет такой опции: {name}"
 
-msgid "Did you mean {possibility}?"
-msgid_plural "(Possible options: {possibilities})"
-msgstr[0] "Вы имели в виду {possibility}?"
-msgstr[1] "(Возможные варианты: {possibilities})"
-msgstr[2] "(Возможные варианты: {possibilities})"
+#~ msgid "Did you mean {possibility}?"
+#~ msgid_plural "(Possible options: {possibilities})"
+#~ msgstr[0] "Вы имели в виду {possibility}?"
+#~ msgstr[1] "(Возможные варианты: {possibilities})"
+#~ msgstr[2] "(Возможные варианты: {possibilities})"
 
-msgid "unknown error"
-msgstr "неизвестная ошибка"
+#~ msgid "unknown error"
+#~ msgstr "неизвестная ошибка"
 
-msgid "Could not open file {filename!r}: {message}"
-msgstr "Не удалось открыть файл {filename!r}: {message}"
+#~ msgid "Could not open file {filename!r}: {message}"
+#~ msgstr "Не удалось открыть файл {filename!r}: {message}"
 
-msgid "Argument {name!r} takes {nargs} values."
-msgstr "Аргумент {name!r} принимает {nargs} значений."
+#~ msgid "Argument {name!r} takes {nargs} values."
+#~ msgstr "Аргумент {name!r} принимает {nargs} значений."
 
-msgid "Option {name!r} does not take a value."
-msgstr "Опция {name!r} не принимает значение."
+#~ msgid "Option {name!r} does not take a value."
+#~ msgstr "Опция {name!r} не принимает значение."
 
-msgid "Option {name!r} requires an argument."
-msgid_plural "Option {name!r} requires {nargs} arguments."
-msgstr[0] "Опция {name!r} требует аргумент."
-msgstr[1] "Опция {name!r} требует {nargs} аргумента."
-msgstr[2] "Опция {name!r} требует {nargs} аргументов."
+#~ msgid "Option {name!r} requires an argument."
+#~ msgid_plural "Option {name!r} requires {nargs} arguments."
+#~ msgstr[0] "Опция {name!r} требует аргумент."
+#~ msgstr[1] "Опция {name!r} требует {nargs} аргумента."
+#~ msgstr[2] "Опция {name!r} требует {nargs} аргументов."
 
-msgid "Shell completion is not supported for Bash versions older than 4.4."
-msgstr "Автодополнение командной строки не поддерживается для версий Bash старше 4.4."
+#~ msgid "Shell completion is not supported for Bash versions older than 4.4."
+#~ msgstr ""
+#~ "Автодополнение командной строки не "
+#~ "поддерживается для версий Bash старше "
+#~ "4.4."
 
-msgid "Couldn't detect Bash version, shell completion is not supported."
-msgstr "Не удалось определить версию Bash, автодополнение командной строки не поддерживается."
+#~ msgid "Couldn't detect Bash version, shell completion is not supported."
+#~ msgstr ""
+#~ "Не удалось определить версию Bash, "
+#~ "автодополнение командной строки не "
+#~ "поддерживается."
 
-msgid "Repeat for confirmation"
-msgstr "Повторите для подтверждения"
+#~ msgid "Repeat for confirmation"
+#~ msgstr "Повторите для подтверждения"
 
-msgid "Error: The value you entered was invalid."
-msgstr "Ошибка: Введенное значение недействительно."
+#~ msgid "Error: The value you entered was invalid."
+#~ msgstr "Ошибка: Введенное значение недействительно."
 
-msgid "Error: {e.message}"
-msgstr "Ошибка: {e.message}"
+#~ msgid "Error: {e.message}"
+#~ msgstr "Ошибка: {e.message}"
 
-msgid "Error: The two entered values do not match."
-msgstr "Ошибка: Два введенных значения не совпадают."
+#~ msgid "Error: The two entered values do not match."
+#~ msgstr "Ошибка: Два введенных значения не совпадают."
 
-msgid "Error: invalid input"
-msgstr "Ошибка: неверный ввод"
+#~ msgid "Error: invalid input"
+#~ msgstr "Ошибка: неверный ввод"
 
-msgid "Press any key to continue..."
-msgstr "Нажмите любую клавишу для продолжения..."
+#~ msgid "Press any key to continue..."
+#~ msgstr "Нажмите любую клавишу для продолжения..."
 
-msgid ""
-"Choose from:\n"
-"\t{choices}"
-msgstr ""
-"Выберите из:\n"
-"\t{choices}"
+#~ msgid ""
+#~ "Choose from:\n"
+#~ "\t{choices}"
+#~ msgstr ""
+#~ "Выберите из:\n"
+#~ "\t{choices}"
 
-msgid "{value!r} is not {choice}."
-msgid_plural "{value!r} is not one of {choices}."
-msgstr[0] "{value!r} не является {choice}."
-msgstr[1] "{value!r} не является одним из {choices}."
-msgstr[2] "{value!r} не является одним из {choices}."
+#~ msgid "{value!r} is not {choice}."
+#~ msgid_plural "{value!r} is not one of {choices}."
+#~ msgstr[0] "{value!r} не является {choice}."
+#~ msgstr[1] "{value!r} не является одним из {choices}."
+#~ msgstr[2] "{value!r} не является одним из {choices}."
 
-msgid "{value!r} does not match the format {format}."
-msgid_plural "{value!r} does not match the formats {formats}."
-msgstr[0] "{value!r} не соответствует формату {format}."
-msgstr[1] "{value!r} не соответствует форматам {formats}."
-msgstr[2] "{value!r} не соответствует форматам {formats}."
+#~ msgid "{value!r} does not match the format {format}."
+#~ msgid_plural "{value!r} does not match the formats {formats}."
+#~ msgstr[0] "{value!r} не соответствует формату {format}."
+#~ msgstr[1] "{value!r} не соответствует форматам {formats}."
+#~ msgstr[2] "{value!r} не соответствует форматам {formats}."
 
-msgid "{value!r} is not a valid {number_type}."
-msgstr "{value!r} не является допустимым {number_type}."
+#~ msgid "{value!r} is not a valid {number_type}."
+#~ msgstr "{value!r} не является допустимым {number_type}."
 
-msgid "{value} is not in the range {range}."
-msgstr "{value} не входит в диапазон {range}."
+#~ msgid "{value} is not in the range {range}."
+#~ msgstr "{value} не входит в диапазон {range}."
 
-msgid "{value!r} is not a valid boolean."
-msgstr "{value!r} не является допустимым булевым значением."
+#~ msgid "{value!r} is not a valid boolean."
+#~ msgstr "{value!r} не является допустимым булевым значением."
 
-msgid "{value!r} is not a valid UUID."
-msgstr "{value!r} не является допустимым UUID."
+#~ msgid "{value!r} is not a valid UUID."
+#~ msgstr "{value!r} не является допустимым UUID."
 
-msgid "file"
-msgstr "файл"
+#~ msgid "file"
+#~ msgstr "файл"
 
-msgid "directory"
-msgstr "каталог"
+#~ msgid "directory"
+#~ msgstr "каталог"
 
-msgid "path"
-msgstr "путь"
+#~ msgid "path"
+#~ msgstr "путь"
 
-msgid "{name} {filename!r} does not exist."
-msgstr "{name} {filename!r} не существует."
+#~ msgid "{name} {filename!r} does not exist."
+#~ msgstr "{name} {filename!r} не существует."
 
-msgid "{name} {filename!r} is a file."
-msgstr "{name} {filename!r} является файлом."
+#~ msgid "{name} {filename!r} is a file."
+#~ msgstr "{name} {filename!r} является файлом."
 
-msgid "{name} {filename!r} is a directory."
-msgstr "{name} {filename!r} является каталогом."
+#~ msgid "{name} {filename!r} is a directory."
+#~ msgstr "{name} {filename!r} является каталогом."
 
-msgid "{name} {filename!r} is not readable."
-msgstr "{name} {filename!r} не доступен для чтения."
+#~ msgid "{name} {filename!r} is not readable."
+#~ msgstr "{name} {filename!r} не доступен для чтения."
 
-msgid "{name} {filename!r} is not writable."
-msgstr "{name} {filename!r} не доступен для записи."
+#~ msgid "{name} {filename!r} is not writable."
+#~ msgstr "{name} {filename!r} не доступен для записи."
 
-msgid "{name} {filename!r} is not executable."
-msgstr "{name} {filename!r} не является исполняемым."
+#~ msgid "{name} {filename!r} is not executable."
+#~ msgstr "{name} {filename!r} не является исполняемым."
 
-msgid "{len_type} values are required, but {len_value} was given."
-msgid_plural "{len_type} values are required, but {len_value} were given."
-msgstr[0] "Требуется {len_type} значение, но было дано {len_value}."
-msgstr[1] "Требуется {len_type} значения, но было дано {len_value}."
-msgstr[2] "Требуется {len_type} значений, но было дано {len_value}."
+#~ msgid "{len_type} values are required, but {len_value} was given."
+#~ msgid_plural "{len_type} values are required, but {len_value} were given."
+#~ msgstr[0] "Требуется {len_type} значение, но было дано {len_value}."
+#~ msgstr[1] "Требуется {len_type} значения, но было дано {len_value}."
+#~ msgstr[2] "Требуется {len_type} значений, но было дано {len_value}."
 
-msgid "Content purported to be compressed with %s but failed to decompress."
-msgstr "Заявлено сжатие с помощью %s, но распаковка не удалась."
+#~ msgid "Content purported to be compressed with %s but failed to decompress."
+#~ msgstr "Заявлено сжатие с помощью %s, но распаковка не удалась."
 
-msgid "Unsupported value for qop: %s."
-msgstr "Неподдерживаемое значение для qop: %s."
+#~ msgid "Unsupported value for qop: %s."
+#~ msgstr "Неподдерживаемое значение для qop: %s."
 
-msgid "Unsupported value for algorithm: %s.algorithm"
-msgstr "Неподдерживаемое значение для алгоритма: %s.algorithm"
+#~ msgid "Unsupported value for algorithm: %s.algorithm"
+#~ msgstr "Неподдерживаемое значение для алгоритма: %s.algorithm"
 
-msgid "The challenge doesn't contain a server nonce, or this one is empty."
-msgstr "Запрос не содержит серверного nonce, или он пуст."
+#~ msgid "The challenge doesn't contain a server nonce, or this one is empty."
+#~ msgstr "Запрос не содержит серверного nonce, или он пуст."
 
-msgid "Unsupported value for pw-algorithm: %s.pw-algorithm"
-msgstr "Неподдерживаемое значение для pw-algorithm: %s.pw-algorithm"
+#~ msgid "Unsupported value for pw-algorithm: %s.pw-algorithm"
+#~ msgstr "Неподдерживаемое значение для pw-algorithm: %s.pw-algorithm"
 
-msgid "Redirected but the response is missing a Location: header."
-msgstr "Выполнено перенаправление, но в ответе отсутствует заголовок Location."
+#~ msgid "Redirected but the response is missing a Location: header."
+#~ msgstr "Выполнено перенаправление, но в ответе отсутствует заголовок Location."
+

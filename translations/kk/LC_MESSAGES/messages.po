@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-09-01 18:04+0800\n"
+"POT-Creation-Date: 2025-09-01 21:19+0800\n"
 "PO-Revision-Date: 2025-09-01 00:30+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: kk\n"
@@ -18,220 +18,367 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
+#: server.py:58
 msgid "Please log in to access this page."
 msgstr "Бұл бетке кіру үшін жүйеге кіріңіз."
 
+#: server.py:140
 msgid "This username is already taken!"
 msgstr "Бұл пайдаланушы аты бос емес!"
 
+#: server.py:158
 msgid "Invalid username or password!"
 msgstr "Пайдаланушы аты немесе құпия сөз қате!"
 
+#: server.py:173
 msgid "Group name and members are required"
 msgstr "Топ атауы мен қатысушылары қажет"
 
+#: server.py:175
 msgid "A group with this name already exists!"
 msgstr "Мұндай атаумен топ бар!"
 
+#: server.py:193 server.py:257
 msgid "Group not found or you are not a member"
 msgstr "Топ табылмады немесе сіз қатысушы емессіз"
 
+#: server.py:202 server.py:214 server.py:226
 msgid "Access denied"
 msgstr "Қатынас құқығы жоқ"
 
+#: server.py:284
 msgid "No audio file"
 msgstr "Аудиофайл жоқ"
 
+#: server.py:286
 msgid "No recipient specified"
 msgstr "Алушы көрсетілмеген"
 
+#: server.py:317
 msgid "Group not found or access denied"
 msgstr "Топ табылмады немесе қатынас құқығы жоқ"
 
+#: server.py:329
 msgid "Recipient not found"
 msgstr "Алушы табылмады"
 
+#: server.py:345
 msgid "Database error"
 msgstr "Дерекқор қатесі"
 
+#: server.py:358
 msgid "No text provided"
 msgstr "Мәтін берілмеген"
 
+#: server.py:388
+#, python-brace-format
 msgid "{model_choice} service failed"
 msgstr "{model_choice} қызметі істен шықты"
 
+#: server.py:398
 msgid "No prompt provided"
 msgstr "Сұрау берілмеген"
 
+#: server.py:412
 msgid "AI Assistant service failed"
 msgstr "ЖИ-ассистент қызметі істен шықты"
 
+#: server.py:421
 msgid "Please select a chat."
 msgstr "Чатты таңдаңыз."
 
-msgid "Recording: {seconds} sec."
-msgstr "Жазылуда: {seconds} сек."
+#: server.py:422
+#, fuzzy
+msgid "Microphone error:"
+msgstr "ЖИ қатесі:"
 
-msgid "Recording finished"
-msgstr "Жазу аяқталды"
-
-msgid "Transcription ready"
-msgstr "Транскрипция дайын"
-
-msgid "Press 'Start' to begin recording"
-msgstr "Жазуды бастау үшін 'Старт' түймесін басыңыз"
-
-msgid "AI is working..."
-msgstr "ЖИ жұмыс істеуде..."
-
+#: server.py:423
 msgid "AI Error:"
 msgstr "ЖИ қатесі:"
 
+#: server.py:424
 msgid "An error occurred while contacting the AI."
 msgstr "ЖИ-мен байланысу кезінде қате пайда болды."
 
-msgid "Thinking..."
-msgstr "Ойлануда..."
-
-msgid "Could not get a response from the AI."
-msgstr "ЖИ-ден жауап алу мүмкін болмады."
-
+#: server.py:425
 msgid "A network error has occurred. Please try again."
 msgstr "Желі қатесі пайда болды. Қайталап көріңіз."
 
+#: server.py:426
+msgid "Could not get a response from the AI."
+msgstr "ЖИ-ден жауап алу мүмкін болмады."
+
+#: server.py:429
+#, python-brace-format
+msgid "Recording: {seconds} sec."
+msgstr "Жазылуда: {seconds} сек."
+
+#: server.py:430
+msgid "Recording finished"
+msgstr "Жазу аяқталды"
+
+#: server.py:431
+msgid "Transcription ready"
+msgstr "Транскрипция дайын"
+
+#: server.py:432
+msgid "Press 'Start' to begin recording"
+msgstr "Жазуды бастау үшін 'Старт' түймесін басыңыз"
+
+#: server.py:433
+msgid "AI is working..."
+msgstr "ЖИ жұмыс істеуде..."
+
+#: server.py:434
+msgid "Thinking..."
+msgstr "Ойлануда..."
+
+#: server.py:435
 msgid "Show text"
 msgstr "Мәтінді көрсету"
 
+#: server.py:436
 msgid "Hide text"
 msgstr "Мәтінді жасыру"
 
+#: server.py:439
+#, python-brace-format
 msgid "Chat with {name}"
 msgstr "{name}-мен чат"
 
-msgid "Мой Мессенджер"
-msgstr "Менің Мессенджерім"
-
-msgid "Выйти"
-msgstr "Шығу"
-
-msgid "Группы"
-msgstr "Топтар"
-
-msgid "Сообщение в группе..."
-msgstr "Топтағы хабарлама..."
-
-msgid "Личные сообщения"
-msgstr "Жеке хабарламалар"
-
-msgid "Личное сообщение..."
-msgstr "Жеке хабарлама..."
-
-msgid "Создать группу"
-msgstr "Топ құру"
-
+#: server.py:440 templates/index.html:71
 msgid "Выберите чат"
 msgstr "Чатты таңдаңыз"
 
+#: templates/assistant_widget.html:10
+msgid "Настроить"
+msgstr ""
+
+#: templates/assistants.html:6
+msgid "Панель управления ассистентами"
+msgstr ""
+
+#: templates/assistants.html:13
+msgid "Мой ИИ"
+msgstr ""
+
+#: templates/assistants.html:16 templates/assistants.html:27
+#: templates/index.html:20
+msgid "Панель управления"
+msgstr ""
+
+#: templates/assistants.html:17
+#, fuzzy
+msgid "Мои ассистенты"
+msgstr "ЖИ-Ассистент"
+
+#: templates/assistants.html:18
+msgid "База знаний"
+msgstr ""
+
+#: templates/assistants.html:19
+msgid "Настройки"
+msgstr ""
+
+#: templates/assistants.html:21
+#, fuzzy
+msgid "Вернуться в мессенджер"
+msgstr "Менің Мессенджерім"
+
+#: templates/group_info.html:5
+msgid "Информация о группе"
+msgstr ""
+
+#: templates/group_info.html:23
+msgid "Назад к чатам"
+msgstr ""
+
+#: templates/group_info.html:26
+msgid "Участники"
+msgstr ""
+
+#: templates/group_info.html:35
+#, fuzzy
+msgid "Настройки группы"
+msgstr "Топ атауы"
+
+#: templates/group_info.html:39
+#, fuzzy
+msgid "Название группы:"
+msgstr "Топ атауы"
+
+#: templates/group_info.html:42
+msgid "Сохранить название"
+msgstr ""
+
+#: templates/group_info.html:48
+#, fuzzy
+msgid "Изменить состав участников"
+msgstr "Қатысушыларды таңдаңыз:"
+
+#: templates/group_info.html:60
+msgid "Обновить состав"
+msgstr ""
+
+#: templates/group_info.html:66
+msgid "Вы уверены, что хотите удалить эту группу?"
+msgstr ""
+
+#: templates/group_info.html:66
+#, fuzzy
+msgid "Удалить группу"
+msgstr "Топ құру"
+
+#: templates/index.html:6
+msgid "Мой Мессенджер"
+msgstr "Менің Мессенджерім"
+
+#: templates/index.html:21
+msgid "Выйти"
+msgstr "Шығу"
+
+#: templates/index.html:25
+msgid "Группы"
+msgstr "Топтар"
+
+#: templates/index.html:32
+msgid "Сообщение в группе..."
+msgstr "Топтағы хабарлама..."
+
+#: templates/index.html:42
+msgid "Личные сообщения"
+msgstr "Жеке хабарламалар"
+
+#: templates/index.html:53
+msgid "Личное сообщение..."
+msgstr "Жеке хабарлама..."
+
+#: templates/index.html:65
+msgid "Создать группу"
+msgstr "Топ құру"
+
+#: templates/index.html:75
 msgid "Введите сообщение..."
 msgstr "Хабарламаны енгізіңіз..."
 
+#: templates/index.html:76 templates/index.html:130
 msgid "ИИ-Ассистент"
 msgstr "ЖИ-Ассистент"
 
+#: templates/index.html:78
 msgid "Отправить"
 msgstr "Жіберу"
 
+#: templates/index.html:85
 msgid "Создание новой группы"
 msgstr "Жаңа топ құру"
 
+#: templates/index.html:87
 msgid "Название группы"
 msgstr "Топ атауы"
 
+#: templates/index.html:88
 msgid "Выберите участников:"
 msgstr "Қатысушыларды таңдаңыз:"
 
+#: templates/index.html:99
 msgid "Создать"
 msgstr "Құру"
 
+#: templates/index.html:106
 msgid "Запись сообщения"
 msgstr "Хабарламаны жазу"
 
+#: templates/index.html:107
 msgid "Нажмите \"Старт\" для начала записи"
 msgstr "\"Старт\" түймесін басып, жазуды бастаңыз"
 
+#: templates/index.html:109
 msgid "Здесь появится транскрипция..."
 msgstr "Транскрипция осы жерде пайда болады..."
 
+#: templates/index.html:111
 msgid "Старт"
 msgstr "Старт"
 
+#: templates/index.html:112
 msgid "Стоп"
 msgstr "Стоп"
 
+#: templates/index.html:117
 msgid "Улучшить текст"
 msgstr "Мәтінді жақсарту"
 
+#: templates/index.html:118
 msgid "Сгенерировать ответ"
 msgstr "Жауапты генерациялау"
 
+#: templates/index.html:121
 msgid "Отмена"
 msgstr "Болдырмау"
 
+#: templates/index.html:122
 msgid "Отправить текст"
 msgstr "Мәтінді жіберу"
 
+#: templates/index.html:123
 msgid "Отправить аудио"
 msgstr "Аудионы жіберу"
 
+#: templates/index.html:132
 msgid "Здравствуйте! Чем могу помочь?"
 msgstr "Сәлеметсіз бе! Қандай көмек көрсете аламын?"
 
+#: templates/index.html:135
 msgid "Спросите что-нибудь..."
 msgstr "Бірдеңе сұраңыз..."
 
+#: templates/index.html:138
 msgid "Отправить последний ответ в чат"
 msgstr "Соңғы жауапты чатқа жіберу"
 
+#: templates/index.html:139
 msgid "Закрыть"
 msgstr "Жабу"
 
-msgid "{editor}: Editing failed"
-msgstr "{editor}: Өңдеу сәтсіз аяқталды"
+#~ msgid "{editor}: Editing failed"
+#~ msgstr "{editor}: Өңдеу сәтсіз аяқталды"
 
-msgid "{editor}: Editing failed: {e}"
-msgstr "{editor}: Өңдеу сәтсіз аяқталды: {e}"
+#~ msgid "{editor}: Editing failed: {e}"
+#~ msgstr "{editor}: Өңдеу сәтсіз аяқталды: {e}"
 
-msgid "Aborted!"
-msgstr "Тоқтатылды!"
+#~ msgid "Aborted!"
+#~ msgstr "Тоқтатылды!"
 
-msgid "Options"
-msgstr "Опциялар"
+#~ msgid "Options"
+#~ msgstr "Опциялар"
 
-msgid "Got unexpected extra argument ({args})"
-msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] "Күтпеген қосымша аргумент алынды ({args})"
-msgstr[1] "Күтпеген қосымша аргументтер алынды ({args})"
+#~ msgid "Got unexpected extra argument ({args})"
+#~ msgid_plural "Got unexpected extra arguments ({args})"
+#~ msgstr[0] "Күтпеген қосымша аргумент алынды ({args})"
+#~ msgstr[1] "Күтпеген қосымша аргументтер алынды ({args})"
 
-msgid "Commands"
-msgstr "Командалар"
+#~ msgid "Commands"
+#~ msgstr "Командалар"
 
-msgid "Missing command."
-msgstr "Команда жоқ."
+#~ msgid "Missing command."
+#~ msgstr "Команда жоқ."
 
-msgid "No such command {name!r}."
-msgstr "Мұндай {name!r} командасы жоқ."
+#~ msgid "No such command {name!r}."
+#~ msgstr "Мұндай {name!r} командасы жоқ."
 
-msgid "Error: {message}"
-msgstr "Қате: {message}"
+#~ msgid "Error: {message}"
+#~ msgstr "Қате: {message}"
 
-msgid "Try '{command} {option}' for help."
-msgstr "Анықтама алу үшін '{command} {option}' командасын қолданыңыз."
+#~ msgid "Try '{command} {option}' for help."
+#~ msgstr "Анықтама алу үшін '{command} {option}' командасын қолданыңыз."
 
-msgid "Missing argument"
-msgstr "Аргумент жоқ"
+#~ msgid "Missing argument"
+#~ msgstr "Аргумент жоқ"
 
-msgid "Missing option"
-msgstr "Опция жоқ"
+#~ msgid "Missing option"
+#~ msgstr "Опция жоқ"
 
-msgid "Missing parameter"
-msgstr "Параметр жоқ"
+#~ msgid "Missing parameter"
+#~ msgstr "Параметр жоқ"
+

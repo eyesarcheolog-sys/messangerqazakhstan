@@ -2,7 +2,7 @@
 <html lang="{{ CURRENT_LANGUAGE }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('Мой Мессенджер') }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
 </head>
@@ -17,6 +17,7 @@
                     {% if not loop.last %} | {% endif %}
                 {% endfor %}
             </div>
+            <a href="{{ url_for('assistants_dashboard') }}">{{ _('Панель управления') }}</a>
             <a href="{{ url_for('logout') }}">{{ _('Выйти') }}</a>
         </div>
         
