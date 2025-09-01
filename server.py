@@ -30,9 +30,9 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 # --- BABEL SETUP ---
 app.config['LANGUAGES'] = {
-    'en': 'English',
-    'ru': 'Русский',
-    'kk': 'Қазақша'
+    'en': 'en',
+    'ru': 'ru',
+    'kk': 'kk'
 }
 app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
 

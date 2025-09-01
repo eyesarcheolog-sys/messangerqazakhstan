@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ CURRENT_LANGUAGE }}">
 <head>
     <meta charset="UTF-8">
-    <title>Информация о группе</title>
+    <title>{{ _('Информация о группе') }}</title>
     <style>
         body { font-family: sans-serif; background-color: #f0f2f5; padding: 20px; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -20,10 +20,10 @@
 </head>
 <body>
     <div class="container">
-        <a href="{{ url_for('index') }}">&larr; Назад к чатам</a>
+        <a href="{{ url_for('index') }}">&larr; {{ _('Назад к чатам') }}</a>
         <h1>{{ group.name }}</h1>
         
-        <h2>Участники ({{ group.members|length }})</h2>
+        <h2>{{ _('Участники') }} ({{ group.members|length }})</h2>
         <ul>
             {% for member in group.members %}
             <li>{{ member.username }}</li>
@@ -32,20 +32,20 @@
         
         <hr style="margin: 20px 0;">
         
-        <h2>Настройки группы</h2>
+        <h2>{{ _('Настройки группы') }}</h2>
         
         <form action="{{ url_for('edit_group_name', group_id=group.id) }}" method="POST">
             <div>
-                <label for="group_name">Название группы:</label>
+                <label for="group_name">{{ _('Название группы:') }}</label>
                 <input type="text" id="group_name" name="group_name" value="{{ group.name }}" required>
             </div>
-            <button type="submit">Сохранить название</button>
+            <button type="submit">{{ _('Сохранить название') }}</button>
         </form>
 
         <hr style="margin: 20px 0;">
 
         <form action="{{ url_for('edit_group_members', group_id=group.id) }}" method="POST">
-            <h2>Изменить состав участников</h2>
+            <h2>{{ _('Изменить состав участников') }}</h2>
             <div class="members-selection">
                 {% for user in all_users %}
                     {% if user.id != current_user.id %}
@@ -57,14 +57,32 @@
                     {% endif %}
                 {% endfor %}
             </div>
-            <button type="submit" style="margin-top: 15px;">Обновить состав</button>
+            <button type="submit" style="margin-top: 15px;">{{ _('Обновить состав') }}</button>
         </form>
 
         <hr style="margin: 20px 0;">
 
-        <form action="{{ url_for('delete_group', group_id=group.id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить эту группу?');">
-            <button type="submit" class="delete-btn">Удалить группу</button>
+        <form id="delete-group-form" action="{{ url_for('delete_group', group_id=group.id) }}" method="POST">
+             <button type="submit" class="delete-btn" data-confirm-message="{{ _('Вы уверены, что хотите удалить эту группу?') }}">{{ _('Удалить группу') }}</button>
         </form>
     </div>
+
+    <script>
+        const deleteForm = document.getElementById('delete-group-form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(event) {
+                // Предотвращаем отправку формы по умолчанию
+                event.preventDefault(); 
+                
+                const button = this.querySelector('button[type="submit"]');
+                const message = button.dataset.confirmMessage;
+
+                // Если пользователь нажал "ОК", отправляем форму
+                if (window.confirm(message)) {
+                    this.submit();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
