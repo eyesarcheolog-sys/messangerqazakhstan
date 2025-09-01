@@ -469,6 +469,24 @@ def configure_assistant(assistant_id):
 
     return render_template('configure_assistant.html', assistant=assistant)
 
+@app.route('/assistants/my')
+@login_required
+def my_assistants_page():
+    # В будущем здесь будет логика для отображения списка ассистентов
+    return render_template('my_assistants.html')
+
+@app.route('/assistants/knowledge')
+@login_required
+def knowledge_base_page():
+    # Логика для базы знаний
+    return render_template('knowledge_base.html')
+
+@app.route('/assistants/settings')
+@login_required
+def assistants_settings_page():
+    # Логика для общих настроек
+    return render_template('settings.html')
+    
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
 @login_required
