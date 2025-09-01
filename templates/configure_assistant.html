@@ -1,0 +1,30 @@
+{% extends "assistants_layout.html" %}
+
+{% block title %}{{ _('Настройка') }} - {{ assistant.name }}{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h1>{{ assistant.name }}</h1>
+    <p class="subtitle">{{ _('Здесь вы можете задать инструкции и обучить вашего ассистента') }}</p>
+</header>
+
+<div class="config-form">
+    <div class="form-section">
+        <label for="instructions">{{ _('Инструкции для ассистента') }}</label>
+        <p class="form-hint">{{ _('Опишите на естественном языке, что должен делать ассистент, его роль и правила.') }}</p>
+        <textarea id="instructions" rows="10" placeholder="{{ _('Например: Ты — мой помощник по задачам. Всегда добавляй новые задачи в проект Inbox...') }}"></textarea>
+    </div>
+
+    <div class="form-section">
+        <label>{{ _('Обучение и Данные') }}</label>
+        <p class="form-hint">{{ _('Подключите источники данных, чтобы ассистент мог их использовать.') }}</p>
+        <div class="data-source-placeholder">
+            <p>{{ _('Скоро здесь можно будет подключать Google Календарь, контакты и другие сервисы.') }}</p>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="save-btn">{{ _('Сохранить изменения') }}</button>
+    </div>
+</div>
+{% endblock %}

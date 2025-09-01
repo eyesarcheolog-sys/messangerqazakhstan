@@ -7,6 +7,6 @@
         <p>{{ assistant.info }}</p>
     </div>
     <div class="widget-footer">
-        <a href="#">{{ _('Настроить') }} →</a>
+        <a href="{{ url_for('configure_assistant', assistant_id=assistant.id) }}">{{ _('Настроить') }} →</a>
     </div>
 </div>

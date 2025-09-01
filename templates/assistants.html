@@ -1,38 +1,15 @@
-<!DOCTYPE html>
-<html lang="{{ CURRENT_LANGUAGE }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('Панель управления ассистентами') }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/assistants.css') }}">
-</head>
-<body>
-    <div class="dashboard-layout">
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <h2>{{ _('Мой ИИ') }}</h2>
-            </div>
-            <ul>
-                <li class="active"><a href="{{ url_for('assistants_dashboard') }}">{{ _('Панель управления') }}</a></li>
-                <li><a href="#">{{ _('Мои ассистенты') }}</a></li>
-                <li><a href="#">{{ _('База знаний') }}</a></li>
-                <li><a href="#">{{ _('Настройки') }}</a></li>
-                <li class="separator"></li>
-                <li><a href="{{ url_for('index') }}">{{ _('Вернуться в мессенджер') }}</a></li>
-            </ul>
-        </nav>
+{% extends "assistants_layout.html" %}
 
-        <main class="main-content">
-            <header class="main-header">
-                <h1>{{ _('Панель управления') }}</h1>
-            </header>
-            
-            <section class="widgets-grid">
-                {% for assistant in assistants %}
-                    {% include 'assistant_widget.html' %}
-                {% endfor %}
-            </section>
-        </main>
-    </div>
-</body>
-</html>
+{% block title %}{{ _('Панель управления') }}{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h1>{{ _('Панель управления') }}</h1>
+</header>
+
+<section class="widgets-grid">
+    {% for assistant in assistants %}
+        {% include 'assistant_widget.html' %}
+    {% endfor %}
+</section>
+{% endblock %}

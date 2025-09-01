@@ -439,22 +439,35 @@ def js_translations():
         "Chat with {name}": _("Chat with {name}"),
         "Select a chat": _("Выберите чат")
     }
-    # Преобразуем словарь в JS-объект
     js_code = f"window.translations = {json.dumps(translations)};"
     return Response(js_code, mimetype='application/javascript')
 
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
-    # Временно создадим "заглушки" данных для ассистентов
-    # В будущем мы будем брать эту информацию из базы данных
     my_assistants = [
-        {'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
-        {'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
-        {'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
-        {'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
+        {'id': 1, 'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
+        {'id': 2, 'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
+        {'id': 3, 'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
+        {'id': 4, 'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
     ]
     return render_template('assistants.html', assistants=my_assistants)
+
+@app.route('/assistants/configure/<int:assistant_id>')
+@login_required
+def configure_assistant(assistant_id):
+    my_assistants = [
+        {'id': 1, 'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
+        {'id': 2, 'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
+        {'id': 3, 'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
+        {'id': 4, 'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
+    ]
+    assistant = next((a for a in my_assistants if a['id'] == assistant_id), None)
+    
+    if not assistant:
+        return "Assistant not found", 404
+
+    return render_template('configure_assistant.html', assistant=assistant)
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')

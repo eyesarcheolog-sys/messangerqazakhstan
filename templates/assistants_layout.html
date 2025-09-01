@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{ CURRENT_LANGUAGE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ _('Панель управления') }}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assistants.css') }}">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>{{ _('Мой ИИ') }}</h2>
+            </div>
+            <ul>
+                <li class="{{ 'active' if request.endpoint == 'assistants_dashboard' else '' }}"><a href="{{ url_for('assistants_dashboard') }}">{{ _('Панель управления') }}</a></li>
+                <li><a href="#">{{ _('Мои ассистенты') }}</a></li>
+                <li><a href="#">{{ _('База знаний') }}</a></li>
+                <li><a href="#">{{ _('Настройки') }}</a></li>
+                <li class="separator"></li>
+                <li><a href="{{ url_for('index') }}">{{ _('Вернуться в мессенджер') }}</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
