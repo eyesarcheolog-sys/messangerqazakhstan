@@ -1,0 +1,132 @@
+:root {
+    --background-color: #101010;
+    --sidebar-color: #181818;
+    --widget-color: #1C1C1E;
+    --primary-text-color: #EAEAEA;
+    --secondary-text-color: #8E8E93;
+    --accent-color: #0A84FF;
+    --border-color: #2A2A2A;
+    --status-active: #34C759;
+    --status-inactive: #8E8E93;
+    --status-training: #FF9500;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--primary-text-color);
+}
+
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- Левая панель --- */
+.sidebar {
+    width: 240px;
+    background-color: var(--sidebar-color);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header h2 {
+    margin: 0 0 30px 0;
+    font-size: 22px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 12px 15px;
+    border-radius: 8px;
+    color: var(--secondary-text-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar ul li.active a {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.sidebar ul li a:hover {
+    background-color: var(--widget-color);
+    color: var(--primary-text-color);
+}
+
+.sidebar ul li.separator {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 15px 0;
+}
+
+
+/* --- Основной контент --- */
+.main-content {
+    flex-grow: 1;
+    padding: 30px 40px;
+}
+
+.main-header h1 {
+    font-size: 32px;
+    margin: 0 0 30px 0;
+}
+
+.widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* --- Виджет --- */
+.widget {
+    background-color: var(--widget-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.widget-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.status-indicator.active { background-color: var(--status-active); }
+.status-indicator.inactive { background-color: var(--status-inactive); }
+.status-indicator.training { background-color: var(--status-training); }
+
+.widget-body {
+    flex-grow: 1;
+    color: var(--secondary-text-color);
+    font-size: 14px;
+}
+
+.widget-footer a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+}

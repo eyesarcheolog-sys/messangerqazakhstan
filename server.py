@@ -443,6 +443,18 @@ def js_translations():
     js_code = f"window.translations = {json.dumps(translations)};"
     return Response(js_code, mimetype='application/javascript')
 
+@app.route('/assistants')
+@login_required
+def assistants_dashboard():
+    # Временно создадим "заглушки" данных для ассистентов
+    # В будущем мы будем брать эту информацию из базы данных
+    my_assistants = [
+        {'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
+        {'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
+        {'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
+        {'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
+    ]
+    return render_template('assistants.html', assistants=my_assistants)
 
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
