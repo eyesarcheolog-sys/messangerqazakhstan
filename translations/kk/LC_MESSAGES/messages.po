@@ -18,221 +18,220 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#~ msgid "Please log in to access this page."
-#~ msgstr "Бұл бетке кіру үшін жүйеге кіріңіз."
+msgid "Please log in to access this page."
+msgstr "Бұл бетке кіру үшін жүйеге кіріңіз."
 
-#~ msgid "This username is already taken!"
-#~ msgstr "Бұл пайдаланушы аты бос емес!"
+msgid "This username is already taken!"
+msgstr "Бұл пайдаланушы аты бос емес!"
 
-#~ msgid "Invalid username or password!"
-#~ msgstr "Пайдаланушы аты немесе құпия сөз қате!"
+msgid "Invalid username or password!"
+msgstr "Пайдаланушы аты немесе құпия сөз қате!"
 
-#~ msgid "Group name and members are required"
-#~ msgstr "Топ атауы мен қатысушылары қажет"
+msgid "Group name and members are required"
+msgstr "Топ атауы мен қатысушылары қажет"
 
-#~ msgid "A group with this name already exists!"
-#~ msgstr "Мұндай атаумен топ бар!"
+msgid "A group with this name already exists!"
+msgstr "Мұндай атаумен топ бар!"
 
-#~ msgid "Group not found or you are not a member"
-#~ msgstr "Топ табылмады немесе сіз қатысушы емессіз"
+msgid "Group not found or you are not a member"
+msgstr "Топ табылмады немесе сіз қатысушы емессіз"
 
-#~ msgid "Access denied"
-#~ msgstr "Қатынас құқығы жоқ"
+msgid "Access denied"
+msgstr "Қатынас құқығы жоқ"
 
-#~ msgid "No audio file"
-#~ msgstr "Аудиофайл жоқ"
+msgid "No audio file"
+msgstr "Аудиофайл жоқ"
 
-#~ msgid "No recipient specified"
-#~ msgstr "Алушы көрсетілмеген"
+msgid "No recipient specified"
+msgstr "Алушы көрсетілмеген"
 
-#~ msgid "Group not found or access denied"
-#~ msgstr "Топ табылмады немесе қатынас құқығы жоқ"
+msgid "Group not found or access denied"
+msgstr "Топ табылмады немесе қатынас құқығы жоқ"
 
-#~ msgid "Recipient not found"
-#~ msgstr "Алушы табылмады"
+msgid "Recipient not found"
+msgstr "Алушы табылмады"
 
-#~ msgid "Database error"
-#~ msgstr "Дерекқор қатесі"
+msgid "Database error"
+msgstr "Дерекқор қатесі"
 
-#~ msgid "No text provided"
-#~ msgstr "Мәтін берілмеген"
+msgid "No text provided"
+msgstr "Мәтін берілмеген"
 
-#~ msgid "{model_choice} service failed"
-#~ msgstr "{model_choice} қызметі істен шықты"
+msgid "{model_choice} service failed"
+msgstr "{model_choice} қызметі істен шықты"
 
-#~ msgid "No prompt provided"
-#~ msgstr "Сұрау берілмеген"
+msgid "No prompt provided"
+msgstr "Сұрау берілмеген"
 
-#~ msgid "AI Assistant service failed"
-#~ msgstr "ЖИ-ассистент қызметі істен шықты"
+msgid "AI Assistant service failed"
+msgstr "ЖИ-ассистент қызметі істен шықты"
 
-#~ msgid "Please select a chat."
-#~ msgstr "Чатты таңдаңыз."
+msgid "Please select a chat."
+msgstr "Чатты таңдаңыз."
 
-#~ msgid "Recording: {seconds} sec."
-#~ msgstr "Жазылуда: {seconds} сек."
+msgid "Recording: {seconds} sec."
+msgstr "Жазылуда: {seconds} сек."
 
-#~ msgid "Recording finished"
-#~ msgstr "Жазу аяқталды"
+msgid "Recording finished"
+msgstr "Жазу аяқталды"
 
-#~ msgid "Transcription ready"
-#~ msgstr "Транскрипция дайын"
+msgid "Transcription ready"
+msgstr "Транскрипция дайын"
 
-#~ msgid "Press 'Start' to begin recording"
-#~ msgstr "Жазуды бастау үшін 'Старт' түймесін басыңыз"
+msgid "Press 'Start' to begin recording"
+msgstr "Жазуды бастау үшін 'Старт' түймесін басыңыз"
 
-#~ msgid "AI is working..."
-#~ msgstr "ЖИ жұмыс істеуде..."
+msgid "AI is working..."
+msgstr "ЖИ жұмыс істеуде..."
 
-#~ msgid "AI Error:"
-#~ msgstr "ЖИ қатесі:"
+msgid "AI Error:"
+msgstr "ЖИ қатесі:"
 
-#~ msgid "An error occurred while contacting the AI."
-#~ msgstr "ЖИ-мен байланысу кезінде қате пайда болды."
+msgid "An error occurred while contacting the AI."
+msgstr "ЖИ-мен байланысу кезінде қате пайда болды."
 
-#~ msgid "Thinking..."
-#~ msgstr "Ойлануда..."
+msgid "Thinking..."
+msgstr "Ойлануда..."
 
-#~ msgid "Could not get a response from the AI."
-#~ msgstr "ЖИ-ден жауап алу мүмкін болмады."
+msgid "Could not get a response from the AI."
+msgstr "ЖИ-ден жауап алу мүмкін болмады."
 
-#~ msgid "A network error has occurred. Please try again."
-#~ msgstr "Желі қатесі пайда болды. Қайталап көріңіз."
+msgid "A network error has occurred. Please try again."
+msgstr "Желі қатесі пайда болды. Қайталап көріңіз."
 
-#~ msgid "Show text"
-#~ msgstr "Мәтінді көрсету"
+msgid "Show text"
+msgstr "Мәтінді көрсету"
 
-#~ msgid "Hide text"
-#~ msgstr "Мәтінді жасыру"
+msgid "Hide text"
+msgstr "Мәтінді жасыру"
 
-#~ msgid "Chat with {name}"
-#~ msgstr "{name}-мен чат"
+msgid "Chat with {name}"
+msgstr "{name}-мен чат"
 
-#~ msgid "Мой Мессенджер"
-#~ msgstr "Менің Мессенджерім"
+msgid "Мой Мессенджер"
+msgstr "Менің Мессенджерім"
 
-#~ msgid "Выйти"
-#~ msgstr "Шығу"
+msgid "Выйти"
+msgstr "Шығу"
 
-#~ msgid "Группы"
-#~ msgstr "Топтар"
+msgid "Группы"
+msgstr "Топтар"
 
-#~ msgid "Сообщение в группе..."
-#~ msgstr "Топтағы хабарлама..."
+msgid "Сообщение в группе..."
+msgstr "Топтағы хабарлама..."
 
-#~ msgid "Личные сообщения"
-#~ msgstr "Жеке хабарламалар"
+msgid "Личные сообщения"
+msgstr "Жеке хабарламалар"
 
-#~ msgid "Личное сообщение..."
-#~ msgstr "Жеке хабарлама..."
+msgid "Личное сообщение..."
+msgstr "Жеке хабарлама..."
 
-#~ msgid "Создать группу"
-#~ msgstr "Топ құру"
+msgid "Создать группу"
+msgstr "Топ құру"
 
-#~ msgid "Выберите чат"
-#~ msgstr "Чатты таңдаңыз"
+msgid "Выберите чат"
+msgstr "Чатты таңдаңыз"
 
-#~ msgid "Введите сообщение..."
-#~ msgstr "Хабарламаны енгізіңіз..."
+msgid "Введите сообщение..."
+msgstr "Хабарламаны енгізіңіз..."
 
-#~ msgid "ИИ-Ассистент"
-#~ msgstr "ЖИ-Ассистент"
+msgid "ИИ-Ассистент"
+msgstr "ЖИ-Ассистент"
 
-#~ msgid "Отправить"
-#~ msgstr "Жіберу"
+msgid "Отправить"
+msgstr "Жіберу"
 
-#~ msgid "Создание новой группы"
-#~ msgstr "Жаңа топ құру"
+msgid "Создание новой группы"
+msgstr "Жаңа топ құру"
 
-#~ msgid "Название группы"
-#~ msgstr "Топ атауы"
+msgid "Название группы"
+msgstr "Топ атауы"
 
-#~ msgid "Выберите участников:"
-#~ msgstr "Қатысушыларды таңдаңыз:"
+msgid "Выберите участников:"
+msgstr "Қатысушыларды таңдаңыз:"
 
-#~ msgid "Создать"
-#~ msgstr "Құру"
+msgid "Создать"
+msgstr "Құру"
 
-#~ msgid "Запись сообщения"
-#~ msgstr "Хабарламаны жазу"
+msgid "Запись сообщения"
+msgstr "Хабарламаны жазу"
 
-#~ msgid "Нажмите \"Старт\" для начала записи"
-#~ msgstr "\"Старт\" түймесін басып, жазуды бастаңыз"
+msgid "Нажмите \"Старт\" для начала записи"
+msgstr "\"Старт\" түймесін басып, жазуды бастаңыз"
 
-#~ msgid "Здесь появится транскрипция..."
-#~ msgstr "Транскрипция осы жерде пайда болады..."
+msgid "Здесь появится транскрипция..."
+msgstr "Транскрипция осы жерде пайда болады..."
 
-#~ msgid "Старт"
-#~ msgstr "Старт"
+msgid "Старт"
+msgstr "Старт"
 
-#~ msgid "Стоп"
-#~ msgstr "Стоп"
+msgid "Стоп"
+msgstr "Стоп"
 
-#~ msgid "Улучшить текст"
-#~ msgstr "Мәтінді жақсарту"
+msgid "Улучшить текст"
+msgstr "Мәтінді жақсарту"
 
-#~ msgid "Сгенерировать ответ"
-#~ msgstr "Жауапты генерациялау"
+msgid "Сгенерировать ответ"
+msgstr "Жауапты генерациялау"
 
-#~ msgid "Отмена"
-#~ msgstr "Болдырмау"
+msgid "Отмена"
+msgstr "Болдырмау"
 
-#~ msgid "Отправить текст"
-#~ msgstr "Мәтінді жіберу"
+msgid "Отправить текст"
+msgstr "Мәтінді жіберу"
 
-#~ msgid "Отправить аудио"
-#~ msgstr "Аудионы жіберу"
+msgid "Отправить аудио"
+msgstr "Аудионы жіберу"
 
-#~ msgid "Здравствуйте! Чем могу помочь?"
-#~ msgstr "Сәлеметсіз бе! Қандай көмек көрсете аламын?"
+msgid "Здравствуйте! Чем могу помочь?"
+msgstr "Сәлеметсіз бе! Қандай көмек көрсете аламын?"
 
-#~ msgid "Спросите что-нибудь..."
-#~ msgstr "Бірдеңе сұраңыз..."
+msgid "Спросите что-нибудь..."
+msgstr "Бірдеңе сұраңыз..."
 
-#~ msgid "Отправить последний ответ в чат"
-#~ msgstr "Соңғы жауапты чатқа жіберу"
+msgid "Отправить последний ответ в чат"
+msgstr "Соңғы жауапты чатқа жіберу"
 
-#~ msgid "Закрыть"
-#~ msgstr "Жабу"
+msgid "Закрыть"
+msgstr "Жабу"
 
-#~ msgid "{editor}: Editing failed"
-#~ msgstr "{editor}: Өңдеу сәтсіз аяқталды"
+msgid "{editor}: Editing failed"
+msgstr "{editor}: Өңдеу сәтсіз аяқталды"
 
-#~ msgid "{editor}: Editing failed: {e}"
-#~ msgstr "{editor}: Өңдеу сәтсіз аяқталды: {e}"
+msgid "{editor}: Editing failed: {e}"
+msgstr "{editor}: Өңдеу сәтсіз аяқталды: {e}"
 
-#~ msgid "Aborted!"
-#~ msgstr "Тоқтатылды!"
+msgid "Aborted!"
+msgstr "Тоқтатылды!"
 
-#~ msgid "Options"
-#~ msgstr "Опциялар"
+msgid "Options"
+msgstr "Опциялар"
 
-#~ msgid "Got unexpected extra argument ({args})"
-#~ msgid_plural "Got unexpected extra arguments ({args})"
-#~ msgstr[0] "Күтпеген қосымша аргумент алынды ({args})"
-#~ msgstr[1] "Күтпеген қосымша аргументтер алынды ({args})"
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] "Күтпеген қосымша аргумент алынды ({args})"
+msgstr[1] "Күтпеген қосымша аргументтер алынды ({args})"
 
-#~ msgid "Commands"
-#~ msgstr "Командалар"
+msgid "Commands"
+msgstr "Командалар"
 
-#~ msgid "Missing command."
-#~ msgstr "Команда жоқ."
+msgid "Missing command."
+msgstr "Команда жоқ."
 
-#~ msgid "No such command {name!r}."
-#~ msgstr "Мұндай {name!r} командасы жоқ."
+msgid "No such command {name!r}."
+msgstr "Мұндай {name!r} командасы жоқ."
 
-#~ msgid "Error: {message}"
-#~ msgstr "Қате: {message}"
+msgid "Error: {message}"
+msgstr "Қате: {message}"
 
-#~ msgid "Try '{command} {option}' for help."
-#~ msgstr "Анықтама алу үшін '{command} {option}' командасын қолданыңыз."
+msgid "Try '{command} {option}' for help."
+msgstr "Анықтама алу үшін '{command} {option}' командасын қолданыңыз."
 
-#~ msgid "Missing argument"
-#~ msgstr "Аргумент жоқ"
+msgid "Missing argument"
+msgstr "Аргумент жоқ"
 
-#~ msgid "Missing option"
-#~ msgstr "Опция жоқ"
+msgid "Missing option"
+msgstr "Опция жоқ"
 
-#~ msgid "Missing parameter"
-#~ msgstr "Параметр жоқ"
-
+msgid "Missing parameter"
+msgstr "Параметр жоқ"
