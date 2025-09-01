@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-09-01 00:27+0800\n"
+"POT-Creation-Date: 2025-09-01 18:04+0800\n"
 "PO-Revision-Date: 2025-09-01 00:30+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,567 +18,396 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: server.py:64
-msgid "Please log in to access this page."
-msgstr "Please log in to access this page."
-
-#: server.py:146
-msgid "This username is already taken!"
-msgstr "This username is already taken!"
-
-#: server.py:164
-msgid "Invalid username or password!"
-msgstr "Invalid username or password!"
-
-#: server.py:179
-msgid "Group name and members are required"
-msgstr "Group name and members are required"
-
-#: server.py:181
-msgid "A group with this name already exists!"
-msgstr "A group with this name already exists!"
-
-#: server.py:199 server.py:263
-msgid "Group not found or you are not a member"
-msgstr "Group not found or you are not a member"
-
-#: server.py:208 server.py:220 server.py:232
-msgid "Access denied"
-msgstr "Access denied"
-
-#: server.py:290
-msgid "No audio file"
-msgstr "No audio file"
-
-#: server.py:292
-msgid "No recipient specified"
-msgstr "No recipient specified"
-
-#: server.py:323
-msgid "Group not found or access denied"
-msgstr "Group not found or access denied"
-
-#: server.py:335
-msgid "Recipient not found"
-msgstr "Recipient not found"
-
-#: server.py:351
-msgid "Database error"
-msgstr "Database error"
-
-#: server.py:364
-msgid "No text provided"
-msgstr "No text provided"
-
-#: server.py:394
-#, python-brace-format
-msgid "{model_choice} service failed"
-msgstr "{model_choice} service failed"
-
-#: server.py:404
-msgid "No prompt provided"
-msgstr "No prompt provided"
-
-#: server.py:418
-msgid "AI Assistant service failed"
-msgstr "AI Assistant service failed"
-
-#: server.py:426
-msgid "Please select a chat."
-msgstr "Please select a chat."
-
-#: server.py:427
-#, python-brace-format
-msgid "Recording: {seconds} sec."
-msgstr "Recording: {seconds} sec."
-
-#: server.py:428
-msgid "Recording finished"
-msgstr "Recording finished"
-
-#: server.py:429
-msgid "Transcription ready"
-msgstr "Transcription ready"
-
-#: server.py:430
-msgid "Press 'Start' to begin recording"
-msgstr "Press 'Start' to begin recording"
-
-#: server.py:431
-msgid "AI is working..."
-msgstr "AI is working..."
-
-#: server.py:432
-msgid "AI Error:"
-msgstr "AI Error:"
-
-#: server.py:433
-msgid "An error occurred while contacting the AI."
-msgstr "An error occurred while contacting the AI."
-
-#: server.py:434
-msgid "Thinking..."
-msgstr "Thinking..."
-
-#: server.py:435
-msgid "Could not get a response from the AI."
-msgstr "Could not get a response from the AI."
-
-#: server.py:436
-msgid "A network error has occurred. Please try again."
-msgstr "A network error has occurred. Please try again."
-
-#: server.py:437
-msgid "Show text"
-msgstr "Show text"
-
-#: server.py:438
-msgid "Hide text"
-msgstr "Hide text"
-
-#: server.py:439
-#, python-brace-format
-msgid "Chat with {name}"
-msgstr "Chat with {name}"
-
-#: templates/index.html:6
-msgid "Мой Мессенджер"
-msgstr "My Messenger"
-
-#: templates/index.html:20
-msgid "Выйти"
-msgstr "Logout"
-
-#: templates/index.html:24
-msgid "Группы"
-msgstr "Groups"
-
-#: templates/index.html:31
-msgid "Сообщение в группе..."
-msgstr "Message in group..."
-
-#: templates/index.html:41
-msgid "Личные сообщения"
-msgstr "Direct Messages"
-
-#: templates/index.html:52
-msgid "Личное сообщение..."
-msgstr "Direct message..."
-
-#: templates/index.html:64
-msgid "Создать группу"
-msgstr "Create Group"
-
-#: templates/index.html:70
-msgid "Выберите чат"
-msgstr "Select a chat"
-
-#: templates/index.html:74
-msgid "Введите сообщение..."
-msgstr "Enter a message..."
-
-#: templates/index.html:75 templates/index.html:129
-msgid "ИИ-Ассистент"
-msgstr "AI Assistant"
-
-#: templates/index.html:77
-msgid "Отправить"
-msgstr "Send"
-
-#: templates/index.html:84
-msgid "Создание новой группы"
-msgstr "Create a new group"
-
-#: templates/index.html:86
-msgid "Название группы"
-msgstr "Group name"
-
-#: templates/index.html:87
-msgid "Выберите участников:"
-msgstr "Select members:"
-
-#: templates/index.html:98
-msgid "Создать"
-msgstr "Create"
-
-#: templates/index.html:105
-msgid "Запись сообщения"
-msgstr "Record message"
-
-#: templates/index.html:106
-msgid "Нажмите \"Старт\" для начала записи"
-msgstr "Press \"Start\" to begin recording"
-
-#: templates/index.html:108
-msgid "Здесь появится транскрипция..."
-msgstr "Transcription will appear here..."
-
-#: templates/index.html:110
-msgid "Старт"
-msgstr "Start"
-
-#: templates/index.html:111
-msgid "Стоп"
-msgstr "Stop"
-
-#: templates/index.html:116
-msgid "Улучшить текст"
-msgstr "Improve text"
-
-#: templates/index.html:117
-msgid "Сгенерировать ответ"
-msgstr "Generate response"
-
-#: templates/index.html:120
-msgid "Отмена"
-msgstr "Cancel"
-
-#: templates/index.html:121
-msgid "Отправить текст"
-msgstr "Send text"
-
-#: templates/index.html:122
-msgid "Отправить аудио"
-msgstr "Send audio"
-
-#: templates/index.html:131
-msgid "Здравствуйте! Чем могу помочь?"
-msgstr "Hello! How can I help you?"
-
-#: templates/index.html:134
-msgid "Спросите что-нибудь..."
-msgstr "Ask something..."
-
-#: templates/index.html:137
-msgid "Отправить последний ответ в чат"
-msgstr "Send last response to chat"
-
-#: templates/index.html:138
-msgid "Закрыть"
-msgstr "Close"
-
-#: venv/lib/python3.9/site-packages/click/_termui_impl.py:556
-#, python-brace-format
-msgid "{editor}: Editing failed"
-msgstr "{editor}: Editing failed"
-
-#: venv/lib/python3.9/site-packages/click/_termui_impl.py:560
-#, python-brace-format
-msgid "{editor}: Editing failed: {e}"
-msgstr "{editor}: Editing failed: {e}"
-
-#: venv/lib/python3.9/site-packages/click/core.py:1124
-msgid "Aborted!"
-msgstr "Aborted!"
-
-#: venv/lib/python3.9/site-packages/click/core.py:1349
-#: venv/lib/python3.9/site-packages/click/core.py:1379
-#, python-brace-format
-msgid "(Deprecated) {text}"
-msgstr "(Deprecated) {text}"
-
-#: venv/lib/python3.9/site-packages/click/core.py:1396
-msgid "Options"
-msgstr "Options"
-
-#: venv/lib/python3.9/site-packages/click/core.py:1422
-#, python-brace-format
-msgid "Got unexpected extra argument ({args})"
-msgid_plural "Got unexpected extra arguments ({args})"
-msgstr[0] "Got unexpected extra argument ({args})"
-msgstr[1] "Got unexpected extra arguments ({args})"
-
-#: venv/lib/python3.9/site-packages/click/core.py:1438
-#, python-brace-format
-msgid "DeprecationWarning: The command {name!r} is deprecated."
-msgstr "DeprecationWarning: The command {name!r} is deprecated."
-
-#: venv/lib/python3.9/site-packages/click/core.py:1645
-msgid "Commands"
-msgstr "Commands"
-
-#: venv/lib/python3.9/site-packages/click/core.py:1677
-msgid "Missing command."
-msgstr "Missing command."
-
-#: venv/lib/python3.9/site-packages/click/core.py:1755
-#, python-brace-format
-msgid "No such command {name!r}."
-msgstr "No such command {name!r}."
-
-#: venv/lib/python3.9/site-packages/click/core.py:2313
-msgid "Value must be an iterable."
-msgstr "Value must be an iterable."
-
-#: venv/lib/python3.9/site-packages/click/core.py:2334
-#, python-brace-format
-msgid "Takes {nargs} values but 1 was given."
-msgid_plural "Takes {nargs} values but {len} were given."
-msgstr[0] "Takes {nargs} values but 1 was given."
-msgstr[1] "Takes {nargs} values but {len} were given."
-
-#: venv/lib/python3.9/site-packages/click/core.py:2783
-#, python-brace-format
-msgid "env var: {var}"
-msgstr "env var: {var}"
-
-#: venv/lib/python3.9/site-packages/click/core.py:2813
-msgid "(dynamic)"
-msgstr "(dynamic)"
-
-#: venv/lib/python3.9/site-packages/click/core.py:2828
-#, python-brace-format
-msgid "default: {default}"
-msgstr "default: {default}"
-
-#: venv/lib/python3.9/site-packages/click/core.py:2841
-msgid "required"
-msgstr "required"
-
-#: venv/lib/python3.9/site-packages/click/decorators.py:457
-#, python-format
-msgid "%(prog)s, version %(version)s"
-msgstr "%(prog)s, version %(version)s"
-
-#: venv/lib/python3.9/site-packages/click/decorators.py:520
-msgid "Show the version and exit."
-msgstr "Show the version and exit."
-
-#: venv/lib/python3.9/site-packages/click/decorators.py:541
-msgid "Show this message and exit."
-msgstr "Show this message and exit."
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:49
-#: venv/lib/python3.9/site-packages/click/exceptions.py:88
-#, python-brace-format
-msgid "Error: {message}"
-msgstr "Error: {message}"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:80
-#, python-brace-format
-msgid "Try '{command} {option}' for help."
-msgstr "Try '{command} {option}' for help."
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:129
-#, python-brace-format
-msgid "Invalid value: {message}"
-msgstr "Invalid value: {message}"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:131
-#, python-brace-format
-msgid "Invalid value for {param_hint}: {message}"
-msgstr "Invalid value for {param_hint}: {message}"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:187
-msgid "Missing argument"
-msgstr "Missing argument"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:189
-msgid "Missing option"
-msgstr "Missing option"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:191
-msgid "Missing parameter"
-msgstr "Missing parameter"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:193
-#, python-brace-format
-msgid "Missing {param_type}"
-msgstr "Missing {param_type}"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:200
-#, python-brace-format
-msgid "Missing parameter: {param_name}"
-msgstr "Missing parameter: {param_name}"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:220
-#, python-brace-format
-msgid "No such option: {name}"
-msgstr "No such option: {name}"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:232
-#, python-brace-format
-msgid "Did you mean {possibility}?"
-msgid_plural "(Possible options: {possibilities})"
-msgstr[0] "Did you mean {possibility}?"
-msgstr[1] "(Possible options: {possibilities})"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:270
-msgid "unknown error"
-msgstr "unknown error"
-
-#: venv/lib/python3.9/site-packages/click/exceptions.py:277
-#, python-brace-format
-msgid "Could not open file {filename!r}: {message}"
-msgstr "Could not open file {filename!r}: {message}"
-
-#: venv/lib/python3.9/site-packages/click/parser.py:233
-#, python-brace-format
-msgid "Argument {name!r} takes {nargs} values."
-msgstr "Argument {name!r} takes {nargs} values."
-
-#: venv/lib/python3.9/site-packages/click/parser.py:415
-#, python-brace-format
-msgid "Option {name!r} does not take a value."
-msgstr "Option {name!r} does not take a value."
-
-#: venv/lib/python3.9/site-packages/click/parser.py:476
-#, python-brace-format
-msgid "Option {name!r} requires an argument."
-msgid_plural "Option {name!r} requires {nargs} arguments."
-msgstr[0] "Option {name!r} requires an argument."
-msgstr[1] "Option {name!r} requires {nargs} arguments."
-
-#: venv/lib/python3.9/site-packages/click/shell_completion.py:326
-msgid "Shell completion is not supported for Bash versions older than 4.4."
-msgstr "Shell completion is not supported for Bash versions older than 4.4."
-
-#: venv/lib/python3.9/site-packages/click/shell_completion.py:333
-msgid "Couldn't detect Bash version, shell completion is not supported."
-msgstr "Couldn't detect Bash version, shell completion is not supported."
-
-#: venv/lib/python3.9/site-packages/click/termui.py:158
-msgid "Repeat for confirmation"
-msgstr "Repeat for confirmation"
-
-#: venv/lib/python3.9/site-packages/click/termui.py:174
-msgid "Error: The value you entered was invalid."
-msgstr "Error: The value you entered was invalid."
-
-#: venv/lib/python3.9/site-packages/click/termui.py:176
-#, python-brace-format
-msgid "Error: {e.message}"
-msgstr "Error: {e.message}"
-
-#: venv/lib/python3.9/site-packages/click/termui.py:187
-msgid "Error: The two entered values do not match."
-msgstr "Error: The two entered values do not match."
-
-#: venv/lib/python3.9/site-packages/click/termui.py:243
-msgid "Error: invalid input"
-msgstr "Error: invalid input"
-
-#: venv/lib/python3.9/site-packages/click/termui.py:773
-msgid "Press any key to continue..."
-msgstr "Press any key to continue..."
-
-#: venv/lib/python3.9/site-packages/click/types.py:267
-#, python-brace-format
-msgid ""
-"Choose from:\n"
-"\t{choices}"
-msgstr ""
-"Choose from:\n"
-"\t{choices}"
-
-#: venv/lib/python3.9/site-packages/click/types.py:299
-#, python-brace-format
-msgid "{value!r} is not {choice}."
-msgid_plural "{value!r} is not one of {choices}."
-msgstr[0] "{value!r} is not {choice}."
-msgstr[1] "{value!r} is not one of {choices}."
-
-#: venv/lib/python3.9/site-packages/click/types.py:393
-#, python-brace-format
-msgid "{value!r} does not match the format {format}."
-msgid_plural "{value!r} does not match the formats {formats}."
-msgstr[0] "{value!r} does not match the format {format}."
-msgstr[1] "{value!r} does not match the formats {formats}."
-
-#: venv/lib/python3.9/site-packages/click/types.py:415
-#, python-brace-format
-msgid "{value!r} is not a valid {number_type}."
-msgstr "{value!r} is not a valid {number_type}."
-
-#: venv/lib/python3.9/site-packages/click/types.py:471
-#, python-brace-format
-msgid "{value} is not in the range {range}."
-msgstr "{value} is not in the range {range}."
-
-#: venv/lib/python3.9/site-packages/click/types.py:612
-#, python-brace-format
-msgid "{value!r} is not a valid boolean."
-msgstr "{value!r} is not a valid boolean."
-
-#: venv/lib/python3.9/site-packages/click/types.py:636
-#, python-brace-format
-msgid "{value!r} is not a valid UUID."
-msgstr "{value!r} is not a valid UUID."
-
-#: venv/lib/python3.9/site-packages/click/types.py:826
-msgid "file"
-msgstr "file"
-
-#: venv/lib/python3.9/site-packages/click/types.py:828
-msgid "directory"
-msgstr "directory"
-
-#: venv/lib/python3.9/site-packages/click/types.py:830
-msgid "path"
-msgstr "path"
-
-#: venv/lib/python3.9/site-packages/click/types.py:881
-#, python-brace-format
-msgid "{name} {filename!r} does not exist."
-msgstr "{name} {filename!r} does not exist."
-
-#: venv/lib/python3.9/site-packages/click/types.py:890
-#, python-brace-format
-msgid "{name} {filename!r} is a file."
-msgstr "{name} {filename!r} is a file."
-
-#: venv/lib/python3.9/site-packages/click/types.py:898
-#, python-brace-format
-msgid "{name} {filename!r} is a directory."
-msgstr "{name} {filename!r} is a directory."
-
-#: venv/lib/python3.9/site-packages/click/types.py:907
-#, python-brace-format
-msgid "{name} {filename!r} is not readable."
-msgstr "{name} {filename!r} is not readable."
-
-#: venv/lib/python3.9/site-packages/click/types.py:916
-#, python-brace-format
-msgid "{name} {filename!r} is not writable."
-msgstr "{name} {filename!r} is not writable."
-
-#: venv/lib/python3.9/site-packages/click/types.py:925
-#, python-brace-format
-msgid "{name} {filename!r} is not executable."
-msgstr "{name} {filename!r} is not executable."
-
-#: venv/lib/python3.9/site-packages/click/types.py:992
-#, python-brace-format
-msgid "{len_type} values are required, but {len_value} was given."
-msgid_plural "{len_type} values are required, but {len_value} were given."
-msgstr[0] "{len_type} values are required, but {len_value} was given."
-msgstr[1] "{len_type} values are required, but {len_value} were given."
-
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:408
-#, python-format
-msgid "Content purported to be compressed with %s but failed to decompress."
-msgstr "Content purported to be compressed with %s but failed to decompress."
-
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:572
-#, python-format
-msgid "Unsupported value for qop: %s."
-msgstr "Unsupported value for qop: %s."
-
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:576
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:654
-#, python-format
-msgid "Unsupported value for algorithm: %s.algorithm"
-msgstr "Unsupported value for algorithm: %s.algorithm"
-
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:649
-msgid "The challenge doesn't contain a server nonce, or this one is empty."
-msgstr "The challenge doesn't contain a server nonce, or this one is empty."
-
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:659
-#, python-format
-msgid "Unsupported value for pw-algorithm: %s.pw-algorithm"
-msgstr "Unsupported value for pw-algorithm: %s.pw-algorithm"
-
-#: venv/lib/python3.9/site-packages/httplib2/__init__.py:1468
-msgid "Redirected but the response is missing a Location: header."
-msgstr "Redirected but the response is missing a Location: header."
+#~ msgid "Please log in to access this page."
+#~ msgstr "Please log in to access this page."
+
+#~ msgid "This username is already taken!"
+#~ msgstr "This username is already taken!"
+
+#~ msgid "Invalid username or password!"
+#~ msgstr "Invalid username or password!"
+
+#~ msgid "Group name and members are required"
+#~ msgstr "Group name and members are required"
+
+#~ msgid "A group with this name already exists!"
+#~ msgstr "A group with this name already exists!"
+
+#~ msgid "Group not found or you are not a member"
+#~ msgstr "Group not found or you are not a member"
+
+#~ msgid "Access denied"
+#~ msgstr "Access denied"
+
+#~ msgid "No audio file"
+#~ msgstr "No audio file"
+
+#~ msgid "No recipient specified"
+#~ msgstr "No recipient specified"
+
+#~ msgid "Group not found or access denied"
+#~ msgstr "Group not found or access denied"
+
+#~ msgid "Recipient not found"
+#~ msgstr "Recipient not found"
+
+#~ msgid "Database error"
+#~ msgstr "Database error"
+
+#~ msgid "No text provided"
+#~ msgstr "No text provided"
+
+#~ msgid "{model_choice} service failed"
+#~ msgstr "{model_choice} service failed"
+
+#~ msgid "No prompt provided"
+#~ msgstr "No prompt provided"
+
+#~ msgid "AI Assistant service failed"
+#~ msgstr "AI Assistant service failed"
+
+#~ msgid "Please select a chat."
+#~ msgstr "Please select a chat."
+
+#~ msgid "Recording: {seconds} sec."
+#~ msgstr "Recording: {seconds} sec."
+
+#~ msgid "Recording finished"
+#~ msgstr "Recording finished"
+
+#~ msgid "Transcription ready"
+#~ msgstr "Transcription ready"
+
+#~ msgid "Press 'Start' to begin recording"
+#~ msgstr "Press 'Start' to begin recording"
+
+#~ msgid "AI is working..."
+#~ msgstr "AI is working..."
+
+#~ msgid "AI Error:"
+#~ msgstr "AI Error:"
+
+#~ msgid "An error occurred while contacting the AI."
+#~ msgstr "An error occurred while contacting the AI."
+
+#~ msgid "Thinking..."
+#~ msgstr "Thinking..."
+
+#~ msgid "Could not get a response from the AI."
+#~ msgstr "Could not get a response from the AI."
+
+#~ msgid "A network error has occurred. Please try again."
+#~ msgstr "A network error has occurred. Please try again."
+
+#~ msgid "Show text"
+#~ msgstr "Show text"
+
+#~ msgid "Hide text"
+#~ msgstr "Hide text"
+
+#~ msgid "Chat with {name}"
+#~ msgstr "Chat with {name}"
+
+#~ msgid "Мой Мессенджер"
+#~ msgstr "My Messenger"
+
+#~ msgid "Выйти"
+#~ msgstr "Logout"
+
+#~ msgid "Группы"
+#~ msgstr "Groups"
+
+#~ msgid "Сообщение в группе..."
+#~ msgstr "Message in group..."
+
+#~ msgid "Личные сообщения"
+#~ msgstr "Direct Messages"
+
+#~ msgid "Личное сообщение..."
+#~ msgstr "Direct message..."
+
+#~ msgid "Создать группу"
+#~ msgstr "Create Group"
+
+#~ msgid "Выберите чат"
+#~ msgstr "Select a chat"
+
+#~ msgid "Введите сообщение..."
+#~ msgstr "Enter a message..."
+
+#~ msgid "ИИ-Ассистент"
+#~ msgstr "AI Assistant"
+
+#~ msgid "Отправить"
+#~ msgstr "Send"
+
+#~ msgid "Создание новой группы"
+#~ msgstr "Create a new group"
+
+#~ msgid "Название группы"
+#~ msgstr "Group name"
+
+#~ msgid "Выберите участников:"
+#~ msgstr "Select members:"
+
+#~ msgid "Создать"
+#~ msgstr "Create"
+
+#~ msgid "Запись сообщения"
+#~ msgstr "Record message"
+
+#~ msgid "Нажмите \"Старт\" для начала записи"
+#~ msgstr "Press \"Start\" to begin recording"
+
+#~ msgid "Здесь появится транскрипция..."
+#~ msgstr "Transcription will appear here..."
+
+#~ msgid "Старт"
+#~ msgstr "Start"
+
+#~ msgid "Стоп"
+#~ msgstr "Stop"
+
+#~ msgid "Улучшить текст"
+#~ msgstr "Improve text"
+
+#~ msgid "Сгенерировать ответ"
+#~ msgstr "Generate response"
+
+#~ msgid "Отмена"
+#~ msgstr "Cancel"
+
+#~ msgid "Отправить текст"
+#~ msgstr "Send text"
+
+#~ msgid "Отправить аудио"
+#~ msgstr "Send audio"
+
+#~ msgid "Здравствуйте! Чем могу помочь?"
+#~ msgstr "Hello! How can I help you?"
+
+#~ msgid "Спросите что-нибудь..."
+#~ msgstr "Ask something..."
+
+#~ msgid "Отправить последний ответ в чат"
+#~ msgstr "Send last response to chat"
+
+#~ msgid "Закрыть"
+#~ msgstr "Close"
+
+#~ msgid "{editor}: Editing failed"
+#~ msgstr "{editor}: Editing failed"
+
+#~ msgid "{editor}: Editing failed: {e}"
+#~ msgstr "{editor}: Editing failed: {e}"
+
+#~ msgid "Aborted!"
+#~ msgstr "Aborted!"
+
+#~ msgid "(Deprecated) {text}"
+#~ msgstr "(Deprecated) {text}"
+
+#~ msgid "Options"
+#~ msgstr "Options"
+
+#~ msgid "Got unexpected extra argument ({args})"
+#~ msgid_plural "Got unexpected extra arguments ({args})"
+#~ msgstr[0] "Got unexpected extra argument ({args})"
+#~ msgstr[1] "Got unexpected extra arguments ({args})"
+
+#~ msgid "DeprecationWarning: The command {name!r} is deprecated."
+#~ msgstr "DeprecationWarning: The command {name!r} is deprecated."
+
+#~ msgid "Commands"
+#~ msgstr "Commands"
+
+#~ msgid "Missing command."
+#~ msgstr "Missing command."
+
+#~ msgid "No such command {name!r}."
+#~ msgstr "No such command {name!r}."
+
+#~ msgid "Value must be an iterable."
+#~ msgstr "Value must be an iterable."
+
+#~ msgid "Takes {nargs} values but 1 was given."
+#~ msgid_plural "Takes {nargs} values but {len} were given."
+#~ msgstr[0] "Takes {nargs} values but 1 was given."
+#~ msgstr[1] "Takes {nargs} values but {len} were given."
+
+#~ msgid "env var: {var}"
+#~ msgstr "env var: {var}"
+
+#~ msgid "(dynamic)"
+#~ msgstr "(dynamic)"
+
+#~ msgid "default: {default}"
+#~ msgstr "default: {default}"
+
+#~ msgid "required"
+#~ msgstr "required"
+
+#~ msgid "%(prog)s, version %(version)s"
+#~ msgstr "%(prog)s, version %(version)s"
+
+#~ msgid "Show the version and exit."
+#~ msgstr "Show the version and exit."
+
+#~ msgid "Show this message and exit."
+#~ msgstr "Show this message and exit."
+
+#~ msgid "Error: {message}"
+#~ msgstr "Error: {message}"
+
+#~ msgid "Try '{command} {option}' for help."
+#~ msgstr "Try '{command} {option}' for help."
+
+#~ msgid "Invalid value: {message}"
+#~ msgstr "Invalid value: {message}"
+
+#~ msgid "Invalid value for {param_hint}: {message}"
+#~ msgstr "Invalid value for {param_hint}: {message}"
+
+#~ msgid "Missing argument"
+#~ msgstr "Missing argument"
+
+#~ msgid "Missing option"
+#~ msgstr "Missing option"
+
+#~ msgid "Missing parameter"
+#~ msgstr "Missing parameter"
+
+#~ msgid "Missing {param_type}"
+#~ msgstr "Missing {param_type}"
+
+#~ msgid "Missing parameter: {param_name}"
+#~ msgstr "Missing parameter: {param_name}"
+
+#~ msgid "No such option: {name}"
+#~ msgstr "No such option: {name}"
+
+#~ msgid "Did you mean {possibility}?"
+#~ msgid_plural "(Possible options: {possibilities})"
+#~ msgstr[0] "Did you mean {possibility}?"
+#~ msgstr[1] "(Possible options: {possibilities})"
+
+#~ msgid "unknown error"
+#~ msgstr "unknown error"
+
+#~ msgid "Could not open file {filename!r}: {message}"
+#~ msgstr "Could not open file {filename!r}: {message}"
+
+#~ msgid "Argument {name!r} takes {nargs} values."
+#~ msgstr "Argument {name!r} takes {nargs} values."
+
+#~ msgid "Option {name!r} does not take a value."
+#~ msgstr "Option {name!r} does not take a value."
+
+#~ msgid "Option {name!r} requires an argument."
+#~ msgid_plural "Option {name!r} requires {nargs} arguments."
+#~ msgstr[0] "Option {name!r} requires an argument."
+#~ msgstr[1] "Option {name!r} requires {nargs} arguments."
+
+#~ msgid "Shell completion is not supported for Bash versions older than 4.4."
+#~ msgstr "Shell completion is not supported for Bash versions older than 4.4."
+
+#~ msgid "Couldn't detect Bash version, shell completion is not supported."
+#~ msgstr "Couldn't detect Bash version, shell completion is not supported."
+
+#~ msgid "Repeat for confirmation"
+#~ msgstr "Repeat for confirmation"
+
+#~ msgid "Error: The value you entered was invalid."
+#~ msgstr "Error: The value you entered was invalid."
+
+#~ msgid "Error: {e.message}"
+#~ msgstr "Error: {e.message}"
+
+#~ msgid "Error: The two entered values do not match."
+#~ msgstr "Error: The two entered values do not match."
+
+#~ msgid "Error: invalid input"
+#~ msgstr "Error: invalid input"
+
+#~ msgid "Press any key to continue..."
+#~ msgstr "Press any key to continue..."
+
+#~ msgid ""
+#~ "Choose from:\n"
+#~ "\t{choices}"
+#~ msgstr ""
+#~ "Choose from:\n"
+#~ "\t{choices}"
+
+#~ msgid "{value!r} is not {choice}."
+#~ msgid_plural "{value!r} is not one of {choices}."
+#~ msgstr[0] "{value!r} is not {choice}."
+#~ msgstr[1] "{value!r} is not one of {choices}."
+
+#~ msgid "{value!r} does not match the format {format}."
+#~ msgid_plural "{value!r} does not match the formats {formats}."
+#~ msgstr[0] "{value!r} does not match the format {format}."
+#~ msgstr[1] "{value!r} does not match the formats {formats}."
+
+#~ msgid "{value!r} is not a valid {number_type}."
+#~ msgstr "{value!r} is not a valid {number_type}."
+
+#~ msgid "{value} is not in the range {range}."
+#~ msgstr "{value} is not in the range {range}."
+
+#~ msgid "{value!r} is not a valid boolean."
+#~ msgstr "{value!r} is not a valid boolean."
+
+#~ msgid "{value!r} is not a valid UUID."
+#~ msgstr "{value!r} is not a valid UUID."
+
+#~ msgid "file"
+#~ msgstr "file"
+
+#~ msgid "directory"
+#~ msgstr "directory"
+
+#~ msgid "path"
+#~ msgstr "path"
+
+#~ msgid "{name} {filename!r} does not exist."
+#~ msgstr "{name} {filename!r} does not exist."
+
+#~ msgid "{name} {filename!r} is a file."
+#~ msgstr "{name} {filename!r} is a file."
+
+#~ msgid "{name} {filename!r} is a directory."
+#~ msgstr "{name} {filename!r} is a directory."
+
+#~ msgid "{name} {filename!r} is not readable."
+#~ msgstr "{name} {filename!r} is not readable."
+
+#~ msgid "{name} {filename!r} is not writable."
+#~ msgstr "{name} {filename!r} is not writable."
+
+#~ msgid "{name} {filename!r} is not executable."
+#~ msgstr "{name} {filename!r} is not executable."
+
+#~ msgid "{len_type} values are required, but {len_value} was given."
+#~ msgid_plural "{len_type} values are required, but {len_value} were given."
+#~ msgstr[0] "{len_type} values are required, but {len_value} was given."
+#~ msgstr[1] "{len_type} values are required, but {len_value} were given."
+
+#~ msgid "Content purported to be compressed with %s but failed to decompress."
+#~ msgstr "Content purported to be compressed with %s but failed to decompress."
+
+#~ msgid "Unsupported value for qop: %s."
+#~ msgstr "Unsupported value for qop: %s."
+
+#~ msgid "Unsupported value for algorithm: %s.algorithm"
+#~ msgstr "Unsupported value for algorithm: %s.algorithm"
+
+#~ msgid "The challenge doesn't contain a server nonce, or this one is empty."
+#~ msgstr "The challenge doesn't contain a server nonce, or this one is empty."
+
+#~ msgid "Unsupported value for pw-algorithm: %s.pw-algorithm"
+#~ msgstr "Unsupported value for pw-algorithm: %s.pw-algorithm"
+
+#~ msgid "Redirected but the response is missing a Location: header."
+#~ msgstr "Redirected but the response is missing a Location: header."
+

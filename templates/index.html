@@ -24,7 +24,7 @@
             <div class="list-header">{{ _('Группы') }}</div>
             <ul id="group-list" class="chat-list">
                 {% for group in groups %}
-                    <li data-id="{{ group.id }}" data-type="group" data-name="{{ group.name }}">
+                    <li data-id="{{ group.id }}" data-type="group" data-name="{{ group.name }}" data-url="{{ url_for('group_info', group_id=group.id) }}">
                         <div class="chat-avatar">#</div>
                         <div class="chat-info">
                             <div class="chat-name">{{ group.name }}</div>

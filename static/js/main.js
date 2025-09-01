@@ -1,12 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CORE JAVASCRIPT ---
+
+    // Функция-помощник для переводов. Берет переводы из window.translations (которые загружаются из server.py)
+    function __(key, replacements = {}) {
+        let text = window.translations[key] || key;
+        for (const placeholder in replacements) {
+            text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+        }
+        return text;
+    }
+
     const socket = io();
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     const messages = document.getElementById('messages');
     const allLists = document.querySelectorAll('.chat-list');
     
-    // Получаем имя пользователя из data-атрибута тега body
     const username = document.body.dataset.username;
 
     let currentChat = { type: null, id: null, name: null };
@@ -61,10 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const toggleBtn = document.createElement('button');
                 toggleBtn.className = 'toggle-transcription-btn';
-                toggleBtn.textContent = 'Показать текст';
+                toggleBtn.textContent = __('Show text');
                 toggleBtn.onclick = () => {
                     transcriptionP.classList.toggle('visible');
-                    toggleBtn.textContent = transcriptionP.classList.contains('visible') ? 'Скрыть текст' : 'Показать текст';
+                    toggleBtn.textContent = transcriptionP.classList.contains('visible') ? __('Hide text') : __('Show text');
                 };
                 item.appendChild(toggleBtn);
                 item.appendChild(transcriptionP);
@@ -103,14 +112,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 messages.innerHTML = '';
                 const headerLink = document.getElementById('chat-header-link');
+                
+                // === ИЗМЕНЕННЫЙ БЛОК ДЛЯ ИСПРАВЛЕНИЯ ОШИБКИ НАВИГАЦИИ ===
+                let historyUrl;
                 if (currentChat.type === 'group') {
-                    headerLink.href = `/group/${currentChat.id}`;
+                    // Берем готовую ссылку из data-атрибута, который мы добавили в index.html
+                    const groupUrl = li.dataset.url; 
+                    headerLink.href = groupUrl;
                     headerLink.textContent = currentChat.name;
-                } else {
+                    historyUrl = `/history/group/${currentChat.id}`;
+                } else { // для личных чатов
                     headerLink.href = '#';
-                    headerLink.textContent = `Чат с ${currentChat.name}`;
+                    // Используем функцию перевода для текста заголовка
+                    headerLink.textContent = __("Chat with {name}", {name: currentChat.name}); 
+                    historyUrl = `/history/${currentChat.name}`;
                 }
-                const historyUrl = currentChat.type === 'user' ? `/history/${currentChat.name}` : `/history/group/${currentChat.id}`;
+                // =======================================================
+                
                 fetch(historyUrl).then(response => response.json()).then(history => history.forEach(appendMessage));
             }
         });
@@ -185,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body.classList.remove('mobile-chat-view');
         currentChat = { type: null, id: null, name: null };
         document.querySelectorAll('.chat-list li').forEach(item => item.classList.remove('active'));
-        document.getElementById('chat-header-link').textContent = "Выберите чат";
+        document.getElementById('chat-header-link').textContent = __("Select a chat");
     });
 
     // --- VOICE MESSAGE MODAL LOGIC ---
@@ -214,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.lang = 'ru-RU';
+        recognition.lang = document.documentElement.lang; // Используем язык страницы
         recognition.continuous = true;
         recognition.interimResults = true;
     }
@@ -233,10 +251,10 @@ document.addEventListener('DOMContentLoaded', () => {
         sendAudioBtn.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
         sendTextBtn.style.display = (state === 'transcribed' && transcriptionText.value) ? 'block' : 'none';
 
-        if(state === 'idle') statusDisplay.textContent = "Нажмите 'Старт' для начала записи";
-        if(state === 'recording') statusDisplay.textContent = `Идет запись: 0 сек.`;
-        if(state === 'recorded') statusDisplay.textContent = "Запись завершена";
-        if(state === 'transcribed') statusDisplay.textContent = "Транскрипция готова";
+        if(state === 'idle') statusDisplay.textContent = __("Press 'Start' to begin recording");
+        if(state === 'recording') statusDisplay.textContent = __("Recording: {seconds} sec.", {seconds: 0});
+        if(state === 'recorded') statusDisplay.textContent = __("Recording finished");
+        if(state === 'transcribed') statusDisplay.textContent = __("Transcription ready");
     }
 
     function resetModal() {
@@ -249,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     mainRecordBtn.onclick = () => {
-        if (!currentChat.type) { alert("Пожалуйста, выберите чат."); return; }
+        if (!currentChat.type) { alert(__("Please select a chat.")); return; }
         voiceModal.style.display = 'flex';
         resetModal();
     };
@@ -274,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let seconds = 0;
             recordingInterval = setInterval(() => {
                 seconds++;
-                statusDisplay.textContent = `Идет запись: ${seconds} сек.`;
+                statusDisplay.textContent = __("Recording: {seconds} sec.", {seconds: seconds});
             }, 1000);
 
             if (recognition) {
@@ -300,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             mediaRecorder.start();
         } catch (err) {
-            console.error("Ошибка микрофона:", err);
+            console.error(__("Microphone error:"), err);
             resetModal();
         }
     };
@@ -318,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return;
         
         const originalStatus = statusDisplay.textContent;
-        statusDisplay.textContent = "ИИ работает...";
+        statusDisplay.textContent = __("AI is working...");
         improveAiBtn.disabled = true;
         generateAiBtn.disabled = true;
         aiModelSelect.disabled = true;
@@ -333,11 +351,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.edited_text) {
                 transcriptionText.value = data.edited_text;
             } else if (data.error) {
-                console.error("AI Error:", data.error);
-                alert("Произошла ошибка при обращении к ИИ.");
+                console.error(__("AI Error:"), data.error);
+                alert(__("An error occurred while contacting the AI."));
             }
         } catch (err) {
-            console.error("Ошибка ИИ:", err);
+            console.error(__("AI error:"), err);
         }
         
         statusDisplay.textContent = originalStatus;
@@ -398,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addAssistantMessage(userPrompt, 'user');
         assistantInput.value = '';
         
-        const thinkingBubble = addAssistantMessage('Думаю...', 'assistant');
+        const thinkingBubble = addAssistantMessage(__('Thinking...'), 'assistant');
 
         try {
             const response = await fetch('/chat_with_assistant', {
@@ -412,18 +430,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            thinkingBubble.textContent = data.response || "Не удалось получить ответ от ИИ.";
+            thinkingBubble.textContent = data.response || __("Could not get a response from the AI.");
 
         } catch (error) {
             console.error("Error with AI Assistant:", error);
-            thinkingBubble.textContent = "Произошла ошибка сети. Попробуйте снова.";
+            thinkingBubble.textContent = __("A network error has occurred. Please try again.");
         }
         assistantMessages.scrollTop = assistantMessages.scrollHeight;
     };
 
     sendToChatBtn.onclick = () => {
         const lastAssistantResponse = assistantMessages.querySelector('.assistant-bubble.assistant:last-child');
-        if (lastAssistantResponse && lastAssistantResponse.textContent !== "Думаю...") {
+        if (lastAssistantResponse && lastAssistantResponse.textContent !== __("Thinking...")) {
             input.value = lastAssistantResponse.textContent;
             assistantModal.style.display = 'none';
         }
