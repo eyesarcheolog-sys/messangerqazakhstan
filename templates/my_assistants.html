@@ -5,6 +5,33 @@
 {% block content %}
 <header class="main-header">
     <h1>{{ _('Мои ассистенты') }}</h1>
-    <p class="subtitle">{{ _('Этот раздел находится в разработке.') }}</p>
+    <p class="subtitle">{{ _('Управляйте всеми вашими персональными ассистентами из одного места.') }}</p>
 </header>
+
+<div class="content-table">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _('Название ассистента') }}</th>
+                <th>{{ _('Статус') }}</th>
+                <th>{{ _('Описание') }}</th>
+                <th>{{ _('Действия') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assistant in assistants %}
+            <tr>
+                <td><strong>{{ assistant.name }}</strong></td>
+                <td>
+                    <span class="status-badge {{ assistant.status }}">{{ _(assistant.status) }}</span>
+                </td>
+                <td>{{ assistant.info }}</td>
+                <td>
+                    <a href="{{ url_for('configure_assistant', assistant_id=assistant.id) }}" class="action-btn">{{ _('Настроить') }}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

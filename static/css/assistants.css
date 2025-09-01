@@ -198,3 +198,71 @@ body {
 .save-btn:hover {
     filter: brightness(1.2);
 }
+/* --- Стили для таблицы ассистентов --- */
+.content-table {
+    margin-top: 30px;
+    background-color: var(--widget-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+thead th {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-badge.active {
+    color: #30D158;
+    background-color: rgba(48, 209, 88, 0.1);
+}
+
+.status-badge.inactive {
+    color: #98989F;
+    background-color: rgba(152, 152, 159, 0.1);
+}
+
+.status-badge.training {
+    color: #FFD60A;
+    background-color: rgba(255, 214, 10, 0.1);
+}
+
+.action-btn {
+    background-color: var(--sidebar-color);
+    color: var(--primary-text-color);
+    padding: 8px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #333;
+}

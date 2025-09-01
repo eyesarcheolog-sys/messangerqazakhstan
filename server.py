@@ -472,8 +472,13 @@ def configure_assistant(assistant_id):
 @app.route('/assistants/my')
 @login_required
 def my_assistants_page():
-    # В будущем здесь будет логика для отображения списка ассистентов
-    return render_template('my_assistants.html')
+    my_assistants = [
+        {'id': 1, 'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
+        {'id': 2, 'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
+        {'id': 3, 'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
+        {'id': 4, 'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
+    ]
+    return render_template('my_assistants.html', assistants=my_assistants)
 
 @app.route('/assistants/knowledge')
 @login_required
