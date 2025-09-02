@@ -271,7 +271,7 @@ tbody tr:last-child td {
 }
 
 .sidebar-logo.assistant-logo {
-    height: 60px; /* Увеличиваем высоту логотипа */
+    height: 70px; /* Увеличиваем высоту логотипа */
     width: auto;
     display: block;
 }

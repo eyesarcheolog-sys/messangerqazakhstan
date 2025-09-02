@@ -5,8 +5,8 @@
     --chat-bg-color: #0b141a;
     --primary-text-color: #e9edef;
     --secondary-text-color: #8696a0;
-    --accent-color: #00AFCA; /* 1. Основной цвет для кнопок теперь голубой */
-    --notification-badge-color: #ffc107; /* 2. Уведомления теперь желтые */
+    --accent-color: #00AFCA; /* Основной цвет для кнопок теперь голубой */
+    --notification-badge-color: #ffc107; /* Уведомления теперь желтые */
     --my-message-bubble-color: #005c4b;
     --other-message-bubble-color: #202c33;
     --separator-color: #222e35;
@@ -37,7 +37,7 @@ body {
     flex-direction: column;
 }
 
-/* 3. Исправленный заголовок с логотипом */
+/* Исправленный заголовок с логотипом */
 #sidebar-header {
     padding: 10px 16px;
     background-color: var(--other-message-bubble-color);
@@ -45,11 +45,11 @@ body {
     align-items: center;
     justify-content: flex-start; /* Выравнивание по левому краю */
     flex-shrink: 0;
-    height: 60px; /* Увеличиваем высоту блока */
+    height: 80px; /* Увеличиваем высоту блока, чтобы логотип влез */
 }
 
 .header-logo {
-    height: 60px; /* Увеличиваем высоту логотипа */
+    height: 70px; /* Увеличиваем высоту логотипа */
     width: auto;
 }
 
@@ -182,7 +182,7 @@ body {
 .voice-modal-controls, .voice-modal-actions { display: flex; justify-content: center; align-items: center; gap: 15px; }
 .voice-modal-controls button, .voice-modal-actions button { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; font-weight: 500; transition: background-color 0.2s; }
 .voice-modal-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
-#start-record-btn { background-color: var(--notification-badge-color); color: white; }
+#start-record-btn { background-color: var(--notification-badge-color); color: #111b21; } /* Кнопка записи тоже желтая */
 #stop-record-btn { background-color: var(--danger-color); color: white; }
 #improve-ai-btn { background-color: #6a1b9a; color: white; }
 #generate-ai-btn { background-color: #8e24aa; color: white; }
@@ -199,5 +199,5 @@ body {
 .assistant-bubble.assistant { background-color: var(--other-message-bubble-color); align-self: flex-start; white-space: pre-wrap; }
 #assistant-form { display: flex; gap: 10px; margin-top: 10px; }
 #assistant-input { flex-grow: 1; background: var(--input-background); border: none; padding: 12px 16px; border-radius: 22px; color: var(--primary-text-color); font-size: 16px; }
-#assistant-send-btn { padding: 10px 15px; }
-#send-to-chat-btn { background-color: var(--notification-badge-color); color: white; width: 100%; margin-top: 10px; }
+#assistant-send-btn { background-color: var(--accent-color); color: white; padding: 10px 15px; } /* Кнопка отправки ассистента тоже голубая */
+#send-to-chat-btn { background-color: var(--accent-color); color: white; width: 100%; margin-top: 10px; } /* Кнопка "Отправить в чат" тоже голубая */
