@@ -33,7 +33,7 @@
             text-align: center;
         }
         .logo {
-            width: 450px; /* Увеличено с 300px на 450px (в 1.5 раза от прошлого, в 3 раза от исходного) */
+            width: 450px;
             margin-bottom: 25px;
             display: block;
             margin-left: auto;
@@ -62,7 +62,7 @@
         button {
             width: 100%;
             padding: 12px;
-            background-color: var(--accent-color); /* Кнопка теперь голубая */
+            background-color: var(--accent-color);
             color: white;
             border: none;
             border-radius: 8px;
@@ -78,14 +78,14 @@
             display: block;
             text-align: center;
             margin-top: 20px;
-            color: var(--accent-color); /* Ссылка теперь голубая */
+            color: var(--accent-color);
             text-decoration: none;
         }
     </style>
 </head>
 <body>
     <div class="form-container">
-        <img src="{{ url_for('static', filename='img/oryn_logo.png') }}" alt="Oryn Logo" class="logo">
+        <img src="{{ url_for('static', filename='img/oryn_logo.svg') }}" alt="Oryn Logo" class="logo">
         <h1>Вход в мессенджер</h1>
         <form method="POST">
             <input type="text" name="username" placeholder="Имя пользователя" required>
