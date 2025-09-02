@@ -41,20 +41,19 @@ body {
 #sidebar-header {
     background-color: var(--other-message-bubble-color);
     flex-shrink: 0;
-    height: 40px; /* 1. Фиксируем высоту контейнера на 40px */
+    height: 40px; /* Фиксируем высоту контейнера на 40px */
     position: relative; 
     border-bottom: 1px solid var(--separator-color);
 }
 
 .header-logo {
-    height: 100px; /* 2. Увеличиваем сам логотип до 100px */
+    height: 100px; /* Увеличиваем сам логотип до 100px */
     width: auto;
     position: absolute; 
     left: 16px; 
     top: 50%; 
     transform: translateY(-50%); 
 }
-
 
 /* Блок с информацией о пользователе */
 #user-info { 
