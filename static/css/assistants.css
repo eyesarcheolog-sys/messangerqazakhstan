@@ -272,6 +272,6 @@ tbody tr:last-child td {
 }
 
 .sidebar-logo {
-    width: 120x; /* Можете подобрать подходящий размер */
+    width: 100x; /* Можете подобрать подходящий размер */
     height: auto;
 }
