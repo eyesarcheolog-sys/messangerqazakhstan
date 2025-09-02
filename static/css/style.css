@@ -41,18 +41,18 @@ body {
 #sidebar-header {
     background-color: var(--other-message-bubble-color);
     flex-shrink: 0;
-    height: 60px; /* Фиксируем высоту самого контейнера, делаем его меньше */
-    position: relative; /* Делаем его точкой отсчета для позиционирования логотипа */
-    border-bottom: 1px solid var(--separator-color); /* Добавляем границу для четкости */
+    height: 40px; /* 1. Фиксируем высоту контейнера на 40px */
+    position: relative; 
+    border-bottom: 1px solid var(--separator-color);
 }
 
 .header-logo {
-    height: 80px; /* Увеличиваем сам логотип */
+    height: 100px; /* 2. Увеличиваем сам логотип до 100px */
     width: auto;
-    position: absolute; /* "Отрываем" логотип от потока документа */
-    left: 16px; /* Прижимаем к левому краю с отступом */
-    top: 50%; /* Смещаем на 50% высоты контейнера вниз */
-    transform: translateY(-50%); /* Поднимаем на половину своей высоты, идеально центрируя по вертикали */
+    position: absolute; 
+    left: 16px; 
+    top: 50%; 
+    transform: translateY(-50%); 
 }
 
 

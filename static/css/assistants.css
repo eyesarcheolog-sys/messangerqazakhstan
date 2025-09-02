@@ -265,13 +265,16 @@ tbody tr:last-child td {
 /* --- Исправленные стили для логотипа в сайдбаре --- */
 .sidebar-header {
     margin: -20px -20px 30px -20px;
-    padding: 10px 20px;
+    padding: 0 20px; /* Убираем вертикальный padding */
     background-color: #1e1e1e;
     border-bottom: 1px solid var(--border-color);
+    height: 40px; /* 1. Фиксируем высоту контейнера */
+    display: flex; /* Добавляем flex для выравнивания */
+    align-items: center; /* Выравниваем по вертикали */
 }
 
 .sidebar-logo.assistant-logo {
-    height: 120px; /* Увеличиваем высоту логотипа */
+    height: 100px; /* 2. Увеличиваем высоту логотипа */
     width: auto;
     display: block;
 }
