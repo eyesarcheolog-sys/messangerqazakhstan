@@ -9,7 +9,7 @@
             --sidebar-color: #1e1e1e;
             --primary-text-color: #e1e1e1;
             --secondary-text-color: #8e8e93;
-            --accent-color: #00AFCA; /* Основной цвет теперь голубой */
+            --accent-color: #00AFCA; 
             --input-background: #2a3942;
             --separator-color: #2a2a2a;
         }
@@ -25,16 +25,20 @@
         }
         .form-container {
             background: var(--sidebar-color);
-            padding: 30px; /* Уменьшаем padding для более компактного вида */
+            padding: 30px; 
             border-radius: 12px;
             border: 1px solid var(--separator-color);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            width: 280px; /* Уменьшаем ширину контейнера */
+            width: 280px; 
             text-align: center;
+        }
+        /* Новый блок для логотипа и заголовка */
+        .form-header {
+            margin-bottom: 25px; /* Отступ от группы "логотип + заголовок" до полей ввода */
         }
         .logo {
             width: 250px; 
-            margin-bottom: 15px; /* Уменьшаем отступ снизу */
+            margin-bottom: 10px; /* Небольшой отступ от логотипа до текста */
             display: block;
             margin-left: auto;
             margin-right: auto;
@@ -42,7 +46,7 @@
         h1 {
             text-align: center;
             color: var(--primary-text-color);
-            margin: 0 0 20px 0;
+            margin: 0; /* Убираем лишние отступы у заголовка */
             font-size: 24px;
         }
         input {
@@ -85,8 +89,10 @@
 </head>
 <body>
     <div class="form-container">
-        <img src="{{ url_for('static', filename='img/oryn_logo.svg') }}" alt="Oryn Logo" class="logo">
-        <h1>Вход в мессенджер</h1>
+        <div class="form-header">
+            <img src="{{ url_for('static', filename='img/oryn_logo.svg') }}" alt="Oryn Logo" class="logo">
+            <h1>Вход в мессенджер</h1>
+        </div>
         <form method="POST">
             <input type="text" name="username" placeholder="Имя пользователя" required>
             <input type="password" name="password" placeholder="Пароль" required>
