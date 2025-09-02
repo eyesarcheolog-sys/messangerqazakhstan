@@ -264,14 +264,14 @@ tbody tr:last-child td {
 
 /* --- Исправленные стили для логотипа в сайдбаре --- */
 .sidebar-header {
-    margin: -20px -20px 30px -20px; /* Убираем отступы родителя и добавляем нижний */
+    margin: -20px -20px 30px -20px;
     padding: 10px 20px;
-    background-color: #1e1e1e; /* Темный фон для хедера */
+    background-color: #1e1e1e;
     border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-logo.assistant-logo {
-    height: 40px; /* Размер как в мессенджере */
+    height: 60px; /* Увеличиваем высоту логотипа */
     width: auto;
     display: block;
 }

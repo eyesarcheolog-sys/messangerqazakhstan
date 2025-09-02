@@ -5,8 +5,8 @@
     --chat-bg-color: #0b141a;
     --primary-text-color: #e9edef;
     --secondary-text-color: #8696a0;
-    --accent-color: #ffc107; /* 1. Желтый для основных кнопок */
-    --notification-badge-color: #00AFCA; /* 2. Голубой для уведомлений и акцентов */
+    --accent-color: #00AFCA; /* 1. Основной цвет для кнопок теперь голубой */
+    --notification-badge-color: #ffc107; /* 2. Уведомления теперь желтые */
     --my-message-bubble-color: #005c4b;
     --other-message-bubble-color: #202c33;
     --separator-color: #222e35;
@@ -39,22 +39,17 @@ body {
 
 /* 3. Исправленный заголовок с логотипом */
 #sidebar-header {
-    padding: 10px 16px 5px 16px;
+    padding: 10px 16px;
     background-color: var(--other-message-bubble-color);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; /* Выравнивание по левому краю */
     flex-shrink: 0;
-    height: 50px;
+    height: 60px; /* Увеличиваем высоту блока */
 }
 
-.header-logo.main-messenger-logo {
-    height: 40px;
-    width: auto;
-}
-/* Старый класс .header-logo на всякий случай */
 .header-logo {
-    height: 40px;
+    height: 60px; /* Увеличиваем высоту логотипа */
     width: auto;
 }
 
@@ -73,11 +68,11 @@ body {
 }
 #user-info h2 { margin: 0; font-size: 18px; }
 .logout-link { font-size: 14px; color: var(--secondary-text-color); text-decoration: none; }
-.logout-link:hover { color: var(--oryn-blue); }
+.logout-link:hover { color: var(--accent-color); }
 
 .lang-switcher { margin-top: 4px; }
 .lang-link { color: var(--secondary-text-color); text-decoration: none; margin-right: 5px; font-size: 12px;}
-.lang-link.active { color: var(--oryn-blue); font-weight: bold; text-decoration: none; }
+.lang-link.active { color: var(--accent-color); font-weight: bold; text-decoration: none; }
 
 /* Стили для списков чатов */
 .chat-list-container { flex-grow: 1; overflow-y: auto; }
@@ -100,8 +95,7 @@ body {
     border-bottom: 1px solid var(--separator-color); 
 }
 .chat-list li:hover { background-color: var(--hover-color); }
-/* 4. Активный чат теперь голубой для консистентности */
-.chat-list li.active { background-color: var(--oryn-blue); }
+.chat-list li.active { background-color: var(--accent-color); }
 .chat-list li.active .chat-name, .chat-list li.active .chat-preview, .chat-list li.active .chat-time { color: white; }
 .chat-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #555; color: white; display: grid; place-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0; position: relative; }
 .user-avatar .online-indicator { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background-color: #8e8e93; border-radius: 50%; border: 2px solid var(--sidebar-color); }
@@ -111,10 +105,10 @@ body {
 .chat-preview { font-size: 14px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-meta { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .chat-time { font-size: 12px; color: var(--secondary-text-color); }
-.notification-dot { background-color: var(--notification-badge-color); color: white; border-radius: 50%; font-size: 12px; font-weight: bold; min-width: 22px; height: 22px; display: none; place-content: center; }
+.notification-dot { background-color: var(--notification-badge-color); color: #111b21; border-radius: 50%; font-size: 12px; font-weight: bold; min-width: 22px; height: 22px; display: none; place-content: center; }
 .notification-dot.visible { display: grid; }
 
-/* 1. Футер с желтыми кнопками */
+/* Футер с голубыми кнопками */
 #sidebar-footer {
     padding: 10px;
     background-color: var(--other-message-bubble-color);
@@ -126,8 +120,8 @@ body {
     width: 100%;
     box-sizing: border-box;
     padding: 12px; 
-    background-color: var(--accent-color); /* Желтый цвет */
-    color: #111b21; /* Темный текст на желтом фоне */
+    background-color: var(--accent-color); /* Голубой цвет */
+    color: white;
     text-align: center; 
     border-radius: 8px; 
     cursor: pointer; 
@@ -157,8 +151,7 @@ body {
 #form { display: flex; padding: 10px 16px; border-top: 1px solid var(--separator-color); background-color: var(--other-message-bubble-color); align-items: center; gap: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 #input { background: var(--input-background); border: none; padding: 12px 16px; flex-grow: 1; border-radius: 22px; color: var(--primary-text-color); font-size: 16px; }
 #input::placeholder { color: var(--secondary-text-color); }
-/* 1. Кнопка отправки тоже желтая */
-#form button { background: var(--accent-color); border: none; color: #111b21; font-weight: bold; padding: 10px 15px; border-radius: 20px; cursor: pointer; flex-shrink: 0; }
+#form button { background: var(--accent-color); border: none; color: white; font-weight: bold; padding: 10px 15px; border-radius: 20px; cursor: pointer; flex-shrink: 0; }
 #record-btn, #assistant-btn { background: none; font-size: 20px; padding: 8px 12px; }
 
 /* --- АДАПТИВНОСТЬ --- */
