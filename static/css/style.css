@@ -39,19 +39,22 @@ body {
 
 /* Исправленный заголовок с логотипом */
 #sidebar-header {
-    padding: 10px 16px;
     background-color: var(--other-message-bubble-color);
-    display: flex;
-    align-items: center;
-    justify-content: flex-start; /* Выравнивание по левому краю */
     flex-shrink: 0;
-    height: 80px; /* Увеличиваем высоту блока, чтобы логотип влез */
+    height: 60px; /* Фиксируем высоту самого контейнера, делаем его меньше */
+    position: relative; /* Делаем его точкой отсчета для позиционирования логотипа */
+    border-bottom: 1px solid var(--separator-color); /* Добавляем границу для четкости */
 }
 
 .header-logo {
-    height: 70px; /* Увеличиваем высоту логотипа */
+    height: 80px; /* Увеличиваем сам логотип */
     width: auto;
+    position: absolute; /* "Отрываем" логотип от потока документа */
+    left: 16px; /* Прижимаем к левому краю с отступом */
+    top: 50%; /* Смещаем на 50% высоты контейнера вниз */
+    transform: translateY(-50%); /* Поднимаем на половину своей высоты, идеально центрируя по вертикали */
 }
+
 
 /* Блок с информацией о пользователе */
 #user-info { 
