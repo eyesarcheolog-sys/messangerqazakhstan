@@ -266,3 +266,12 @@ tbody tr:last-child td {
 .action-btn:hover {
     background-color: #333;
 }
+/* --- Стили для логотипа в сайдбаре --- */
+.sidebar-header {
+    margin-bottom: 30px;
+}
+
+.sidebar-logo {
+    width: 100px; /* Можете подобрать подходящий размер */
+    height: auto;
+}

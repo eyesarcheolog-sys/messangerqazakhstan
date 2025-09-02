@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('Мой Мессенджер') }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
+    <title>Oryn Messenger</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5">
 </head>
 <body data-username="{{ current_user.username }}">
     
     <div id="sidebar">
-        <div id="user-info">
-            <h2>{{ current_user.username }}</h2>
-            <div class="lang-switcher">
-                {% for lang, name in AVAILABLE_LANGUAGES.items() %}
-                    <a href="?lang={{ lang }}" {% if lang == CURRENT_LANGUAGE %} style="font-weight:bold; text-decoration:underline;" {% endif %}>{{ name }}</a>
-                    {% if not loop.last %} | {% endif %}
-                {% endfor %}
+        <div id="sidebar-header">
+            <img src="{{ url_for('static', filename='img/oryn_logo.png') }}" alt="Oryn Logo" class="header-logo">
             </div>
-            <a href="{{ url_for('assistants_dashboard') }}">{{ _('Панель управления') }}</a>
-            <a href="{{ url_for('logout') }}">{{ _('Выйти') }}</a>
+
+        <div id="user-info">
+            <div class="user-details">
+                <h2>{{ current_user.username }}</h2>
+                <div class="lang-switcher">
+                    {% for lang, name in AVAILABLE_LANGUAGES.items() %}
+                        <a href="?lang={{ lang }}" class="lang-link {% if lang == CURRENT_LANGUAGE %}active{% endif %}">{{ name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-link">{{ _('Выйти') }}</a>
         </div>
         
         <div class="chat-list-container">
@@ -62,7 +66,10 @@
             </ul>
         </div>
         
-        <div id="create-group-btn">{{ _('Создать группу') }}</div>
+        <div id="sidebar-footer">
+            <a href="{{ url_for('assistants_dashboard') }}" class="sidebar-action-btn">{{ _('Управление ассистентом') }}</a>
+            <div id="create-group-btn" class="sidebar-action-btn">{{ _('Создать группу') }}</div>
+        </div>
     </div>
 
     <div id="chat-container">
@@ -103,41 +110,12 @@
 
     <div id="voice-modal" class="voice-modal-overlay">
         <div class="voice-modal-content">
-            <h2 id="voice-modal-title">{{ _('Запись сообщения') }}</h2>
-            <div id="voice-status">{{ _('Нажмите "Старт" для начала записи') }}</div>
-            <div id="audio-playback-container"><audio id="audio-playback" controls></audio></div>
-            <div id="transcription-container"><textarea id="transcription-text" placeholder="{{ _('Здесь появится транскрипция...') }}"></textarea></div>
-            <div class="voice-modal-controls">
-                <button id="start-record-btn">{{ _('Старт') }}</button>
-                <button id="stop-record-btn" style="display:none;">{{ _('Стоп') }}</button>
-                <select id="ai-model-select" style="display:none;">
-                    <option value="gemini">Gemini</option>
-                    <option value="deepseek">DeepSeek</option>
-                </select>
-                <button id="improve-ai-btn" style="display:none;">{{ _('Улучшить текст') }} ✍️</button>
-                <button id="generate-ai-btn" style="display:none;">{{ _('Сгенерировать ответ') }} 🤖</button>
             </div>
-            <div class="voice-modal-actions">
-                <button id="delete-record-btn">{{ _('Отмена') }}</button>
-                <button id="send-text-btn" style="display:none;">{{ _('Отправить текст') }}</button>
-                <button id="send-audio-btn" style="display:none;">{{ _('Отправить аудио') }}</button>
-            </div>
-        </div>
     </div>
 
     <div id="assistant-modal" class="voice-modal-overlay">
         <div class="voice-modal-content">
-            <h2>{{ _('ИИ-Ассистент') }}</h2>
-            <div id="assistant-messages">
-                <div class="assistant-bubble assistant">{{ _('Здравствуйте! Чем могу помочь?') }}</div>
             </div>
-            <form id="assistant-form">
-                <input id="assistant-input" autocomplete="off" placeholder="{{ _('Спросите что-нибудь...') }}" />
-                <button id="assistant-send-btn" type="submit">➢</button>
-            </form>
-            <button id="send-to-chat-btn" class="voice-modal-actions">{{ _('Отправить последний ответ в чат') }}</button>
-            <button id="close-assistant-btn" class="voice-modal-actions">{{ _('Закрыть') }}</button>
-        </div>
     </div>
     
     <div id="initial-data" data-unread-counts='{{ unread_counts | tojson | safe }}'></div>

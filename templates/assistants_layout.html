@@ -9,8 +9,10 @@
 <body>
     <div class="dashboard-layout">
         <nav class="sidebar">
-            <div class="sidebar-header">
-                <h2>{{ _('Мой ИИ') }}</h2>
+                <div class="sidebar-header">
+                <a href="{{ url_for('assistants_dashboard') }}">
+                    <img src="{{ url_for('static', filename='img/oryn_logo.png') }}" alt="Oryn Logo" class="sidebar-logo">
+                </a>
             </div>
             <ul>
                 <li class="{{ 'active' if request.endpoint == 'assistants_dashboard' else '' }}"><a href="{{ url_for('assistants_dashboard') }}">{{ _('Панель управления') }}</a></li>
