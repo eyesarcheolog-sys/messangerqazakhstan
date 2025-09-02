@@ -32,15 +32,17 @@
             width: 280px; 
             text-align: center;
         }
+        /* ИСПРАВЛЕНИЕ ЗДЕСЬ */
         .form-header {
             margin-bottom: 25px;
+            display: flex; /* 1. Включаем Flexbox */
+            flex-direction: column; /* 2. Располагаем элементы вертикально */
+            align-items: center; /* 3. Центрируем их */
         }
         .logo {
             width: 250px; 
             margin-bottom: 0; /* Убираем отступ */
             display: block;
-            margin-left: auto;
-            margin-right: auto;
         }
         h1 {
             text-align: center;
