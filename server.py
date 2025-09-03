@@ -15,6 +15,8 @@ from flask_migrate import Migrate
 from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
+# ИМПОРТИРУЕМ НАШУ НОВУЮ ФУНКЦИЮ
+from ai_logic import get_orchestrated_ai_response
 
 # --- APP SETUP ---
 app = Flask(__name__)
@@ -72,6 +74,7 @@ class User(UserMixin, db.Model):
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
     groups = db.relationship('Group', secondary=group_members, lazy='subquery',
                              backref=db.backref('members', lazy=True))
+    assistants = db.relationship('Assistant', backref='owner', lazy=True)
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,16 +96,15 @@ class Assistant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(300))
-    status = db.Column(db.String(20), nullable=False, default='inactive') # 'active', 'inactive', 'training'
+    status = db.Column(db.String(20), nullable=False, default='inactive')
     instructions = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
-    user = db.relationship('User', backref=db.backref('assistants', lazy=True))
     knowledge_sources = db.relationship('Knowledge', backref='assistant', lazy=True, cascade="all, delete-orphan")
 
 class Knowledge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(50), nullable=False) # 'text', 'file', 'url'
+    type = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
     assistant_id = db.Column(db.Integer, db.ForeignKey('assistant.id'), nullable=False)
 
@@ -283,7 +285,6 @@ def group_history(group_id):
     } for msg in messages]
     return jsonify(messages_json)
 
-# ИСПРАВЛЕНИЕ: Этот роут будет обслуживать файлы из папки 'uploads' в корне проекта
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)
@@ -301,7 +302,6 @@ def send_audio():
     if not group_id and not recipient_username:
         return jsonify({"error": _("No recipient specified")}), 400
     
-    # ИСПРАВЛЕНИЕ: Создаем папку 'uploads' в корне проекта, если ее нет
     upload_dir = os.path.join(app.root_path, 'uploads')
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
@@ -310,7 +310,6 @@ def send_audio():
     filepath = os.path.join(upload_dir, filename)
     audio_file.save(filepath)
     
-    # ИСПРАВЛЕНИЕ: Генерируем полный https URL для Render.com
     audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
     
     timestamp = datetime.utcnow()
@@ -364,7 +363,6 @@ def send_audio():
 
     return jsonify({"success": True}), 200
 
-# ИСПРАВЛЕНИЕ: Восстановлена полная логика ИИ
 @app.route('/edit_with_ai', methods=['POST'])
 @login_required
 def edit_with_ai():
@@ -428,7 +426,6 @@ def edit_with_ai():
         print(f"Error calling {model_choice} API: {e}")
         return jsonify({'error': _('{model_choice} service failed').format(model_choice=model_choice)}), 500
 
-
 @app.route('/chat_with_assistant', methods=['POST'])
 @login_required
 def chat_with_assistant():
@@ -439,17 +436,12 @@ def chat_with_assistant():
         return jsonify({'error': _('No prompt provided')}), 400
 
     try:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key: raise ValueError("GEMINI_API_KEY is not set")
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        
-        response = model.generate_content(user_prompt)
-        
-        return jsonify({'response': response.text})
+        # ИСПОЛЬЗУЕМ НОВУЮ ФУНКЦИЮ-ОРКЕСТРАТОР
+        final_response = get_orchestrated_ai_response(user_prompt, current_user)
+        return jsonify({'response': final_response})
 
     except Exception as e:
-        print(f"Error calling Gemini Assistant API: {e}")
+        print(f"Error in chat_with_assistant route: {e}")
         return jsonify({'error': _('AI Assistant service failed')}), 500
 
 @app.route('/js/translations.js')
