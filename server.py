@@ -89,6 +89,23 @@ class Message(db.Model):
     audio_url = db.Column(db.String(255), nullable=True)
     transcription = db.Column(db.Text, nullable=True)
 
+class Assistant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(300))
+    status = db.Column(db.String(20), nullable=False, default='inactive') # 'active', 'inactive', 'training'
+    instructions = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    user = db.relationship('User', backref=db.backref('assistants', lazy=True))
+    knowledge_sources = db.relationship('Knowledge', backref='assistant', lazy=True, cascade="all, delete-orphan")
+
+class Knowledge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(50), nullable=False) # 'text', 'file', 'url'
+    content = db.Column(db.Text, nullable=False)
+    assistant_id = db.Column(db.Integer, db.ForeignKey('assistant.id'), nullable=False)
+
 
 @login_manager.user_loader
 def load_user(user_id):
