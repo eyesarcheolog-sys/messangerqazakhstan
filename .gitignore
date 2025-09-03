@@ -20,3 +20,4 @@ instance/
 
 # Файлы переводов (исходники)
 messages.pot
+google_credentials.json

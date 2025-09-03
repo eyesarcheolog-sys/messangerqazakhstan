@@ -17,26 +17,72 @@
 
     <div class="form-section">
         <label for="assistant_description">{{ _('Описание для выбора ИИ') }}</label>
-        <p class="form-hint">{{ _('Опишите в 3-5 словах, что делает этот ассистент. Это описание будет видеть только главный ИИ-диспетчер для выбора специалиста.') }}</p>
+        <p class="form-hint">{{ _('Опишите в 3-5 словах, что делает этот ассистент...') }}</p>
         <textarea id="assistant_description" name="assistant_description" rows="3" class="config-textarea">{{ assistant.description or '' }}</textarea>
     </div>
 
     <div class="form-section">
         <label for="instructions">{{ _('Инструкции для ассистента (Системный промпт)') }}</label>
-        <p class="form-hint">{{ _('Опишите на естественном языке, что должен делать ассистент, его роль и правила.') }}</p>
-        <textarea id="instructions" name="instructions" rows="10" class="config-textarea" placeholder="{{ _('Например: Ты — мой помощник по задачам. Всегда добавляй новые задачи в проект Inbox...') }}">{{ assistant.instructions or '' }}</textarea>
-    </div>
-
-    <div class="form-section">
-        <label>{{ _('Обучение и Данные') }}</label>
-        <p class="form-hint">{{ _('Подключите источники данных, чтобы ассистент мог их использовать.') }}</p>
-        <div class="data-source-placeholder">
-            <p>{{ _('Скоро здесь можно будет подключать Google Календарь, контакты и другие сервисы.') }}</p>
-        </div>
+        <p class="form-hint">{{ _('Опишите на естественном языке, что должен делать ассистент...') }}</p>
+        <textarea id="instructions" name="instructions" rows="10" class="config-textarea" placeholder="{{ _('Например: Ты — мой помощник по задачам...') }}">{{ assistant.instructions or '' }}</textarea>
     </div>
 
     <div class="form-actions">
         <button type="submit" class="save-btn">{{ _('Сохранить изменения') }}</button>
     </div>
 </form>
+
+<hr class="form-separator">
+
+<div class="config-form">
+    <div class="form-section">
+        <label>{{ _('Обучение и Данные') }}</label>
+        <p class="form-hint">{{ _('Подключите источники данных, чтобы ассистент мог их использовать.') }}</p>
+        <div class="data-source">
+            <div class="data-source-info">
+                <strong>Google Calendar</strong>
+                {% if current_user.google_credentials_json %}
+                    <span class="status-badge active">{{ _('Подключено') }}</span>
+                {% else %}
+                    <span class="status-badge inactive">{{ _('Не подключено') }}</span>
+                {% endif %}
+            </div>
+            {% if not current_user.google_credentials_json %}
+            <a href="{{ url_for('authorize_google') }}" class="connect-btn">{{ _('Подключить') }}</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<hr class="form-separator">
+
+<form id="delete-assistant-form" class="config-form" action="{{ url_for('delete_assistant', assistant_id=assistant.id) }}" method="POST">
+    <div class="form-section">
+         <label>{{ _('Опасная зона') }}</label>
+         <p class="form-hint">{{ _('Это действие нельзя будет отменить.') }}</p>
+        <button type="submit" class="delete-btn">{{ _('Удалить ассистента') }}</button>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Находим нашу форму по id
+    const deleteForm = document.getElementById('delete-assistant-form');
+    
+    // Добавляем обработчик события "submit"
+    deleteForm.addEventListener('submit', function(event) {
+        // Предотвращаем отправку формы по умолчанию
+        event.preventDefault();
+        
+        // Показываем стандартное окно подтверждения
+        const confirmation = confirm("{{ _('Вы уверены, что хотите удалить этого ассистента? Это действие необратимо.') }}");
+        
+        // Если пользователь нажал "ОК", отправляем форму
+        if (confirmation) {
+            this.submit();
+        }
+    });
+</script>
 {% endblock %}

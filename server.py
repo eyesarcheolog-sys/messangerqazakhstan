@@ -4,7 +4,7 @@ monkey.patch_all()
 import os
 import uuid
 import json
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Response
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Response, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
@@ -17,6 +17,10 @@ from flask_babel import Babel, gettext as _
 from ai_logic import get_orchestrated_ai_response
 # ИМПОРТИРУЕМ ВСЕ ИЗ НОВОГО ФАЙЛА models.py
 from models import db, User, Group, Message, Assistant, Knowledge
+# НОВЫЕ ИМПОРТЫ ДЛЯ GOOGLE API
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
 
 # --- APP SETUP ---
 app = Flask(__name__)
@@ -393,7 +397,6 @@ def chat_with_assistant():
         return jsonify({'error': _('No prompt provided')}), 400
 
     try:
-        # ИСПОЛЬЗУЕМ НОВУЮ ФУНКЦИЮ-ОРКЕСТРАТОР
         final_response = get_orchestrated_ai_response(user_prompt, current_user)
         return jsonify({'response': final_response})
 
@@ -424,13 +427,15 @@ def js_translations():
     js_code = f"window.translations = {json.dumps(translations)};"
     return Response(js_code, mimetype='application/javascript')
 
+# --- ASSISTANTS ROUTES ---
+
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
     user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
     return render_template('assistants.html', assistants=user_assistants)
 
-@app.route('/assistants/create', methods=['GET', 'POST'])
+@app.route('/assistants/create', methods=['POST'])
 @login_required
 def create_assistant():
     new_assistant = Assistant(
@@ -458,6 +463,14 @@ def configure_assistant(assistant_id):
 
     return render_template('configure_assistant.html', assistant=assistant)
 
+@app.route('/assistants/delete/<int:assistant_id>', methods=['POST'])
+@login_required
+def delete_assistant(assistant_id):
+    assistant = Assistant.query.filter_by(id=assistant_id, user_id=current_user.id).first_or_404()
+    db.session.delete(assistant)
+    db.session.commit()
+    return redirect(url_for('assistants_dashboard'))
+
 @app.route('/assistants/my')
 @login_required
 def my_assistants_page():
@@ -473,7 +486,46 @@ def knowledge_base_page():
 @login_required
 def assistants_settings_page():
     return render_template('settings.html')
+
+# --- GOOGLE CALENDAR OAUTH ROUTES ---
+
+@app.route('/authorize/google')
+@login_required
+def authorize_google():
+    flow = Flow.from_client_secrets_file(
+        'google_credentials.json',
+        scopes=['https://www.googleapis.com/auth/calendar'],
+        redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
+    )
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true'
+    )
+    session['state'] = state
+    return redirect(authorization_url)
+
+@app.route('/oauth2callback/google')
+@login_required
+def oauth2callback_google():
+    state = session.get('state')
+    if not state or state != request.args.get('state'):
+        return 'State mismatch error', 400
+        
+    flow = Flow.from_client_secrets_file(
+        'google_credentials.json',
+        scopes=['https://www.googleapis.com/auth/calendar'],
+        state=state,
+        redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
+    )
     
+    flow.fetch_token(authorization_response=request.url)
+    credentials = flow.credentials
+    
+    current_user.google_credentials_json = credentials.to_json()
+    db.session.commit()
+    
+    return redirect(url_for('assistants_dashboard'))
+
 # --- WEBSOCKET LOGIC ---
 @socketio.on('connect')
 @login_required

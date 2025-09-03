@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     groups = db.relationship('Group', secondary=group_members, lazy='subquery',
                              backref=db.backref('members', lazy=True))
     assistants = db.relationship('Assistant', backref='owner', lazy=True)
+    google_credentials_json = db.Column(db.Text, nullable=True)
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
