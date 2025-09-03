@@ -6,7 +6,6 @@ import uuid
 import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Response
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from sqlalchemy import or_, func
@@ -15,8 +14,9 @@ from flask_migrate import Migrate
 from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
-# ИМПОРТИРУЕМ НАШУ НОВУЮ ФУНКЦИЮ
 from ai_logic import get_orchestrated_ai_response
+# ИМПОРТИРУЕМ ВСЕ ИЗ НОВОГО ФАЙЛА models.py
+from models import db, User, Group, Message, Assistant, Knowledge
 
 # --- APP SETUP ---
 app = Flask(__name__)
@@ -51,7 +51,8 @@ def inject_conf_var():
     )
 
 # --- OTHER EXTENSIONS ---
-db = SQLAlchemy(app)
+# СВЯЗЫВАЕМ db С НАШИМ ПРИЛОЖЕНИЕМ
+db.init_app(app)
 migrate = Migrate(app, db)
 socketio = SocketIO(app)
 login_manager = LoginManager()
@@ -62,52 +63,7 @@ login_manager.login_message = _("Please log in to access this page.")
 user_sids = {}
 
 # --- DATABASE MODELS ---
-group_members = db.Table('group_members',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
-)
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(256), nullable=False)
-    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy=True)
-    groups = db.relationship('Group', secondary=group_members, lazy='subquery',
-                             backref=db.backref('members', lazy=True))
-    assistants = db.relationship('Assistant', backref='owner', lazy=True)
-
-class Group(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    messages = db.relationship('Message', backref='group', lazy=True)
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
-    body = db.Column(db.Text, nullable=True)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    is_read = db.Column(db.Boolean, default=False, nullable=False, server_default='false')
-    audio_url = db.Column(db.String(255), nullable=True)
-    transcription = db.Column(db.Text, nullable=True)
-
-class Assistant(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(300))
-    status = db.Column(db.String(20), nullable=False, default='inactive')
-    instructions = db.Column(db.Text, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
-    knowledge_sources = db.relationship('Knowledge', backref='assistant', lazy=True, cascade="all, delete-orphan")
-
-class Knowledge(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(50), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    assistant_id = db.Column(db.Integer, db.ForeignKey('assistant.id'), nullable=False)
-
+# ВСЕ МОДЕЛИ ТЕПЕРЬ В ФАЙЛЕ models.py
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -425,6 +381,7 @@ def edit_with_ai():
     except Exception as e:
         print(f"Error calling {model_choice} API: {e}")
         return jsonify({'error': _('{model_choice} service failed').format(model_choice=model_choice)}), 500
+
 
 @app.route('/chat_with_assistant', methods=['POST'])
 @login_required
