@@ -3,12 +3,13 @@
 {% block title %}{{ _('Мои ассистенты') }}{% endblock %}
 
 {% block content %}
-<header class="main-header">
+<header class="main-header with-action">
     <h1>{{ _('Мои ассистенты') }}</h1>
-    <p class="subtitle">{{ _('Управляйте всеми вашими персональными ассистентами из одного места.') }}</p>
+    <a href="{{ url_for('create_assistant') }}" class="action-btn-primary">{{ _('Создать ассистента') }}</a>
 </header>
 
 <div class="content-table">
+    {% if assistants %}
     <table>
         <thead>
             <tr>
@@ -25,7 +26,7 @@
                 <td>
                     <span class="status-badge {{ assistant.status }}">{{ _(assistant.status) }}</span>
                 </td>
-                <td>{{ assistant.info }}</td>
+                <td>{{ assistant.description or '' }}</td>
                 <td>
                     <a href="{{ url_for('configure_assistant', assistant_id=assistant.id) }}" class="action-btn">{{ _('Настроить') }}</a>
                 </td>
@@ -33,5 +34,8 @@
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p class="empty-state">{{ _('У вас еще нет ассистентов. Нажмите "Создать ассистента", чтобы добавить первого.') }}</p>
+    {% endif %}
 </div>
 {% endblock %}

@@ -294,3 +294,35 @@ tbody tr:last-child td {
 .config-textarea {
     resize: vertical;
 }
+/* Стили для заголовка с кнопкой */
+.main-header.with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-btn-primary {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: filter 0.2s;
+}
+
+.action-btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+.empty-state {
+    color: var(--secondary-text-color);
+    font-size: 16px;
+    padding: 40px;
+    text-align: center;
+    background-color: var(--widget-color);
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+    grid-column: 1 / -1; /* Растягиваем на всю ширину грида */
+}

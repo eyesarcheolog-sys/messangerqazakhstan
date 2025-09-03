@@ -3,13 +3,18 @@
 {% block title %}{{ _('Панель управления') }}{% endblock %}
 
 {% block content %}
-<header class="main-header">
+<header class="main-header with-action">
     <h1>{{ _('Панель управления') }}</h1>
+    <a href="{{ url_for('create_assistant') }}" class="action-btn-primary">{{ _('Создать ассистента') }}</a>
 </header>
 
 <section class="widgets-grid">
-    {% for assistant in assistants %}
-        {% include 'assistant_widget.html' %}
-    {% endfor %}
+    {% if assistants %}
+        {% for assistant in assistants %}
+            {% include 'assistant_widget.html' %}
+        {% endfor %}
+    {% else %}
+        <p class="empty-state">{{ _('У вас еще нет ассистентов. Нажмите "Создать ассистента", чтобы добавить первого.') }}</p>
+    {% endif %}
 </section>
 {% endblock %}

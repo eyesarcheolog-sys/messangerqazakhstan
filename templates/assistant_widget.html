@@ -4,7 +4,7 @@
         <span class="status-indicator {{ assistant.status }}"></span>
     </div>
     <div class="widget-body">
-        <p>{{ assistant.info }}</p>
+        <p>{{ assistant.description or _('Нет описания') }}</p>
     </div>
     <div class="widget-footer">
         <a href="{{ url_for('configure_assistant', assistant_id=assistant.id) }}">{{ _('Настроить') }} →</a>

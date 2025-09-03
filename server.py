@@ -427,14 +427,26 @@ def js_translations():
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
-    # Загружаем ассистентов ТЕКУЩЕГО пользователя из базы данных
     user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
     return render_template('assistants.html', assistants=user_assistants)
+
+@app.route('/assistants/create', methods=['GET', 'POST'])
+@login_required
+def create_assistant():
+    new_assistant = Assistant(
+        name=_('Новый ассистент'),
+        description=_('Краткое описание'),
+        status='inactive',
+        instructions=_('Ты — полезный ассистент.'),
+        owner=current_user
+    )
+    db.session.add(new_assistant)
+    db.session.commit()
+    return redirect(url_for('configure_assistant', assistant_id=new_assistant.id))
 
 @app.route('/assistants/configure/<int:assistant_id>', methods=['GET', 'POST'])
 @login_required
 def configure_assistant(assistant_id):
-    # Находим конкретного ассистента, убедившись, что он принадлежит текущему пользователю
     assistant = Assistant.query.filter_by(id=assistant_id, user_id=current_user.id).first_or_404()
     
     if request.method == 'POST':
@@ -449,7 +461,6 @@ def configure_assistant(assistant_id):
 @app.route('/assistants/my')
 @login_required
 def my_assistants_page():
-    # Этот роут делает то же самое, что и главный, просто использует другой шаблон
     user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
     return render_template('my_assistants.html', assistants=user_assistants)
 
