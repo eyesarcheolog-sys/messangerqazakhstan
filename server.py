@@ -153,7 +153,8 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('index'))
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
         else:
             return _("Invalid username or password!")
     return render_template('login.html')
@@ -175,7 +176,6 @@ def create_group():
         return _("A group with this name already exists!"), 400
     new_group = Group(name=group_name)
     db.session.add(new_group)
-    db.session.commit()
     creator = db.session.get(User, current_user.id)
     new_group.members.append(creator)
     for user_id in member_ids:
@@ -266,11 +266,10 @@ def group_history(group_id):
     } for msg in messages]
     return jsonify(messages_json)
 
+# ИСПРАВЛЕНИЕ: Этот роут будет обслуживать файлы из папки 'uploads' в корне проекта
 @app.route('/uploads/<filename>')
-@login_required
 def uploaded_file(filename):
-    upload_dir = os.path.join(app.static_folder, 'uploads')
-    return send_from_directory(upload_dir, filename)
+    return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)
 
 @app.route('/send_audio', methods=['POST'])
 @login_required
@@ -285,7 +284,8 @@ def send_audio():
     if not group_id and not recipient_username:
         return jsonify({"error": _("No recipient specified")}), 400
     
-    upload_dir = os.path.join(app.static_folder, 'uploads')
+    # ИСПРАВЛЕНИЕ: Создаем папку 'uploads' в корне проекта, если ее нет
+    upload_dir = os.path.join(app.root_path, 'uploads')
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
 
@@ -293,7 +293,8 @@ def send_audio():
     filepath = os.path.join(upload_dir, filename)
     audio_file.save(filepath)
     
-    audio_url = url_for('static', filename=f'uploads/{filename}')
+    # ИСПРАВЛЕНИЕ: Генерируем полный https URL для Render.com
+    audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
     
     timestamp = datetime.utcnow()
     new_message = Message(
@@ -346,6 +347,7 @@ def send_audio():
 
     return jsonify({"success": True}), 200
 
+# ИСПРАВЛЕНИЕ: Восстановлена полная логика ИИ
 @app.route('/edit_with_ai', methods=['POST'])
 @login_required
 def edit_with_ai():
@@ -362,24 +364,46 @@ def edit_with_ai():
         
         if task_type == 'improve':
             prompt = f"""
-            You are a smart editor assistant. Your task is to take the user's text and improve it.
-            - Fix all spelling, punctuation, and grammar mistakes.
-            - Improve the style and clarity to make the text sound natural and correct.
-            - **Do not change the core meaning of the text and do not add new information.**
-            - Your response must ALWAYS be in the same language as the original text.
-            - RESPONSE FORMAT: Only the final, edited text, without your comments.
+            Ты — умный ассистент-редактор. Твоя задача — взять текст пользователя и улучшить его.
+            - Исправь все орфографические, пунктуационные и грамматические ошибки.
+            - Улучши стиль и ясность, чтобы текст звучал естественно и грамотно.
+            - **Не меняй основной смысл текста и не добавляй новой информации от себя.**
+            - Твой ответ ВСЕГДА должен быть на том же языке, что и оригинальный текст.
+            - ФОРМАТ ОТВЕТА: Только итоговый, отредактированный текст, без твоих комментариев.
 
-            Original text: "{original_text}"
+            Оригинальный текст: "{original_text}"
             """
         else: # 'generate'
             prompt = original_text
 
         if model_choice == 'gemini':
-            # ... (Логика Gemini API) ...
-            pass
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(
+                'gemini-1.5-flash-latest',
+                system_instruction="Ты — полезный ИИ-ассистент в чате. Отвечай на русском языке, если не указано иное."
+            )
+            response = model.generate_content(prompt)
+            
+            try:
+                edited_text = response.text
+            except ValueError:
+                print("Gemini response blocked by safety settings.")
+                edited_text = "[Ответ был заблокирован из-за настроек безопасности]"
+
         else: # deepseek
-            # ... (Логика DeepSeek API) ...
-            pass
+            api_key = os.environ.get("DEEPSEEK_API_KEY")
+            if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
+            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "You are a helpful AI assistant. Respond in Russian unless the user asks for another language."},
+                    {"role": "user", "content": prompt},
+                ]
+            )
+            edited_text = response.choices[0].message.content
         
         return jsonify({'edited_text': edited_text})
 
@@ -413,19 +437,13 @@ def chat_with_assistant():
 
 @app.route('/js/translations.js')
 def js_translations():
-    """
-    Предоставляет все необходимые переводы для использования в JavaScript.
-    """
     translations = {
-        # Для уведомлений и алертов
         "Please select a chat.": _("Please select a chat."),
         "Microphone error:": _("Microphone error:"),
         "AI Error:": _("AI Error:"),
         "An error occurred while contacting the AI.": _("An error occurred while contacting the AI."),
         "A network error has occurred. Please try again.": _("A network error has occurred. Please try again."),
         "Could not get a response from the AI.": _("Could not get a response from the AI."),
-        
-        # Для интерфейса модальных окон
         "Recording: {seconds} sec.": _("Recording: {seconds} sec."),
         "Recording finished": _("Recording finished"),
         "Transcription ready": _("Transcription ready"),
@@ -434,8 +452,6 @@ def js_translations():
         "Thinking...": _("Thinking..."),
         "Show text": _("Show text"),
         "Hide text": _("Hide text"),
-
-        # Для заголовков чата
         "Chat with {name}": _("Chat with {name}"),
         "Select a chat": _("Выберите чат")
     }
@@ -483,13 +499,11 @@ def my_assistants_page():
 @app.route('/assistants/knowledge')
 @login_required
 def knowledge_base_page():
-    # Логика для базы знаний
     return render_template('knowledge_base.html')
 
 @app.route('/assistants/settings')
 @login_required
 def assistants_settings_page():
-    # Логика для общих настроек
     return render_template('settings.html')
     
 # --- WEBSOCKET LOGIC ---
