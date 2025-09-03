@@ -427,40 +427,31 @@ def js_translations():
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
-    my_assistants = [
-        {'id': 1, 'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
-        {'id': 2, 'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
-        {'id': 3, 'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
-        {'id': 4, 'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
-    ]
-    return render_template('assistants.html', assistants=my_assistants)
+    # Загружаем ассистентов ТЕКУЩЕГО пользователя из базы данных
+    user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
+    return render_template('assistants.html', assistants=user_assistants)
 
-@app.route('/assistants/configure/<int:assistant_id>')
+@app.route('/assistants/configure/<int:assistant_id>', methods=['GET', 'POST'])
 @login_required
 def configure_assistant(assistant_id):
-    my_assistants = [
-        {'id': 1, 'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
-        {'id': 2, 'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
-        {'id': 3, 'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
-        {'id': 4, 'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
-    ]
-    assistant = next((a for a in my_assistants if a['id'] == assistant_id), None)
+    # Находим конкретного ассистента, убедившись, что он принадлежит текущему пользователю
+    assistant = Assistant.query.filter_by(id=assistant_id, user_id=current_user.id).first_or_404()
     
-    if not assistant:
-        return "Assistant not found", 404
+    if request.method == 'POST':
+        assistant.name = request.form.get('assistant_name')
+        assistant.description = request.form.get('assistant_description')
+        assistant.instructions = request.form.get('instructions')
+        db.session.commit()
+        return redirect(url_for('configure_assistant', assistant_id=assistant.id))
 
     return render_template('configure_assistant.html', assistant=assistant)
 
 @app.route('/assistants/my')
 @login_required
 def my_assistants_page():
-    my_assistants = [
-        {'id': 1, 'name': 'Календарь и Задачи', 'status': 'active', 'info': '3 предстоящих события'},
-        {'id': 2, 'name': 'Заказ еды и доставок', 'status': 'active', 'info': 'Предпочтения: Итальянская кухня'},
-        {'id': 3, 'name': 'Путешествия', 'status': 'inactive', 'info': 'Не настроен'},
-        {'id': 4, 'name': 'Бытовые вопросы', 'status': 'training', 'info': 'Требует обучения'}
-    ]
-    return render_template('my_assistants.html', assistants=my_assistants)
+    # Этот роут делает то же самое, что и главный, просто использует другой шаблон
+    user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
+    return render_template('my_assistants.html', assistants=user_assistants)
 
 @app.route('/assistants/knowledge')
 @login_required
