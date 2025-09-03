@@ -278,3 +278,19 @@ tbody tr:last-child td {
     width: auto;
     display: block;
 }
+/* --- Стили для полей ввода на странице настроек --- */
+.config-input, .config-textarea {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    background-color: var(--widget-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--primary-text-color);
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.config-textarea {
+    resize: vertical;
+}
