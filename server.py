@@ -435,7 +435,7 @@ def assistants_dashboard():
     user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
     return render_template('assistants.html', assistants=user_assistants)
 
-@app.route('/assistants/create', methods=['POST'])
+@app.route('/assistants/create', methods=['GET'])
 @login_required
 def create_assistant():
     new_assistant = Assistant(
