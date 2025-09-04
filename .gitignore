@@ -1,5 +1,5 @@
 # Виртуальное окружение
-.venv
+.venv/
 venv/
 
 # Файлы Python
@@ -15,9 +15,13 @@ instance/
 *.db
 *.sqlite3
 
-# Переменные окружения
+# Переменные окружения и секреты
 .env
+.flaskenv
+google_credentials.json
 
 # Файлы переводов (исходники)
 messages.pot
-google_credentials.json
+
+# Папка для загруженных файлов
+uploads/
