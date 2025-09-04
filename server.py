@@ -15,15 +15,14 @@ from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
 from ai_logic import get_orchestrated_ai_response
-# ИМПОРТИРУЕМ ВСЕ ИЗ НОВОГО ФАЙЛА models.py
 from models import db, User, Group, Message, Assistant, Knowledge
-# НОВЫЕ ИМПОРТЫ ДЛЯ GOOGLE API
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
 # --- APP SETUP ---
 app = Flask(__name__)
+# ИСПРАВЛЕНИЕ: Убрана опечатка 'develo2pment'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -55,7 +54,6 @@ def inject_conf_var():
     )
 
 # --- OTHER EXTENSIONS ---
-# СВЯЗЫВАЕМ db С НАШИМ ПРИЛОЖЕНИЕМ
 db.init_app(app)
 migrate = Migrate(app, db)
 socketio = SocketIO(app)
@@ -65,9 +63,6 @@ login_manager.login_view = 'login'
 login_manager.login_message = _("Please log in to access this page.")
 
 user_sids = {}
-
-# --- DATABASE MODELS ---
-# ВСЕ МОДЕЛИ ТЕПЕРЬ В ФАЙЛЕ models.py
 
 @login_manager.user_loader
 def load_user(user_id):
