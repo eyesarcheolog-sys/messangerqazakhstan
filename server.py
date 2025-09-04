@@ -22,7 +22,6 @@ from googleapiclient.discovery import build
 
 # --- APP SETUP ---
 app = Flask(__name__)
-# ИСПРАВЛЕНИЕ: Убрана опечатка 'develo2pment'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -487,8 +486,9 @@ def assistants_settings_page():
 @app.route('/authorize/google')
 @login_required
 def authorize_google():
+    credentials_path = os.path.join(app.root_path, 'google_credentials.json')
     flow = Flow.from_client_secrets_file(
-        'google_credentials.json',
+        credentials_path,
         scopes=['https://www.googleapis.com/auth/calendar'],
         redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
     )
@@ -502,12 +502,13 @@ def authorize_google():
 @app.route('/oauth2callback/google')
 @login_required
 def oauth2callback_google():
+    credentials_path = os.path.join(app.root_path, 'google_credentials.json')
     state = session.get('state')
     if not state or state != request.args.get('state'):
         return 'State mismatch error', 400
         
     flow = Flow.from_client_secrets_file(
-        'google_credentials.json',
+        credentials_path,
         scopes=['https://www.googleapis.com/auth/calendar'],
         state=state,
         redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
