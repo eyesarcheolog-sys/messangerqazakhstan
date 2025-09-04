@@ -18,6 +18,17 @@ def create_calendar_event(user, event_data_json):
         return _("Ошибка: Google Календарь не подключен. Пожалуйста, подключите его в настройках ассистента.")
 
     try:
+        # --- ИСПРАВЛЕНИЕ: Очищаем строку от лишних символов (например, ```json) ---
+        start_index = event_data_json.find('{')
+        end_index = event_data_json.rfind('}')
+        
+        if start_index == -1 or end_index == -1:
+            print(f"AI returned non-JSON response: {event_data_json}")
+            return _("Извините, ассистент не смог сформировать данные для календаря. Попробуйте еще раз.")
+            
+        clean_json_string = event_data_json[start_index:end_index+1]
+        # --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
         # 1. Загружаем учетные данные из базы данных
         creds_data = json.loads(user.google_credentials_json)
         creds = Credentials(**creds_data)
@@ -25,8 +36,8 @@ def create_calendar_event(user, event_data_json):
         # 2. Создаем клиент для работы с API
         service = build('calendar', 'v3', credentials=creds)
 
-        # 3. Парсим JSON от ассистента
-        event_data = json.loads(event_data_json)
+        # 3. Парсим ОЧИЩЕННЫЙ JSON от ассистента
+        event_data = json.loads(clean_json_string)
 
         # 4. Формируем тело запроса для API
         event = {
@@ -61,7 +72,6 @@ def get_orchestrated_ai_response(user_prompt, user):
     """
     available_assistants = Assistant.query.filter_by(user_id=user.id).all()
 
-    # Фильтруем ассистентов, чтобы убрать тех, у кого нет инструкций
     active_assistants = [a for a in available_assistants if a.instructions]
 
     if not active_assistants:
@@ -99,10 +109,8 @@ def get_orchestrated_ai_response(user_prompt, user):
         if not specialist_assistant or not specialist_assistant.instructions:
             return _("Ассистент с ID {assistant_id} не найден или не имеет инструкций.").format(assistant_id=selected_assistant_id)
 
-        # Проверяем, является ли выбранный ассистент специалистом по календарю
         if 'календар' in specialist_assistant.name.lower():
             
-            # Подставляем текущую дату в инструкции
             today_date = datetime.now().strftime("%Y-%m-%d")
             instructions_with_date = specialist_assistant.instructions.replace("{{current_date}}", today_date)
 
@@ -110,14 +118,11 @@ def get_orchestrated_ai_response(user_prompt, user):
                 'gemini-1.5-flash-latest',
                 system_instruction=instructions_with_date
             )
-            # Получаем от ИИ JSON-ответ
             json_response = final_model.generate_content(user_prompt)
             
-            # Вызываем нашу новую функцию для создания события
             return create_calendar_event(user, json_response.text)
 
         else:
-            # Для всех остальных ассистентов логика остается прежней
             final_model = genai.GenerativeModel(
                 'gemini-1.5-flash-latest',
                 system_instruction=specialist_assistant.instructions
