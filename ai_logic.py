@@ -18,33 +18,26 @@ def create_calendar_event(user, event_data_json):
         return _("Ошибка: Google Календарь не подключен. Пожалуйста, подключите его в настройках ассистента.")
 
     try:
-        # --- ИСПРАВЛЕНИЕ: Очищаем строку от лишних символов (например, ```json) ---
+        # Правильно загружаем учетные данные, чтобы избежать ошибки с датой
+        info = json.loads(user.google_credentials_json)
+        creds = Credentials.from_authorized_user_info(info)
+
+        # Очищаем строку от лишних символов (например, ```json)
         start_index = event_data_json.find('{')
         end_index = event_data_json.rfind('}')
-        
         if start_index == -1 or end_index == -1:
             print(f"AI returned non-JSON response: {event_data_json}")
             return _("Извините, ассистент не смог сформировать данные для календаря. Попробуйте еще раз.")
-            
         clean_json_string = event_data_json[start_index:end_index+1]
-        # --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
-        # 1. Загружаем учетные данные из базы данных
-        creds_data = json.loads(user.google_credentials_json)
-        creds = Credentials(**creds_data)
-
-        # 2. Создаем клиент для работы с API
         service = build('calendar', 'v3', credentials=creds)
-
-        # 3. Парсим ОЧИЩЕННЫЙ JSON от ассистента
         event_data = json.loads(clean_json_string)
 
-        # 4. Формируем тело запроса для API
         event = {
             'summary': event_data.get('summary', 'Без названия'),
             'start': {
                 'dateTime': event_data.get('start'),
-                'timeZone': 'Asia/Makassar', #ВАЖНО: Укажите ваш часовой пояс. Например, 'Europe/Amsterdam' или 'Asia/Almaty'
+                'timeZone': 'Asia/Makassar', #ВАЖНО: Укажите ваш часовой пояс
             },
             'end': {
                 'dateTime': event_data.get('end'),
@@ -52,7 +45,6 @@ def create_calendar_event(user, event_data_json):
             },
         }
 
-        # 5. Отправляем запрос на создание события
         created_event = service.events().insert(calendarId='primary', body=event).execute()
         
         return _("✅ Событие успешно создано! '{event_summary}'").format(event_summary=created_event.get('summary'))
@@ -61,7 +53,7 @@ def create_calendar_event(user, event_data_json):
         return _("Извините, не удалось распознать данные для события. Попробуйте переформулировать запрос.")
     except Exception as e:
         print(f"Google Calendar API error: {e}")
-        return _("Произошла ошибка при работе с Google Календарем: {error}").format(error=e)
+        return _("Произошла ошибка при работе с Google Календарем: {error}").format(error=str(e))
 
 
 def get_orchestrated_ai_response(user_prompt, user):
