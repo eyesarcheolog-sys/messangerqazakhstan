@@ -68,6 +68,7 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 # --- ROUTES ---
+# ... (все основные маршруты до /authorize/google остаются без изменений) ...
 @app.route('/')
 @login_required
 def index():
@@ -481,6 +482,18 @@ def knowledge_base_page():
 def assistants_settings_page():
     return render_template('settings.html')
 
+# --- НОВЫЙ МАРШРУТ ДЛЯ ОТКЛЮЧЕНИЯ GOOGLE ---
+@app.route('/assistants/disconnect_google', methods=['POST'])
+@login_required
+def disconnect_google():
+    """
+    Отключает интеграцию с Google для текущего пользователя.
+    """
+    user = db.session.get(User, current_user.id)
+    user.google_credentials_json = None
+    db.session.commit()
+    return redirect(request.referrer or url_for('assistants_dashboard'))
+
 # --- GOOGLE CALENDAR OAUTH ROUTES ---
 
 @app.route('/authorize/google')
@@ -489,7 +502,10 @@ def authorize_google():
     credentials_path = os.path.join(app.root_path, 'google_credentials.json')
     flow = Flow.from_client_secrets_file(
         credentials_path,
-        scopes=['https://www.googleapis.com/auth/calendar'],
+        scopes=[
+            'https://www.googleapis.com/auth/calendar.events', 
+            'https://www.googleapis.com/auth/tasks'
+        ],
         redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
     )
     authorization_url, state = flow.authorization_url(
@@ -509,7 +525,10 @@ def oauth2callback_google():
         
     flow = Flow.from_client_secrets_file(
         credentials_path,
-        scopes=['https://www.googleapis.com/auth/calendar'],
+        scopes=[
+            'https://www.googleapis.com/auth/calendar.events', 
+            'https://www.googleapis.com/auth/tasks'
+        ],
         state=state,
         redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
     )

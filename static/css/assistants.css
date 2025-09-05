@@ -326,3 +326,31 @@ tbody tr:last-child td {
     border-radius: 12px;
     grid-column: 1 / -1; /* Растягиваем на всю ширину грида */
 }
+/* static/css/assistants.css */
+
+.disconnect-btn {
+    background-color: #d1453b; /* Красный цвет */
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.disconnect-btn:hover {
+    background-color: #b0352d;
+}
+
+/* Стили для контейнера с кнопками подключения */
+.data-source {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--widget-color);
+    padding: 15px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}

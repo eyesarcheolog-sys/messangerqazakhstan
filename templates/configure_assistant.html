@@ -38,6 +38,7 @@
     <div class="form-section">
         <label>{{ _('Обучение и Данные') }}</label>
         <p class="form-hint">{{ _('Подключите источники данных, чтобы ассистент мог их использовать.') }}</p>
+        
         <div class="data-source">
             <div class="data-source-info">
                 <strong>Google Calendar</strong>
@@ -47,11 +48,16 @@
                     <span class="status-badge inactive">{{ _('Не подключено') }}</span>
                 {% endif %}
             </div>
-            {% if not current_user.google_credentials_json %}
-            <a href="{{ url_for('authorize_google') }}" class="connect-btn">{{ _('Подключить') }}</a>
+            
+            {% if current_user.google_credentials_json %}
+                <form action="{{ url_for('disconnect_google') }}" method="POST" style="margin: 0;">
+                    <button type="submit" class="disconnect-btn">{{ _('Отключить') }}</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('authorize_google') }}" class="connect-btn">{{ _('Подключить') }}</a>
             {% endif %}
         </div>
-    </div>
+        </div>
 </div>
 
 <hr class="form-separator">
