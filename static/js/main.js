@@ -417,9 +417,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const assistantMessages = document.getElementById('assistant-messages');
         const sendToChatBtn = document.getElementById('send-to-chat-btn');
         
+        // --- ИЗМЕНЕНИЕ: Функция для загрузки истории ---
+        async function loadAssistantHistory() {
+            assistantMessages.innerHTML = ''; // Очищаем чат перед загрузкой
+            try {
+                const response = await fetch('/assistant_history');
+                const history = await response.json();
+                if (history.length === 0) {
+                     addAssistantMessage(__('Здравствуйте! Чем могу помочь?'), 'assistant');
+                } else {
+                    history.forEach(msg => addAssistantMessage(msg.content, msg.role));
+                }
+            } catch (error) {
+                console.error("Failed to load assistant history:", error);
+                addAssistantMessage(__('Ошибка загрузки истории.'), 'assistant');
+            }
+        }
+    
         if (openAssistantBtn) {
             openAssistantBtn.onclick = () => {
                 assistantModal.style.display = 'flex';
+                loadAssistantHistory(); // Загружаем историю при открытии
             };
         }
 
@@ -438,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addAssistantMessage(userPrompt, 'user');
                 assistantInput.value = '';
                 
-                const thinkingBubble = addAssistantMessage(__('Thinking...'), 'assistant');
+                const thinkingBubble = addAssistantMessage(__('Думаю...'), 'assistant');
 
                 try {
                     const response = await fetch('/chat_with_assistant', {
@@ -452,11 +470,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const data = await response.json();
-                    thinkingBubble.textContent = data.response || __("Could not get a response from the AI.");
+                    thinkingBubble.textContent = data.response || __("Не удалось получить ответ от ИИ.");
 
                 } catch (error) {
                     console.error("Error with AI Assistant:", error);
-                    thinkingBubble.textContent = __("A network error has occurred. Please try again.");
+                    thinkingBubble.textContent = __("Произошла сетевая ошибка. Пожалуйста, попробуйте еще раз.");
                 }
                 assistantMessages.scrollTop = assistantMessages.scrollHeight;
             };
@@ -465,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sendToChatBtn) {
             sendToChatBtn.onclick = () => {
                 const lastAssistantResponse = assistantMessages.querySelector('.assistant-bubble.assistant:last-child');
-                if (lastAssistantResponse && lastAssistantResponse.textContent !== __("Thinking...")) {
+                if (lastAssistantResponse && lastAssistantResponse.textContent !== __("Думаю...")) {
                     input.value = lastAssistantResponse.textContent;
                     assistantModal.style.display = 'none';
                 }

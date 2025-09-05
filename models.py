@@ -51,3 +51,14 @@ class Knowledge(db.Model):
     type = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
     assistant_id = db.Column(db.Integer, db.ForeignKey('assistant.id'), nullable=False)
+
+# --- НАЧАЛО: Новый класс для хранения истории чата с ассистентом ---
+class AssistantMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    role = db.Column(db.String(10), nullable=False)  # 'user' или 'assistant'
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    owner = db.relationship('User', backref=db.backref('assistant_messages', lazy=True))
+# --- КОНЕЦ НОВОГО КЛАССА ---

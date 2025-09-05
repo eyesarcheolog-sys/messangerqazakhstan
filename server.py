@@ -15,7 +15,7 @@ from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
 from ai_logic import get_orchestrated_ai_response
-from models import db, User, Group, Message, Assistant, Knowledge
+from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage # <-- Добавлен AssistantMessage
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -381,6 +381,15 @@ def edit_with_ai():
         return jsonify({'error': _('{model_choice} service failed').format(model_choice=model_choice)}), 500
 
 
+# --- НАЧАЛО: Обновленный блок для работы с ИИ-ассистентом ---
+@app.route('/assistant_history')
+@login_required
+def assistant_history():
+    """ Возвращает историю сообщений с ассистентом для текущего пользователя. """
+    messages = AssistantMessage.query.filter_by(user_id=current_user.id).order_by(AssistantMessage.timestamp.asc()).all()
+    history = [{'role': msg.role, 'content': msg.content} for msg in messages]
+    return jsonify(history)
+
 @app.route('/chat_with_assistant', methods=['POST'])
 @login_required
 def chat_with_assistant():
@@ -391,12 +400,27 @@ def chat_with_assistant():
         return jsonify({'error': _('No prompt provided')}), 400
 
     try:
+        # Сохраняем сообщение пользователя
+        user_message = AssistantMessage(user_id=current_user.id, role='user', content=user_prompt)
+        db.session.add(user_message)
+        
+        # Получаем ответ от ИИ
         final_response = get_orchestrated_ai_response(user_prompt, current_user)
+
+        # Сохраняем ответ ассистента
+        assistant_response = AssistantMessage(user_id=current_user.id, role='assistant', content=final_response)
+        db.session.add(assistant_response)
+
+        db.session.commit() # Сохраняем оба сообщения в базу
+
         return jsonify({'response': final_response})
 
     except Exception as e:
+        db.session.rollback() # Откатываем изменения в случае ошибки
         print(f"Error in chat_with_assistant route: {e}")
         return jsonify({'error': _('AI Assistant service failed')}), 500
+# --- КОНЕЦ: Обновленный блок для работы с ИИ-ассистентом ---
+
 
 @app.route('/js/translations.js')
 def js_translations():
