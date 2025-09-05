@@ -68,7 +68,6 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 # --- ROUTES ---
-# ... (все основные маршруты до /authorize/google остаются без изменений) ...
 @app.route('/')
 @login_required
 def index():
@@ -482,13 +481,9 @@ def knowledge_base_page():
 def assistants_settings_page():
     return render_template('settings.html')
 
-# --- НОВЫЙ МАРШРУТ ДЛЯ ОТКЛЮЧЕНИЯ GOOGLE ---
 @app.route('/assistants/disconnect_google', methods=['POST'])
 @login_required
 def disconnect_google():
-    """
-    Отключает интеграцию с Google для текущего пользователя.
-    """
     user = db.session.get(User, current_user.id)
     user.google_credentials_json = None
     db.session.commit()
@@ -510,7 +505,8 @@ def authorize_google():
     )
     authorization_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true'
+        include_granted_scopes='true',
+        prompt='consent'
     )
     session['state'] = state
     return redirect(authorization_url)
