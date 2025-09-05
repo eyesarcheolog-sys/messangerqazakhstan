@@ -7,63 +7,74 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
 
-def create_calendar_event(user, event_data_json):
-    """
-    Создает событие в Google Календаре пользователя.
-    :param user: Объект текущего пользователя (для получения credentials).
-    :param event_data_json: Строка JSON от ИИ-ассистента.
-    :return: Строка с результатом операции.
-    """
-    if not user.google_credentials_json:
-        return _("Ошибка: Google Календарь не подключен. Пожалуйста, подключите его в настройках ассистента.")
+def create_task(user, data):
+    """ Создает задачу в Google Tasks, возможно с датой выполнения. """
+    info = json.loads(user.google_credentials_json)
+    creds = Credentials.from_authorized_user_info(info)
+    service = build('tasks', 'v1', credentials=creds)
+    
+    task = {'title': data.get('title')}
+    
+    if data.get('due'):
+        task['due'] = data.get('due').replace(' ', 'T') + 'Z'
 
-    try:
-        # Правильно загружаем учетные данные, чтобы избежать ошибки с датой
-        info = json.loads(user.google_credentials_json)
-        creds = Credentials.from_authorized_user_info(info)
+    result = service.tasks().insert(tasklist='@default', body=task).execute()
+    return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
 
-        # Очищаем строку от лишних символов (например, ```json)
-        start_index = event_data_json.find('{')
-        end_index = event_data_json.rfind('}')
-        if start_index == -1 or end_index == -1:
-            print(f"AI returned non-JSON response: {event_data_json}")
-            return _("Извините, ассистент не смог сформировать данные для календаря. Попробуйте еще раз.")
-        clean_json_string = event_data_json[start_index:end_index+1]
+def find_and_update_event(user, data):
+    """ Находит и обновляет событие в Google Календаре. """
+    info = json.loads(user.google_credentials_json)
+    creds = Credentials.from_authorized_user_info(info)
+    service = build('calendar', 'v3', credentials=creds)
 
-        service = build('calendar', 'v3', credentials=creds)
-        event_data = json.loads(clean_json_string)
+    search_term = data.get('search_term')
+    time_min = datetime.now().isoformat() + 'Z'
+    
+    events_result = service.events().list(calendarId='primary', q=search_term,
+                                        timeMin=time_min, maxResults=1,
+                                        singleEvents=True, orderBy='startTime').execute()
+    events = events_result.get('items', [])
 
-        event = {
-            'summary': event_data.get('summary', 'Без названия'),
-            'start': {
-                'dateTime': event_data.get('start'),
-                'timeZone': 'Asia/Makassar', #ВАЖНО: Укажите ваш часовой пояс
-            },
-            'end': {
-                'dateTime': event_data.get('end'),
-                'timeZone': 'Asia/Makassar', #ВАЖНО: Укажите ваш часовой пояс
-            },
-        }
+    if not events:
+        return _("Не удалось найти событие '{search_term}' для обновления.").format(search_term=search_term)
 
-        created_event = service.events().insert(calendarId='primary', body=event).execute()
-        
-        return _("✅ Событие успешно создано! '{event_summary}'").format(event_summary=created_event.get('summary'))
+    event_to_update = events[0]
+    event_to_update['start']['dateTime'] = data.get('new_start')
+    event_to_update['end']['dateTime'] = data.get('new_end')
 
-    except json.JSONDecodeError:
-        return _("Извините, не удалось распознать данные для события. Попробуйте переформулировать запрос.")
-    except Exception as e:
-        print(f"Google Calendar API error: {e}")
-        return _("Произошла ошибка при работе с Google Календарем: {error}").format(error=str(e))
+    updated_event = service.events().update(calendarId='primary', eventId=event_to_update['id'], body=event_to_update).execute()
+    return _("✅ Событие '{event_summary}' успешно перенесено!").format(event_summary=updated_event.get('summary'))
 
+def create_calendar_event(user, data):
+    """ Создает событие в Google Календаре с проверкой времени и цветом. """
+    info = json.loads(user.google_credentials_json)
+    creds = Credentials.from_authorized_user_info(info)
+    service = build('calendar', 'v3', credentials=creds)
+    
+    start_time_str = data.get('start')
+    end_time_str = data.get('end')
+
+    if start_time_str and not end_time_str:
+        start_time_obj = datetime.fromisoformat(start_time_str)
+        end_time_obj = start_time_obj + timedelta(hours=1)
+        end_time_str = end_time_obj.isoformat()
+
+    event = {
+        'summary': data.get('summary', 'Без названия'),
+        'start': {'dateTime': start_time_str, 'timeZone': 'Asia/Makassar'},
+        'end': {'dateTime': end_time_str, 'timeZone': 'Asia/Makassar'},
+        'colorId': data.get('colorId', '1')
+    }
+    created_event = service.events().insert(calendarId='primary', body=event).execute()
+    return _("✅ Событие успешно создано! '{event_summary}'").format(event_summary=created_event.get('summary'))
 
 def get_orchestrated_ai_response(user_prompt, user):
     """
     Эта функция-оркестратор управляет взаимодействием с ИИ.
     Шаг 1: Выбирает подходящего ассистента.
-    Шаг 2: Получает ответ от выбранного ассистента.
+    Шаг 2: Получает ответ от выбранного ассистента и выполняет действие.
     """
     available_assistants = Assistant.query.filter_by(user_id=user.id).all()
-
     active_assistants = [a for a in available_assistants if a.instructions]
 
     if not active_assistants:
@@ -102,29 +113,40 @@ def get_orchestrated_ai_response(user_prompt, user):
             return _("Ассистент с ID {assistant_id} не найден или не имеет инструкций.").format(assistant_id=selected_assistant_id)
 
         if 'календар' in specialist_assistant.name.lower():
-            
             today_date = datetime.now().strftime("%Y-%m-%d")
             instructions_with_date = specialist_assistant.instructions.replace("{{current_date}}", today_date)
-
-            final_model = genai.GenerativeModel(
-                'gemini-1.5-flash-latest',
-                system_instruction=instructions_with_date
-            )
-            json_response = final_model.generate_content(user_prompt)
+            final_model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=instructions_with_date)
             
-            return create_calendar_event(user, json_response.text)
+            response_text = final_model.generate_content(user_prompt).text
+            start_index = response_text.find('{')
+            end_index = response_text.rfind('}')
+            if start_index != -1 and end_index != -1:
+                clean_json_string = response_text[start_index:end_index+1]
+            else:
+                clean_json_string = "{}"
+            
+            try:
+                response_json = json.loads(clean_json_string)
+                intent = response_json.get("intent")
+                data = response_json.get("data")
 
+                if intent == "create_event":
+                    return create_calendar_event(user, data)
+                elif intent == "create_task":
+                    return create_task(user, data)
+                elif intent == "update_event":
+                    return find_and_update_event(user, data)
+                else:
+                    return _("Не удалось определить намерение. Попробуйте переформулировать.")
+            except (json.JSONDecodeError, AttributeError):
+                 return _("Ассистент вернул ответ в неверном формате. Попробуйте еще раз.")
         else:
-            final_model = genai.GenerativeModel(
-                'gemini-1.5-flash-latest',
-                system_instruction=specialist_assistant.instructions
-            )
-            final_response = final_model.generate_content(user_prompt)
-            return final_response.text
-
+            final_model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=specialist_assistant.instructions)
+            return final_model.generate_content(user_prompt).text
+            
     except (ValueError, IndexError, TypeError) as e:
         print(f"Orchestrator Error: Could not parse assistant ID from response. Details: {e}")
         return _("Извините, не удалось выбрать подходящего ассистента. Попробуйте переформулировать.")
     except Exception as e:
         print(f"Orchestrator general error: {e}")
-        return _('AI Assistant service failed')
+        return _('Произошла ошибка в работе ассистента.')
