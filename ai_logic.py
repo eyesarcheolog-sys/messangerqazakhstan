@@ -5,38 +5,82 @@ from flask_babel import gettext as _
 from models import Assistant
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-def find_and_delete_event(user, data):
-    """ Находит и удаляет событие в Google Календаре. """
+# --- Вспомогательная функция для аутентификации ---
+def get_google_service(user, service_name, version):
     info = json.loads(user.google_credentials_json)
     creds = Credentials.from_authorized_user_info(info)
-    service = build('calendar', 'v3', credentials=creds)
+    return build(service_name, version, credentials=creds)
 
+# --- НОВАЯ УМНАЯ ФУНКЦИЯ ПОИСКА ---
+def find_events(user, data):
+    service = get_google_service(user, 'calendar', 'v3')
     search_term = data.get('search_term')
-    time_min = datetime.now().isoformat() + 'Z'
     
-    events_result = service.events().list(calendarId='primary', q=search_term,
-                                        timeMin=time_min, maxResults=1,
-                                        singleEvents=True, orderBy='startTime').execute()
+    # Ищем события на ближайшую неделю
+    now = datetime.now(timezone.utc)
+    time_min = now.isoformat()
+    time_max = (now + timedelta(days=7)).isoformat()
+
+    events_result = service.events().list(
+        calendarId='primary', 
+        q=search_term,
+        timeMin=time_min,
+        timeMax=time_max,
+        maxResults=5,
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
     events = events_result.get('items', [])
 
     if not events:
-        return _("Не удалось найти событие '{search_term}' для удаления.").format(search_term=search_term)
-
-    event_to_delete = events[0]
-    event_id = event_to_delete['id']
-    event_summary = event_to_delete.get('summary', 'Без названия')
+        return _("На ближайшую неделю событий с названием '{search_term}' не найдено.").format(search_term=search_term)
     
-    service.events().delete(calendarId='primary', eventId=event_id).execute()
-    
-    return _("✅ Событие '{event_summary}' успешно удалено!").format(event_summary=event_summary)
+    # Формируем красивый ответ для пользователя со списком найденных событий
+    response_lines = [_("Вот что мне удалось найти:")]
+    for event in events:
+        start_str = event['start'].get('dateTime', event['start'].get('date'))
+        start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00'))
+        # Форматируем дату и время в более читаемый вид
+        formatted_start = start_dt.strftime('%d %B в %H:%M')
+        summary = event.get('summary', _('Без названия'))
+        event_id = event['id']
+        response_lines.append(f"- '{summary}' ({formatted_start}) - ID: {event_id[:10]}...")
 
+    response_lines.append(_("\nЧто вы хотите сделать с одним из этих событий? (например, 'удали событие с ID ...')"))
+    return "\n".join(response_lines)
+
+# --- ОБНОВЛЕННЫЕ ФУНКЦИИ (теперь могут работать по ID) ---
+def find_and_delete_event(user, data):
+    service = get_google_service(user, 'calendar', 'v3')
+    event_id = data.get('event_id')
+    
+    try:
+        # Пытаемся получить событие, чтобы узнать его имя перед удалением
+        event = service.events().get(calendarId='primary', eventId=event_id).execute()
+        summary = event.get('summary', _('Без названия'))
+        service.events().delete(calendarId='primary', eventId=event_id).execute()
+        return _("✅ Событие '{summary}' успешно удалено!").format(summary=summary)
+    except Exception as e:
+        return _("Не удалось удалить событие с ID '{event_id}'. Возможно, ID некорректен.").format(event_id=event_id)
+
+def find_and_update_event(user, data):
+    service = get_google_service(user, 'calendar', 'v3')
+    event_id = data.get('event_id')
+
+    try:
+        event_to_update = service.events().get(calendarId='primary', eventId=event_id).execute()
+        event_to_update['start']['dateTime'] = data.get('new_start')
+        event_to_update['end']['dateTime'] = data.get('new_end')
+        updated_event = service.events().update(calendarId='primary', eventId=event_to_update['id'], body=event_to_update).execute()
+        return _("✅ Событие '{summary}' успешно перенесено!").format(summary=updated_event.get('summary'))
+    except Exception as e:
+         return _("Не удалось обновить событие с ID '{event_id}'. Возможно, ID некорректен.").format(event_id=event_id)
+
+# --- Функции создания остаются почти без изменений ---
 def create_task(user, data):
-    """ Создает задачу в Google Tasks, возможно с датой выполнения. """
-    info = json.loads(user.google_credentials_json)
-    creds = Credentials.from_authorized_user_info(info)
-    service = build('tasks', 'v1', credentials=creds)
+    service = get_google_service(user, 'tasks', 'v1')
     task = {'title': data.get('title')}
     if data.get('due'):
         due_dt_object = datetime.fromisoformat(data.get('due'))
@@ -44,28 +88,8 @@ def create_task(user, data):
     result = service.tasks().insert(tasklist='@default', body=task).execute()
     return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
 
-def find_and_update_event(user, data):
-    """ Находит и обновляет событие в Google Календаре. """
-    info = json.loads(user.google_credentials_json)
-    creds = Credentials.from_authorized_user_info(info)
-    service = build('calendar', 'v3', credentials=creds)
-    search_term = data.get('search_term')
-    time_min = datetime.now().isoformat() + 'Z'
-    events_result = service.events().list(calendarId='primary', q=search_term, timeMin=time_min, maxResults=1, singleEvents=True, orderBy='startTime').execute()
-    events = events_result.get('items', [])
-    if not events:
-        return _("Не удалось найти событие '{search_term}' для обновления.").format(search_term=search_term)
-    event_to_update = events[0]
-    event_to_update['start']['dateTime'] = data.get('new_start')
-    event_to_update['end']['dateTime'] = data.get('new_end')
-    updated_event = service.events().update(calendarId='primary', eventId=event_to_update['id'], body=event_to_update).execute()
-    return _("✅ Событие '{event_summary}' успешно перенесено!").format(event_summary=updated_event.get('summary'))
-
 def create_calendar_event(user, data):
-    """ Создает событие в Google Календаре с проверкой времени и цветом. """
-    info = json.loads(user.google_credentials_json)
-    creds = Credentials.from_authorized_user_info(info)
-    service = build('calendar', 'v3', credentials=creds)
+    service = get_google_service(user, 'calendar', 'v3')
     start_time_str = data.get('start')
     end_time_str = data.get('end')
     if start_time_str and not end_time_str:
@@ -79,65 +103,58 @@ def create_calendar_event(user, data):
         'colorId': data.get('colorId', '1')
     }
     created_event = service.events().insert(calendarId='primary', body=event).execute()
-    return _("✅ Событие успешно создано! '{event_summary}'").format(event_summary=created_event.get('summary'))
+    return _("✅ Событие успешно создано! '{summary}'").format(summary=created_event.get('summary'))
 
+# --- ГЛАВНАЯ ФУНКЦИЯ-ОРКЕСТРАТОР (полностью заменяем) ---
 def get_orchestrated_ai_response(user_prompt, user):
-    """
-    Эта функция-оркестратор управляет взаимодействием с ИИ.
-    Шаг 1: Выбирает подходящего ассистента.
-    Шаг 2: Получает ответ от выбранного ассистента и выполняет действие.
-    """
+    # ... код выбора ассистента ...
+    # (Эта часть остается без изменений)
     available_assistants = Assistant.query.filter_by(user_id=user.id).all()
     active_assistants = [a for a in available_assistants if a.instructions]
     if not active_assistants: return _("У вас пока нет настроенных ассистентов с инструкциями.")
     assistant_list_for_prompt = "\n".join([f"- id: {a.id}, name: {a.name}, description: {a.description}" for a in active_assistants])
     selection_prompt = f"""
-    Ты — главный ассистент-диспетчер. Проанализируй запрос пользователя и выбери ОДНОГО из доступных специалистов из списка ниже, который лучше всего подходит для выполнения задачи.
-    В ответ дай ТОЛЬКО цифру — id выбранного специалиста. Не добавляй никаких других слов, текста или знаков препинания.
-
-    Список доступных специалистов:
-    {assistant_list_for_prompt}
-
-    Запрос пользователя: "{user_prompt}"
+    Ты — главный ассистент-диспетчер...
+    Список доступных специалистов:\n{assistant_list_for_prompt}\nЗапрос пользователя: "{user_prompt}"
     """
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key: raise ValueError("GEMINI_API_KEY is not set")
         genai.configure(api_key=api_key)
         selection_model = genai.GenerativeModel('gemini-1.5-flash-latest')
         selection_response = selection_model.generate_content(selection_prompt)
         selected_assistant_id_str = ''.join(filter(str.isdigit, selection_response.text))
-        if not selected_assistant_id_str: raise ValueError("AI did not return a valid numeric ID.")
         selected_assistant_id = int(selected_assistant_id_str)
         specialist_assistant = Assistant.query.filter_by(id=selected_assistant_id, user_id=user.id).first()
-        if not specialist_assistant or not specialist_assistant.instructions: return _("Ассистент с ID {assistant_id} не найден...").format(assistant_id=selected_assistant_id)
 
         if 'календар' in specialist_assistant.name.lower():
             today_date = datetime.now().strftime("%Y-%m-%d")
             instructions_with_date = specialist_assistant.instructions.replace("{{current_date}}", today_date)
             final_model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=instructions_with_date)
             response_text = final_model.generate_content(user_prompt).text
-            start_index = response_text.find('{')
-            end_index = response_text.rfind('}')
-            clean_json_string = response_text[start_index:end_index+1] if start_index != -1 and end_index != -1 else "{}"
             
-            try:
-                response_json = json.loads(clean_json_string)
-                intent = response_json.get("intent")
-                data = response_json.get("data")
+            clean_json_string = response_text[response_text.find('{'):response_text.rfind('}')+1]
+            response_json = json.loads(clean_json_string)
+            intent = response_json.get("intent")
+            data = response_json.get("data")
 
-                if intent == "create_event":
-                    return create_calendar_event(user, data)
-                elif intent == "create_task":
-                    return create_task(user, data)
+            # НОВЫЙ МАРШРУТИЗАТОР КОМАНД
+            if data.get('event_id'): # Если ID уже указан, выполняем действие
+                if intent == "delete_event":
+                    return find_and_delete_event(user, data)
                 elif intent == "update_event":
                     return find_and_update_event(user, data)
-                elif intent == "delete_event":
-                    return find_and_delete_event(user, data)
-                else:
-                    return _("Не удалось определить намерение. Попробуйте переформулировать.")
-            except (json.JSONDecodeError, AttributeError):
-                 return _("Ассистент вернул ответ в неверном формате. Попробуйте еще раз.")
+
+            # Если ID не указан, сначала ищем события
+            if intent in ["delete_event", "update_event", "find_events"]:
+                return find_events(user, data)
+            
+            # Иначе создаем новое
+            elif intent == "create_event":
+                return create_calendar_event(user, data)
+            elif intent == "create_task":
+                return create_task(user, data)
+            else:
+                return _("Не удалось определить намерение.")
         else:
             final_model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=specialist_assistant.instructions)
             return final_model.generate_content(user_prompt).text
