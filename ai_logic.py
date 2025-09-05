@@ -16,7 +16,14 @@ def create_task(user, data):
     task = {'title': data.get('title')}
     
     if data.get('due'):
-        task['due'] = data.get('due').replace(' ', 'T') + 'Z'
+        # Преобразуем строку от ИИ в объект datetime
+        due_str = data.get('due')
+        due_dt_object = datetime.fromisoformat(due_str)
+        
+        # Форматируем в СТРОГИЙ формат RFC 3339 с миллисекундами, который ожидает Google
+        formatted_due_str = due_dt_object.strftime('%Y-%m-%dT%H:%M:%S') + ".000Z"
+        
+        task['due'] = formatted_due_str
 
     result = service.tasks().insert(tasklist='@default', body=task).execute()
     return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
