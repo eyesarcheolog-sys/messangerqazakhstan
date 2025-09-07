@@ -16,12 +16,15 @@ logging.basicConfig(level=logging.INFO)
 
 # --- Вспомогательные функции (теперь это "инструменты" для Gemini) ---
 def get_google_service(user, service_name, version):
+    if not user.google_credentials_json:
+        return None
     info = json.loads(user.google_credentials_json)
     creds = Credentials.from_authorized_user_info(info)
     return build(service_name, version, credentials=creds)
 
 def find_events(user, search_term):
     service = get_google_service(user, 'calendar', 'v3')
+    if not service: return _("Доступ к Google Календарю не настроен.")
     now = datetime.now(utc)
     time_min = now.isoformat()
     time_max = (now + timedelta(days=7)).isoformat()
@@ -56,6 +59,7 @@ def find_events(user, search_term):
 
 def find_and_delete_event(user, event_id):
     service = get_google_service(user, 'calendar', 'v3')
+    if not service: return _("Доступ к Google Календарю не настроен.")
     try:
         event = service.events().get(calendarId='primary', eventId=event_id).execute()
         summary = event.get('summary', _('Без названия'))
@@ -67,6 +71,7 @@ def find_and_delete_event(user, event_id):
 
 def find_and_update_event(user, event_id, new_start, new_end=None):
     service = get_google_service(user, 'calendar', 'v3')
+    if not service: return _("Доступ к Google Календарю не настроен.")
     try:
         event_to_update = service.events().get(calendarId='primary', eventId=event_id).execute()
         event_to_update['start']['dateTime'] = new_start
@@ -80,6 +85,7 @@ def find_and_update_event(user, event_id, new_start, new_end=None):
 
 def create_task(user, title, due=None):
     service = get_google_service(user, 'tasks', 'v1')
+    if not service: return _("Доступ к Google Tasks не настроен.")
     task = {'title': title}
     if due:
         due_dt_object = datetime.fromisoformat(due)
@@ -93,6 +99,7 @@ def create_task(user, title, due=None):
 
 def create_calendar_event(user, summary, start, end=None):
     service = get_google_service(user, 'calendar', 'v3')
+    if not service: return _("Доступ к Google Календарю не настроен.")
     
     user_tz_str = getattr(user, 'timezone', None) or 'UTC'
     
@@ -113,7 +120,6 @@ def create_calendar_event(user, summary, start, end=None):
         logging.error(f"Error creating calendar event: {e}")
         return _("Не удалось создать событие в календаре. Пожалуйста, убедитесь, что вы предоставили корректное время.")
 
-
 def get_orchestrated_ai_response(user_prompt, user, assistant_id):
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
@@ -121,7 +127,6 @@ def get_orchestrated_ai_response(user_prompt, user, assistant_id):
             raise ValueError("GEMINI_API_KEY environment variable not set")
         genai.configure(api_key=api_key)
 
-        # 1. Получаем историю чата
         last_messages = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(10).all()
         last_messages.reverse()
         history = [
@@ -129,14 +134,14 @@ def get_orchestrated_ai_response(user_prompt, user, assistant_id):
             for msg in last_messages
         ]
 
-        # 2. Получаем инструкции ассистента из базы данных
         assistant = Assistant.query.filter_by(id=assistant_id, user_id=user.id).first()
-        if not assistant or not assistant.instructions:
+        if not assistant:
+            return _("Ассистент с этим ID не найден.")
+        if not assistant.instructions:
             return _("У этого ассистента нет инструкций. Пожалуйста, настройте его в панели управления.")
 
-        # 3. Определяем инструменты, доступные этому ассистенту
-        # Этот словарь будет расти по мере добавления новых мини-ассистентов
-        available_tools = {
+        # Словарь всех доступных инструментов
+        all_tools = {
             "create_calendar_event": genai.FunctionDeclaration(
                 name="create_calendar_event",
                 description="Создает новое событие в Google Календаре. Принимает название, время начала и опционально время окончания.",
@@ -186,24 +191,26 @@ def get_orchestrated_ai_response(user_prompt, user, assistant_id):
             ),
         }
 
-        # 4. Выбираем инструменты на основе имени ассистента
+        # Определяем инструменты на основе имени ассистента
         tools_for_model = []
         if 'календар' in assistant.name.lower() or 'события' in assistant.name.lower():
-            tools_for_model.append(available_tools["create_calendar_event"])
-            tools_for_model.append(available_tools["find_events"])
-            tools_for_model.append(available_tools["find_and_delete_event"])
+            tools_for_model.append(all_tools["create_calendar_event"])
+            tools_for_model.append(all_tools["find_events"])
+            tools_for_model.append(all_tools["find_and_delete_event"])
         if 'задачи' in assistant.name.lower():
-            tools_for_model.append(available_tools["create_task"])
+            tools_for_model.append(all_tools["create_task"])
 
-        # 5. Инициализируем модель с инструкциями и инструментами
-        model = genai.GenerativeModel('gemini-1.5-pro-latest', 
-                                    system_instruction=assistant.instructions, 
-                                    tools=tools_for_model)
+        # Проверяем, есть ли инструменты для этого ассистента
+        if not tools_for_model:
+            model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=assistant.instructions)
+            chat = model.start_chat(history=history)
+            response = chat.send_message(user_prompt)
+            return response.text
         
+        model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=assistant.instructions, tools=tools_for_model)
         chat = model.start_chat(history=history)
         response = chat.send_message(user_prompt)
-
-        # 6. Обрабатываем ответ ИИ
+        
         if response.tool_calls:
             tool_call = response.tool_calls[0]
             tool_name = tool_call.name

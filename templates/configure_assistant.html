@@ -20,7 +20,18 @@
         <p class="form-hint">{{ _('Опишите в 3-5 словах, что делает этот ассистент...') }}</p>
         <textarea id="assistant_description" name="assistant_description" rows="3" class="config-textarea">{{ assistant.description or '' }}</textarea>
     </div>
-
+    
+    <div class="form-section">
+        <label for="assistant_status">{{ _('Статус ассистента') }}</label>
+        <p class="form-hint">{{ _('Установите статус, чтобы включить или отключить ассистента.') }}</p>
+        <div class="status-control">
+            <input type="radio" id="status_active" name="assistant_status" value="active" {% if assistant.status == 'active' %}checked{% endif %}>
+            <label for="status_active" class="status-label status-label-active">{{ _('Активен') }}</label>
+            <input type="radio" id="status_inactive" name="assistant_status" value="inactive" {% if assistant.status == 'inactive' %}checked{% endif %}>
+            <label for="status_inactive" class="status-label status-label-inactive">{{ _('Неактивен') }}</label>
+        </div>
+    </div>
+    
     <div class="form-section">
         <label for="instructions">{{ _('Инструкции для ассистента (Системный промпт)') }}</label>
         <p class="form-hint">{{ _('Опишите на естественном языке, что должен делать ассистент...') }}</p>
