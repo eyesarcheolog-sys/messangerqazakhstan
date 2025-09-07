@@ -6,6 +6,11 @@ from models import Assistant, AssistantMessage # <-- Убедитесь, что 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, timezone
+from pytz import timezone as pytz_timezone
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 
 # --- Все вспомогательные функции (get_google_service, find_events, и т.д.) остаются без изменений ---
 def get_google_service(user, service_name, version):
@@ -42,7 +47,8 @@ def find_and_delete_event(user, data):
         summary = event.get('summary', _('Без названия'))
         service.events().delete(calendarId='primary', eventId=event_id).execute()
         return _("✅ Событие '{summary}' успешно удалено!").format(summary=summary)
-    except Exception:
+    except Exception as e:
+        logging.error(f"Error deleting event with ID {event_id}: {e}")
         return _("Не удалось удалить событие. Пожалуйста, скопируйте и вставьте ID полностью.").format(event_id=event_id)
 
 def find_and_update_event(user, data):
@@ -54,8 +60,9 @@ def find_and_update_event(user, data):
         event_to_update['end']['dateTime'] = data.get('new_end')
         updated_event = service.events().update(calendarId='primary', eventId=event_to_update['id'], body=event_to_update).execute()
         return _("✅ Событие '{summary}' успешно перенесено!").format(summary=updated_event.get('summary'))
-    except Exception:
-         return _("Не удалось обновить событие. Пожалуйста, скопируйте и вставьте ID полностью.").format(event_id=event_id)
+    except Exception as e:
+        logging.error(f"Error updating event with ID {event_id}: {e}")
+        return _("Не удалось обновить событие. Пожалуйста, скопируйте и вставьте ID полностью.").format(event_id=event_id)
 
 def create_task(user, data):
     service = get_google_service(user, 'tasks', 'v1')
@@ -63,25 +70,43 @@ def create_task(user, data):
     if data.get('due'):
         due_dt_object = datetime.fromisoformat(data.get('due'))
         task['due'] = due_dt_object.strftime('%Y-%m-%dT%H:%M:%S') + ".000Z"
-    result = service.tasks().insert(tasklist='@default', body=task).execute()
-    return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
+    try:
+        result = service.tasks().insert(tasklist='@default', body=task).execute()
+        return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
+    except Exception as e:
+        logging.error(f"Error creating task: {e}")
+        return _("Не удалось создать задачу.")
 
 def create_calendar_event(user, data):
     service = get_google_service(user, 'calendar', 'v3')
     start_time_str = data.get('start')
     end_time_str = data.get('end')
-    if start_time_str and not end_time_str:
-        start_time_obj = datetime.fromisoformat(start_time_str)
-        end_time_obj = start_time_obj + timedelta(hours=1)
-        end_time_str = end_time_obj.isoformat()
+
+    # Определяем часовой пояс пользователя, если он установлен, иначе используем UTC
+    user_tz_str = user.timezone if user.timezone else 'UTC'
+    user_tz = pytz_timezone(user_tz_str)
+    
+    # Преобразуем время в часовой пояс пользователя
+    try:
+        start_time_obj = datetime.fromisoformat(start_time_str).replace(tzinfo=user_tz)
+        if not end_time_str:
+            end_time_obj = start_time_obj + timedelta(hours=1)
+            end_time_str = end_time_obj.isoformat()
+    except ValueError:
+        return _("Неверный формат времени. Пожалуйста, попробуйте еще раз.")
+
     event = {
         'summary': data.get('summary', _('Без названия')),
-        'start': {'dateTime': start_time_str, 'timeZone': 'Asia/Makassar'},
-        'end': {'dateTime': end_time_str, 'timeZone': 'Asia/Makassar'},
+        'start': {'dateTime': start_time_str, 'timeZone': user_tz_str},
+        'end': {'dateTime': end_time_str, 'timeZone': user_tz_str},
         'colorId': data.get('colorId', '1')
     }
-    created_event = service.events().insert(calendarId='primary', body=event).execute()
-    return _("✅ Событие успешно создано! '{summary}'").format(summary=created_event.get('summary'))
+    try:
+        created_event = service.events().insert(calendarId='primary', body=event).execute()
+        return _("✅ Событие успешно создано! '{summary}'").format(summary=created_event.get('summary'))
+    except Exception as e:
+        logging.error(f"Error creating calendar event: {e}")
+        return _("Не удалось создать событие в календаре.")
 
 
 # --- ГЛАВНАЯ ФУНКЦИЯ-ОРКЕСТРАТОР (полностью заменяем) ---

@@ -1,3 +1,5 @@
+// main.js
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- CORE JAVASCRIPT ---
 
@@ -239,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function updateUI(state) {
-            if (startBtn) startBtn.style.display = (state === 'idle') ? 'block' : 'none';
+            if (startBtn) startBtn.style.display = (state === 'idle' || state === 'transcribed') ? 'block' : 'none';
             if (stopBtn) stopBtn.style.display = (state === 'recording') ? 'block' : 'none';
             if (playbackContainer) playbackContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
             if (transcriptionContainer) transcriptionContainer.style.display = (state === 'recorded' || state === 'transcribed') ? 'block' : 'none';
@@ -266,6 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (transcriptionText) transcriptionText.value = "";
             if (audioPlayer) audioPlayer.src = "";
             if (recordingInterval) clearInterval(recordingInterval);
+            if (recognition) {
+                recognition.onend = null; // сбрасываем обработчик
+                try { recognition.abort(); } catch(e) { /* ignore */ }
+            }
             updateUI('idle');
         }
 
@@ -284,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
                 if (recognition) {
-                    try { recognition.stop(); } catch(e) { /* ignore */ }
+                    try { recognition.abort(); } catch(e) { /* ignore */ } // используем abort() для немедленной остановки
                 }
                 voiceModal.style.display = 'none';
             };
@@ -311,7 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             if (transcriptionText) transcriptionText.value = final_transcript;
                         };
-                        recognition.onend = () => updateUI('transcribed');
+                        recognition.onend = () => {
+                            updateUI('transcribed');
+                        };
                         recognition.start();
                     }
 
@@ -457,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 assistantInput.value = '';
                 
                 const thinkingBubble = addAssistantMessage(__('Думаю...'), 'assistant');
+                toggleThinkingIndicator(true); // Включаем индикатор
 
                 try {
                     const response = await fetch('/chat_with_assistant', {
@@ -475,8 +484,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) {
                     console.error("Error with AI Assistant:", error);
                     thinkingBubble.textContent = __("Произошла сетевая ошибка. Пожалуйста, попробуйте еще раз.");
+                } finally {
+                    toggleThinkingIndicator(false); // Выключаем индикатор
+                    assistantMessages.scrollTop = assistantMessages.scrollHeight;
                 }
-                assistantMessages.scrollTop = assistantMessages.scrollHeight;
             };
         }
 
@@ -499,6 +510,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 assistantMessages.scrollTop = assistantMessages.scrollHeight;
             }
             return bubble;
+        }
+
+        function toggleThinkingIndicator(show) {
+            // Добавляем или удаляем CSS-класс, который будет управлять анимацией
+            const lastAssistantBubble = assistantMessages.querySelector('.assistant-bubble.assistant:last-child');
+            if (lastAssistantBubble) {
+                lastAssistantBubble.classList.toggle('thinking', show);
+            }
         }
     }
 });

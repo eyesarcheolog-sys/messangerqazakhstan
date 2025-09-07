@@ -1,3 +1,5 @@
+# server.py
+
 from gevent import monkey
 monkey.patch_all()
 
@@ -38,10 +40,13 @@ app.config['LANGUAGES'] = {
 app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
 
 def get_locale():
+    # Проверяем, был ли язык явно задан в URL-параметре
     lang = request.args.get('lang')
     if lang in app.config['LANGUAGES']:
-        return lang
-    return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
+        session['lang'] = lang  # Сохраняем выбранный язык в сессии
+    
+    # Возвращаем язык из сессии или определяем по заголовку браузера
+    return session.get('lang', request.accept_languages.best_match(app.config['LANGUAGES'].keys()))
 
 babel = Babel(app, locale_selector=get_locale)
 
@@ -554,6 +559,7 @@ def oauth2callback_google():
     )
     
     flow.fetch_token(authorization_response=request.url)
+    session.pop('state', None) # <-- Добавлена эта строка
     credentials = flow.credentials
     
     current_user.google_credentials_json = credentials.to_json()
