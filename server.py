@@ -17,7 +17,7 @@ from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
 from ai_logic import get_orchestrated_ai_response
-from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage # <-- Добавлен AssistantMessage
+from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -400,9 +400,13 @@ def assistant_history():
 def chat_with_assistant():
     data = request.get_json()
     user_prompt = data.get('prompt')
+    assistant_id = data.get('assistant_id')
 
     if not user_prompt:
         return jsonify({'error': _('No prompt provided')}), 400
+
+    if not assistant_id:
+        return jsonify({'error': _('No assistant specified')}), 400
 
     try:
         # Сохраняем сообщение пользователя
@@ -410,7 +414,7 @@ def chat_with_assistant():
         db.session.add(user_message)
         
         # Получаем ответ от ИИ
-        final_response = get_orchestrated_ai_response(user_prompt, current_user)
+        final_response = get_orchestrated_ai_response(user_prompt, current_user, assistant_id)
 
         # Сохраняем ответ ассистента
         assistant_response = AssistantMessage(user_id=current_user.id, role='assistant', content=final_response)
