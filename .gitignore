@@ -25,3 +25,5 @@ messages.pot
 
 # Папка для загруженных файлов
 uploads/
+
+.tmp.driveupload/
