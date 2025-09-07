@@ -14,7 +14,7 @@ import logging
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-# --- Вспомогательные функции (они теперь будут вызываться из Gemini) ---
+# --- Вспомогательные функции (теперь это "инструменты" для Gemini) ---
 def get_google_service(user, service_name, version):
     info = json.loads(user.google_credentials_json)
     creds = Credentials.from_authorized_user_info(info)
