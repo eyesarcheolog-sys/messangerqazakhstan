@@ -113,14 +113,15 @@ def create_calendar_event(user, summary, start, end=None):
         logging.error(f"Error creating calendar event: {e}")
         return _("Не удалось создать событие в календаре. Пожалуйста, убедитесь, что вы предоставили корректное время.")
 
-def get_orchestrated_ai_response(user_prompt, user):
+
+def get_orchestrated_ai_response(user_prompt, user, assistant_id):
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
         genai.configure(api_key=api_key)
 
-        # Подготовка истории чата для контекста
+        # 1. Получаем историю чата
         last_messages = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(10).all()
         last_messages.reverse()
         history = [
@@ -128,67 +129,85 @@ def get_orchestrated_ai_response(user_prompt, user):
             for msg in last_messages
         ]
 
-        # Описание доступных инструментов для Gemini
-        tools = [
-            genai.FunctionDeclaration(
+        # 2. Получаем инструкции ассистента из базы данных
+        assistant = Assistant.query.filter_by(id=assistant_id, user_id=user.id).first()
+        if not assistant or not assistant.instructions:
+            return _("У этого ассистента нет инструкций. Пожалуйста, настройте его в панели управления.")
+
+        # 3. Определяем инструменты, доступные этому ассистенту
+        # Этот словарь будет расти по мере добавления новых мини-ассистентов
+        available_tools = {
+            "create_calendar_event": genai.FunctionDeclaration(
                 name="create_calendar_event",
                 description="Создает новое событие в Google Календаре. Принимает название, время начала и опционально время окончания.",
                 parameters=genai.Schema(
                     type=genai.Schema.Type.OBJECT,
                     properties={
-                        "summary": genai.Schema(type=genai.Schema.Type.STRING, description="Название события, например 'Встреча с Ириной'"),
-                        "start": genai.Schema(type=genai.Schema.Type.STRING, description="Время начала события в формате ISO 8601, например '2025-09-08T17:00:00'"),
-                        "end": genai.Schema(type=genai.Schema.Type.STRING, description="Время окончания события в формате ISO 8601"),
+                        "summary": genai.Schema(type=genai.Schema.Type.STRING),
+                        "start": genai.Schema(type=genai.Schema.Type.STRING),
+                        "end": genai.Schema(type=genai.Schema.Type.STRING),
                     },
                     required=["summary", "start"],
                 ),
             ),
-            genai.FunctionDeclaration(
+            "find_events": genai.FunctionDeclaration(
                 name="find_events",
                 description="Находит события в Google Календаре по ключевым словам. Используется для поиска встреч или задач.",
                 parameters=genai.Schema(
                     type=genai.Schema.Type.OBJECT,
                     properties={
-                        "search_term": genai.Schema(type=genai.Schema.Type.STRING, description="Ключевое слово для поиска, например 'встреча' или 'совещание'"),
+                        "search_term": genai.Schema(type=genai.Schema.Type.STRING),
                     },
                     required=["search_term"],
                 ),
             ),
-            genai.FunctionDeclaration(
+            "find_and_delete_event": genai.FunctionDeclaration(
                 name="find_and_delete_event",
                 description="Удаляет событие из Google Календаря по его уникальному ID.",
                 parameters=genai.Schema(
                     type=genai.Schema.Type.OBJECT,
                     properties={
-                        "event_id": genai.Schema(type=genai.Schema.Type.STRING, description="Уникальный ID события, которое нужно удалить"),
+                        "event_id": genai.Schema(type=genai.Schema.Type.STRING),
                     },
                     required=["event_id"],
                 ),
             ),
-            genai.FunctionDeclaration(
+            "create_task": genai.FunctionDeclaration(
                 name="create_task",
                 description="Создает новую задачу в Google Tasks. Требует название задачи.",
                 parameters=genai.Schema(
                     type=genai.Schema.Type.OBJECT,
                     properties={
-                        "title": genai.Schema(type=genai.Schema.Type.STRING, description="Название задачи"),
-                        "due": genai.Schema(type=genai.Schema.Type.STRING, description="Дата выполнения в формате ISO 8601"),
+                        "title": genai.Schema(type=genai.Schema.Type.STRING),
+                        "due": genai.Schema(type=genai.Schema.Type.STRING),
                     },
                     required=["title"],
                 ),
             ),
-        ]
-        
-        model = genai.GenerativeModel('gemini-1.5-pro-latest', tools=tools)
-        chat = model.start_chat(history=history)
+        }
 
-        response = chat.send_message(user_prompt)
+        # 4. Выбираем инструменты на основе имени ассистента
+        tools_for_model = []
+        if 'календар' in assistant.name.lower() or 'события' in assistant.name.lower():
+            tools_for_model.append(available_tools["create_calendar_event"])
+            tools_for_model.append(available_tools["find_events"])
+            tools_for_model.append(available_tools["find_and_delete_event"])
+        if 'задачи' in assistant.name.lower():
+            tools_for_model.append(available_tools["create_task"])
+
+        # 5. Инициализируем модель с инструкциями и инструментами
+        model = genai.GenerativeModel('gemini-1.5-pro-latest', 
+                                    system_instruction=assistant.instructions, 
+                                    tools=tools_for_model)
         
+        chat = model.start_chat(history=history)
+        response = chat.send_message(user_prompt)
+
+        # 6. Обрабатываем ответ ИИ
         if response.tool_calls:
             tool_call = response.tool_calls[0]
             tool_name = tool_call.name
             tool_args = {k: v for k, v in tool_call.args.items()}
-            
             tool_response = locals()[tool_name](user, **tool_args)
             return tool_response
         else:
