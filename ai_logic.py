@@ -1,8 +1,10 @@
+# ai_logic.py
+
 import os
 import json
 import google.generativeai as genai
 from flask_babel import gettext as _
-from models import Assistant, AssistantMessage # <-- Убедитесь, что AssistantMessage импортирован
+from models import Assistant, AssistantMessage, User # <-- Добавьте User
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, timezone
@@ -35,7 +37,7 @@ def find_events(user, data):
         formatted_start = start_dt.strftime('%d %B в %H:%M')
         summary = event.get('summary', _('Без названия'))
         event_id = event['id']
-        response_lines.append(f"- '{summary}' ({formatted_start}) - ID: {event_id}") # Убрал сокращение ID
+        response_lines.append(f"- '{summary}' ({formatted_start}) - ID: {event_id}")
     response_lines.append(_("\nЧто вы хотите сделать? (например, 'удали событие с ID ...')"))
     return "\n".join(response_lines)
 
@@ -82,17 +84,16 @@ def create_calendar_event(user, data):
     start_time_str = data.get('start')
     end_time_str = data.get('end')
 
-    # Определяем часовой пояс пользователя, если он установлен, иначе используем UTC
-    user_tz_str = user.timezone if user.timezone else 'UTC'
+    user_tz_str = getattr(user, 'timezone', None) or 'UTC'
     user_tz = pytz_timezone(user_tz_str)
     
-    # Преобразуем время в часовой пояс пользователя
     try:
         start_time_obj = datetime.fromisoformat(start_time_str).replace(tzinfo=user_tz)
         if not end_time_str:
             end_time_obj = start_time_obj + timedelta(hours=1)
             end_time_str = end_time_obj.isoformat()
-    except ValueError:
+    except ValueError as e:
+        logging.error(f"Invalid time format: {e}")
         return _("Неверный формат времени. Пожалуйста, попробуйте еще раз.")
 
     event = {
@@ -111,9 +112,8 @@ def create_calendar_event(user, data):
 
 # --- ГЛАВНАЯ ФУНКЦИЯ-ОРКЕСТРАТОР (полностью заменяем) ---
 def get_orchestrated_ai_response(user_prompt, user):
-    # --- НАЧАЛО ИЗМЕНЕНИЯ: Получаем контекст диалога ---
     last_messages = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(2).all()
-    last_messages.reverse() # Восстанавливаем хронологический порядок
+    last_messages.reverse()
 
     context = ""
     if last_messages:
@@ -122,14 +122,12 @@ def get_orchestrated_ai_response(user_prompt, user):
             role = "Пользователь" if msg.role == 'user' else "Ассистент"
             context_lines.append(f"{role}: {msg.content}")
         context = "\n".join(context_lines)
-    # --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     available_assistants = Assistant.query.filter_by(user_id=user.id).all()
     active_assistants = [a for a in available_assistants if a.instructions]
     if not active_assistants: return _("У вас пока нет настроенных ассистентов с инструкциями.")
     assistant_list_for_prompt = "\n".join([f"- id: {a.id}, name: {a.name}, description: {a.description}" for a in active_assistants])
     
-    # --- НАЧАЛО ИЗМЕНЕНИЯ: Добавляем контекст в промпт ---
     selection_prompt = f"""
     Проанализируй ПОСЛЕДНИЙ ЗАПРОС ПОЛЬЗОВАТЕЛЯ, учитывая ПРЕДЫДУЩИЙ ДИАЛОГ, и выбери ОДНОГО специалиста для выполнения задачи.
     В ответ дай ТОЛЬКО цифру — id выбранного специалиста.
@@ -142,7 +140,6 @@ def get_orchestrated_ai_response(user_prompt, user):
 
     ПОСЛЕДНИЙ ЗАПРОС ПОЛЬЗОВАТЕЛЯ: "{user_prompt}"
     """
-    # --- КОНЕЦ ИЗМЕНЕНИЯ ---
     
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
@@ -153,10 +150,8 @@ def get_orchestrated_ai_response(user_prompt, user):
         selected_assistant_id = int(selected_assistant_id_str)
         specialist_assistant = Assistant.query.filter_by(id=selected_assistant_id, user_id=user.id).first()
 
-        # --- НАЧАЛО ИЗМЕНЕНИЯ: Небольшая проверка на случай, если ассистент не найден ---
         if not specialist_assistant:
              return _("Не удалось выбрать подходящего ассистента для вашего запроса.")
-        # --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         if 'календар' in specialist_assistant.name.lower():
             today_date = datetime.now().strftime("%Y-%m-%d")
