@@ -417,6 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- AI ASSISTANT MODAL LOGIC ---
     const assistantModal = document.getElementById('assistant-modal');
+    let currentAssistantId = null;
+
     if (assistantModal) {
         const openAssistantBtn = document.getElementById('assistant-btn');
         const closeAssistantBtn = document.getElementById('close-assistant-btn');
@@ -425,9 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const assistantMessages = document.getElementById('assistant-messages');
         const sendToChatBtn = document.getElementById('send-to-chat-btn');
         
-        // --- ИЗМЕНЕНИЕ: Функция для загрузки истории ---
         async function loadAssistantHistory() {
-            assistantMessages.innerHTML = ''; // Очищаем чат перед загрузкой
+            assistantMessages.innerHTML = '';
             try {
                 const response = await fetch('/assistant_history');
                 const history = await response.json();
@@ -444,14 +445,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
         if (openAssistantBtn) {
             openAssistantBtn.onclick = () => {
+                const assistantBtn = document.getElementById('assistant-btn');
+                currentAssistantId = assistantBtn.dataset.assistantId;
+                
                 assistantModal.style.display = 'flex';
-                loadAssistantHistory(); // Загружаем историю при открытии
+                loadAssistantHistory();
             };
         }
 
         if (closeAssistantBtn) {
             closeAssistantBtn.onclick = () => {
                 assistantModal.style.display = 'none';
+                currentAssistantId = null;
             };
         }
 
@@ -459,19 +464,22 @@ document.addEventListener('DOMContentLoaded', () => {
             assistantForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const userPrompt = assistantInput.value;
-                if (!userPrompt) return;
+                if (!userPrompt || !currentAssistantId) return;
 
                 addAssistantMessage(userPrompt, 'user');
                 assistantInput.value = '';
                 
                 const thinkingBubble = addAssistantMessage(__('Думаю...'), 'assistant');
-                toggleThinkingIndicator(true); // Включаем индикатор
+                toggleThinkingIndicator(true);
 
                 try {
                     const response = await fetch('/chat_with_assistant', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ prompt: userPrompt })
+                        body: JSON.stringify({ 
+                            prompt: userPrompt, 
+                            assistant_id: currentAssistantId 
+                        })
                     });
 
                     if (!response.ok) {
@@ -485,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Error with AI Assistant:", error);
                     thinkingBubble.textContent = __("Произошла сетевая ошибка. Пожалуйста, попробуйте еще раз.");
                 } finally {
-                    toggleThinkingIndicator(false); // Выключаем индикатор
+                    toggleThinkingIndicator(false);
                     assistantMessages.scrollTop = assistantMessages.scrollHeight;
                 }
             };
@@ -513,7 +521,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function toggleThinkingIndicator(show) {
-            // Добавляем или удаляем CSS-класс, который будет управлять анимацией
             const lastAssistantBubble = assistantMessages.querySelector('.assistant-bubble.assistant:last-child');
             if (lastAssistantBubble) {
                 lastAssistantBubble.classList.toggle('thinking', show);
