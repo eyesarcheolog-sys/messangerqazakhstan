@@ -85,18 +85,10 @@
 
 {% block scripts %}
 <script>
-    // Находим нашу форму по id
     const deleteForm = document.getElementById('delete-assistant-form');
-    
-    // Добавляем обработчик события "submit"
     deleteForm.addEventListener('submit', function(event) {
-        // Предотвращаем отправку формы по умолчанию
         event.preventDefault();
-        
-        // Показываем стандартное окно подтверждения
         const confirmation = confirm("{{ _('Вы уверены, что хотите удалить этого ассистента? Это действие необратимо.') }}");
-        
-        // Если пользователь нажал "ОК", отправляем форму
         if (confirmation) {
             this.submit();
         }

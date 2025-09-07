@@ -139,8 +139,11 @@ def get_orchestrated_ai_response(user_prompt, user, assistant_id):
             return _("Ассистент с этим ID не найден.")
         if not assistant.instructions:
             return _("У этого ассистента нет инструкций. Пожалуйста, настройте его в панели управления.")
+        
+        # Проверяем статус ассистента, чтобы не работать с неактивным
+        if assistant.status != 'active':
+            return _("Ассистент неактивен. Пожалуйста, активируйте его в панели управления.")
 
-        # Словарь всех доступных инструментов
         all_tools = {
             "create_calendar_event": genai.FunctionDeclaration(
                 name="create_calendar_event",
@@ -191,7 +194,6 @@ def get_orchestrated_ai_response(user_prompt, user, assistant_id):
             ),
         }
 
-        # Определяем инструменты на основе имени ассистента
         tools_for_model = []
         if 'календар' in assistant.name.lower() or 'события' in assistant.name.lower():
             tools_for_model.append(all_tools["create_calendar_event"])
@@ -200,7 +202,6 @@ def get_orchestrated_ai_response(user_prompt, user, assistant_id):
         if 'задачи' in assistant.name.lower():
             tools_for_model.append(all_tools["create_task"])
 
-        # Проверяем, есть ли инструменты для этого ассистента
         if not tools_for_model:
             model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=assistant.instructions)
             chat = model.start_chat(history=history)
