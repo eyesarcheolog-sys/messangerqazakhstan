@@ -10,7 +10,6 @@ from googleapiclient.discovery import build
 from datetime import datetime, timedelta, date
 from pytz import timezone as pytz_timezone, utc
 import logging
-from functools import partial
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -133,7 +132,8 @@ def create_calendar_event(user, summary, start, end=None):
         logging.error(f"Error creating calendar event: {e}")
         return _("Не удалось создать событие в календаре.")
 
-# <<< ГЛАВНАЯ ФУНКЦИЯ-СПЕЦИАЛИСТ, ПОЛНОСТЬЮ ПЕРЕРАБОТАНА >>>
+
+# <<< ФУНКЦИЯ-СПЕЦИАЛИСТ, ВНОВЬ ПЕРЕРАБОТАНА С ПРАВИЛЬНЫМ ПОДХОДОМ >>>
 def get_specialist_response(user_prompt, user, assistant):
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
@@ -144,32 +144,35 @@ def get_specialist_response(user_prompt, user, assistant):
         if not assistant or assistant.status != 'active':
             return _("Выбранный ассистент не найден или неактивен.")
         
-        # 1. Подставляем текущую дату в инструкции
         instructions = assistant.instructions.replace('{{current_date}}', date.today().strftime('%Y-%m-%d'))
         
-        # 2. Загружаем историю чата
         last_messages = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(10).all()
         last_messages.reverse()
         history = [{'role': msg.role, 'parts': [msg.content]} for msg in last_messages]
         
-        # 3. "Прячем" аргумент user от модели с помощью partial
-        # Это решает ошибку "multiple values for keyword argument 'user'"
-        available_tools = {
-            "create_calendar_event": partial(create_calendar_event, user),
-            "find_events": partial(find_events, user),
-            "find_and_delete_event": partial(find_and_delete_event, user),
-            "create_task": partial(create_task, user),
+        # 1. Объявляем СХЕМЫ инструментов для модели, как она этого ожидает
+        # Мы не передаем ей сами функции, только их описание.
+        tool_schemas = {
+            "create_calendar_event": genai.FunctionDeclaration( name="create_calendar_event", description="Создает новое событие в Google Календаре.", parameters=genai.Schema(type=genai.Schema.Type.OBJECT, properties={"summary": genai.Schema(type=genai.Schema.Type.STRING), "start": genai.Schema(type=genai.Schema.Type.STRING, description="Время начала в формате ISO 8601, например 2025-09-09T13:00:00"), "end": genai.Schema(type=genai.Schema.Type.STRING, description="Время окончания в формате ISO 8601")}, required=["summary", "start"])),
+            "find_events": genai.FunctionDeclaration( name="find_events", description="Находит события в Google Календаре по ключевым словам.", parameters=genai.Schema(type=genai.Schema.Type.OBJECT, properties={"search_term": genai.Schema(type=genai.Schema.Type.STRING)}, required=["search_term"])),
+            "find_and_delete_event": genai.FunctionDeclaration( name="find_and_delete_event", description="Удаляет событие из Google Календаря по его ID.", parameters=genai.Schema(type=genai.Schema.Type.OBJECT, properties={"event_id": genai.Schema(type=genai.Schema.Type.STRING)}, required=["event_id"])),
+            "create_task": genai.FunctionDeclaration( name="create_task", description="Создает новую задачу в Google Tasks.", parameters=genai.Schema(type=genai.Schema.Type.OBJECT, properties={"title": genai.Schema(type=genai.Schema.Type.STRING), "due": genai.Schema(type=genai.Schema.Type.STRING, description="Срок выполнения в формате ISO 8601")}, required=["title"])),
         }
-        
+
+        # 2. Создаем карту, связывающую имена инструментов с нашими Python функциями
+        tool_executors = {
+            "create_calendar_event": create_calendar_event,
+            "find_events": find_events,
+            "find_and_delete_event": find_and_delete_event,
+            "create_task": create_task,
+        }
+
+        # 3. Выбираем, какие СХЕМЫ передать модели на основе имени ассистента
         tools_for_model = []
         if any(keyword in assistant.name.lower() for keyword in ['календар', 'события', 'встреча']):
-            tools_for_model.extend([
-                available_tools["create_calendar_event"], 
-                available_tools["find_events"], 
-                available_tools["find_and_delete_event"]
-            ])
+            tools_for_model.extend([tool_schemas["create_calendar_event"], tool_schemas["find_events"], tool_schemas["find_and_delete_event"]])
         if any(keyword in assistant.name.lower() for keyword in ['задачи', 'задач']):
-            tools_for_model.append(available_tools["create_task"])
+            tools_for_model.append(tool_schemas["create_task"])
 
         model = genai.GenerativeModel(
             'gemini-1.5-pro-latest', 
@@ -177,10 +180,28 @@ def get_specialist_response(user_prompt, user, assistant):
             tools=tools_for_model
         )
         
-        # 4. Включаем автоматический вызов функций - это более надежный способ
-        # Он решает ошибку "Could not convert part.function_call to text"
-        chat = model.start_chat(history=history, enable_automatic_function_calling=True)
+        chat = model.start_chat(history=history)
         response = chat.send_message(user_prompt)
+
+        # 4. Правильный цикл обработки Function Calling
+        while response.candidates[0].content.parts[0].function_call:
+            function_call = response.candidates[0].content.parts[0].function_call
+            tool_name = function_call.name
+            
+            if tool_name not in tool_executors:
+                raise ValueError(f"Модель попыталась вызвать неизвестный инструмент: '{tool_name}'")
+            
+            # Находим нужную функцию-исполнитель
+            executor = tool_executors[tool_name]
+            tool_args = {key: value for key, value in function_call.args.items()}
+            
+            # Вызываем нашу Python-функцию, вручную добавляя 'user'
+            tool_response_text = executor(user=user, **tool_args)
+            
+            # Отправляем результат работы инструмента обратно в модель
+            response = chat.send_message(
+                genai.Part(function_response=genai.FunctionResponse(name=tool_name, response={'result': tool_response_text}))
+            )
         
         return response.text
 
