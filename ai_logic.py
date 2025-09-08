@@ -17,6 +17,8 @@ class GoogleTools:
     """Класс-контейнер для всех инструментов, работающих с Google API."""
     def __init__(self, user):
         self.user = user
+        # <<< ИСПРАВЛЕНИЕ: Получаем таймзону пользователя один раз
+        self.user_tz = getattr(user, 'timezone', 'UTC') 
 
     def _get_google_service(self, service_name, version):
         if not self.user.google_credentials_json:
@@ -36,7 +38,12 @@ class GoogleTools:
         except ValueError:
             return _("Не удалось распознать дату. Используйте формат ISO YYYY-MM-DDTHH:MM:SS.")
 
-        event = {'summary': summary, 'start': {'dateTime': start_dt.isoformat()}, 'end': {'dateTime': end_dt.isoformat()}}
+        # <<< ИСПРАВЛЕНИЕ: Добавляем 'timeZone' в запрос к Google API
+        event = {
+            'summary': summary,
+            'start': {'dateTime': start_dt.isoformat(), 'timeZone': self.user_tz},
+            'end': {'dateTime': end_dt.isoformat(), 'timeZone': self.user_tz}
+        }
         
         try:
             created_event = service.events().insert(calendarId='primary', body=event).execute()
@@ -115,9 +122,6 @@ def get_specialist_response(user_prompt, user, assistant):
             tools=tools_for_model
         )
         
-        # <<< Возвращаемся к самому простому и надежному способу >>>
-        # enable_automatic_function_calling=True будет работать с классом GoogleTools, 
-        # так как мы элегантно спрятали 'user' внутри него.
         chat = model.start_chat(history=chat_history, enable_automatic_function_calling=True)
         response = chat.send_message(user_prompt)
         
