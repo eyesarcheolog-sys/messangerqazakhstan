@@ -9,6 +9,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, date
 import logging
+from google.generativeai.types import FunctionResponse, Part
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +18,6 @@ class GoogleTools:
     """Класс-контейнер для всех инструментов, работающих с Google API."""
     def __init__(self, user):
         self.user = user
-        # <<< ИСПРАВЛЕНИЕ: Получаем таймзону пользователя один раз
         self.user_tz = getattr(user, 'timezone', 'UTC') 
 
     def _get_google_service(self, service_name, version):
@@ -38,7 +38,6 @@ class GoogleTools:
         except ValueError:
             return _("Не удалось распознать дату. Используйте формат ISO YYYY-MM-DDTHH:MM:SS.")
 
-        # <<< ИСПРАВЛЕНИЕ: Добавляем 'timeZone' в запрос к Google API
         event = {
             'summary': summary,
             'start': {'dateTime': start_dt.isoformat(), 'timeZone': self.user_tz},
@@ -47,6 +46,7 @@ class GoogleTools:
         
         try:
             created_event = service.events().insert(calendarId='primary', body=event).execute()
+            logging.info(f"Event created successfully: {created_event.get('id')}")
             return _("✅ Событие '{summary}' успешно создано на {start_time}.").format(
                 summary=created_event.get('summary'),
                 start_time=start_dt.strftime('%d %B в %H:%M')
@@ -87,6 +87,7 @@ class GoogleTools:
             task['due'] = datetime.fromisoformat(due.replace('Z', '+00:00')).isoformat() + "Z"
         try:
             result = service.tasks().insert(tasklist='@default', body=task).execute()
+            logging.info(f"Task created successfully: {result.get('id')}")
             return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
         except Exception as e:
             logging.error(f"Error creating task: {e}")
@@ -122,8 +123,25 @@ def get_specialist_response(user_prompt, user, assistant):
             tools=tools_for_model
         )
         
-        chat = model.start_chat(history=chat_history, enable_automatic_function_calling=True)
+        chat = model.start_chat(history=chat_history)
         response = chat.send_message(user_prompt)
+
+        # <<< Возвращаем надежный РУЧНОЙ ЦИКЛ ОБРАБОТКИ >>>
+        while response.candidates[0].content.parts[0].function_call:
+            function_call = response.candidates[0].content.parts[0].function_call
+            tool_name = function_call.name
+            
+            if hasattr(google_tools, tool_name):
+                executor = getattr(google_tools, tool_name)
+                tool_args = {key: value for key, value in function_call.args.items()}
+                
+                tool_response_text = executor(**tool_args)
+                
+                response = chat.send_message(
+                    Part(function_response=FunctionResponse(name=tool_name, response={'result': tool_response_text}))
+                )
+            else:
+                break
         
         return response.text
 
