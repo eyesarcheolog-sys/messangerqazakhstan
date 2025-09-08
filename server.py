@@ -485,6 +485,7 @@ def configure_assistant(assistant_id):
         assistant.name = request.form.get('assistant_name')
         assistant.description = request.form.get('assistant_description')
         assistant.instructions = request.form.get('instructions')
+        assistant.status = request.form.get('assistant_status') # <<< ВОТ ИСПРАВЛЕНИЕ
         db.session.commit()
         return redirect(url_for('configure_assistant', assistant_id=assistant.id))
 
