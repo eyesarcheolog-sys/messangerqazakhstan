@@ -14,7 +14,7 @@ import logging
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-# --- Вспомогательные функции (теперь это "инструменты" для Gemini) ---
+# --- Инструменты для Gemini (эти функции не изменились) ---
 def get_google_service(user, service_name, version):
     if not user.google_credentials_json:
         return None
@@ -88,8 +88,13 @@ def create_task(user, title, due=None):
     if not service: return _("Доступ к Google Tasks не настроен.")
     task = {'title': title}
     if due:
-        due_dt_object = datetime.fromisoformat(due)
-        task['due'] = due_dt_object.strftime('%Y-%m-%dT%H:%M:%S') + ".000Z"
+        # Gemini может присылать дату в разных форматах, пробуем обработать ISO
+        try:
+            due_dt_object = datetime.fromisoformat(due.replace('Z', '+00:00'))
+            task['due'] = due_dt_object.isoformat()
+        except ValueError:
+            logging.warning(f"Could not parse due date '{due}', creating task without it.")
+
     try:
         result = service.tasks().insert(tasklist='@default', body=task).execute()
         return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
@@ -101,126 +106,108 @@ def create_calendar_event(user, summary, start, end=None):
     service = get_google_service(user, 'calendar', 'v3')
     if not service: return _("Доступ к Google Календарю не настроен.")
     
-    user_tz_str = getattr(user, 'timezone', None) or 'UTC'
+    # Получаем таймзону пользователя, если она задана, иначе UTC
+    user_tz_str = getattr(user, 'timezone', 'UTC')
     
+    try:
+        start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
+        if end:
+            end_dt = datetime.fromisoformat(end.replace('Z', '+00:00'))
+        else:
+            end_dt = start_dt + timedelta(hours=1)
+    except ValueError:
+        return _("Не удалось распознать дату или время. Пожалуйста, укажите их в формате ISO (YYYY-MM-DDTHH:MM:SS).")
+
     event = {
         'summary': summary,
-        'start': {'dateTime': start, 'timeZone': user_tz_str},
-        'end': {'dateTime': end or (datetime.fromisoformat(start) + timedelta(hours=1)).isoformat(), 'timeZone': user_tz_str},
-        'colorId': '1'
+        'start': {'dateTime': start_dt.isoformat(), 'timeZone': user_tz_str},
+        'end': {'dateTime': end_dt.isoformat(), 'timeZone': user_tz_str},
     }
     
     try:
         created_event = service.events().insert(calendarId='primary', body=event).execute()
         return _("✅ Событие успешно создано: '{summary}' на {start_time}.").format(
             summary=created_event.get('summary'),
-            start_time=datetime.fromisoformat(start).strftime('%d %B в %H:%M')
+            start_time=start_dt.strftime('%d %B в %H:%M')
         )
     except Exception as e:
         logging.error(f"Error creating calendar event: {e}")
-        return _("Не удалось создать событие в календаре. Пожалуйста, убедитесь, что вы предоставили корректное время.")
+        return _("Не удалось создать событие в календаре.")
 
-def get_orchestrated_ai_response(user_prompt, user, assistant_id):
+# <<< ФУНКЦИЯ ПЕРЕИМЕНОВАНА И ПОЛНОСТЬЮ ПЕРЕРАБОТАНА >>>
+def get_specialist_response(user_prompt, user, assistant):
+    """
+    Эта функция принимает уже ВЫБРАННОГО ассистента-специалиста
+    и выполняет запрос пользователя с его инструментами, используя правильный
+    цикл Function Calling.
+    """
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
         genai.configure(api_key=api_key)
 
+        if not assistant or assistant.status != 'active':
+            return _("Выбранный ассистент не найден или неактивен.")
+        
+        # Загружаем историю чата
         last_messages = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(10).all()
         last_messages.reverse()
-        history = [
-            {'role': 'user' if msg.role == 'user' else 'model', 'parts': [msg.content]}
-            for msg in last_messages
-        ]
-
-        assistant = Assistant.query.filter_by(id=assistant_id, user_id=user.id).first()
-        if not assistant:
-            return _("Ассистент с этим ID не найден.")
-        if not assistant.instructions:
-            return _("У этого ассистента нет инструкций. Пожалуйста, настройте его в панели управления.")
+        history = [{'role': msg.role, 'parts': [msg.content]} for msg in last_messages]
         
-        # Проверяем статус ассистента, чтобы не работать с неактивным
-        if assistant.status != 'active':
-            return _("Ассистент неактивен. Пожалуйста, активируйте его в панели управления.")
-
-        all_tools = {
-            "create_calendar_event": genai.FunctionDeclaration(
-                name="create_calendar_event",
-                description="Создает новое событие в Google Календаре. Принимает название, время начала и опционально время окончания.",
-                parameters=genai.Schema(
-                    type=genai.Schema.Type.OBJECT,
-                    properties={
-                        "summary": genai.Schema(type=genai.Schema.Type.STRING),
-                        "start": genai.Schema(type=genai.Schema.Type.STRING),
-                        "end": genai.Schema(type=genai.Schema.Type.STRING),
-                    },
-                    required=["summary", "start"],
-                ),
-            ),
-            "find_events": genai.FunctionDeclaration(
-                name="find_events",
-                description="Находит события в Google Календаре по ключевым словам. Используется для поиска встреч или задач.",
-                parameters=genai.Schema(
-                    type=genai.Schema.Type.OBJECT,
-                    properties={
-                        "search_term": genai.Schema(type=genai.Schema.Type.STRING),
-                    },
-                    required=["search_term"],
-                ),
-            ),
-            "find_and_delete_event": genai.FunctionDeclaration(
-                name="find_and_delete_event",
-                description="Удаляет событие из Google Календаря по его уникальному ID.",
-                parameters=genai.Schema(
-                    type=genai.Schema.Type.OBJECT,
-                    properties={
-                        "event_id": genai.Schema(type=genai.Schema.Type.STRING),
-                    },
-                    required=["event_id"],
-                ),
-            ),
-            "create_task": genai.FunctionDeclaration(
-                name="create_task",
-                description="Создает новую задачу в Google Tasks. Требует название задачи.",
-                parameters=genai.Schema(
-                    type=genai.Schema.Type.OBJECT,
-                    properties={
-                        "title": genai.Schema(type=genai.Schema.Type.STRING),
-                        "due": genai.Schema(type=genai.Schema.Type.STRING),
-                    },
-                    required=["title"],
-                ),
-            ),
+        # --- УЛУЧШЕННАЯ ЛОГИКА ВЫБОРА ИНСТРУМЕНТОВ ---
+        # Теперь мы сопоставляем строковые имена с реальными функциями
+        available_tools = {
+            "create_calendar_event": create_calendar_event,
+            "find_events": find_events,
+            "find_and_delete_event": find_and_delete_event,
+            "create_task": create_task,
         }
-
+        
+        # Пока оставляем старую логику выбора по имени, но теперь она надежнее
         tools_for_model = []
-        if 'календар' in assistant.name.lower() or 'события' in assistant.name.lower():
-            tools_for_model.append(all_tools["create_calendar_event"])
-            tools_for_model.append(all_tools["find_events"])
-            tools_for_model.append(all_tools["find_and_delete_event"])
-        if 'задачи' in assistant.name.lower():
-            tools_for_model.append(all_tools["create_task"])
+        if 'календар' in assistant.name.lower() or 'события' in assistant.name.lower() or 'встреча' in assistant.name.lower():
+            tools_for_model.extend([available_tools["create_calendar_event"], available_tools["find_events"], available_tools["find_and_delete_event"]])
+        if 'задачи' in assistant.name.lower() or 'задач' in assistant.name.lower():
+            tools_for_model.append(available_tools["create_task"])
 
-        if not tools_for_model:
-            model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=assistant.instructions)
-            chat = model.start_chat(history=history)
-            response = chat.send_message(user_prompt)
-            return response.text
+        model = genai.GenerativeModel(
+            'gemini-1.5-pro-latest', 
+            system_instruction=assistant.instructions, 
+            tools=tools_for_model
+        )
         
-        model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=assistant.instructions, tools=tools_for_model)
-        chat = model.start_chat(history=history)
+        chat = model.start_chat(history=history, enable_automatic_function_calling=False) # Важно отключить автоматический вызов
         response = chat.send_message(user_prompt)
+
+        # <<< УЛУЧШЕННАЯ ОБРАБОТКА ВЫЗОВА ИНСТРУМЕНТОВ (FUNCTION CALLING) >>>
+        # Этот цикл позволяет модели и инструментам общаться, пока не будет получен финальный ответ
+        while response.candidates[0].content.parts[0].function_call:
+            function_call = response.candidates[0].content.parts[0].function_call
+            tool_name = function_call.name
+            
+            if tool_name not in available_tools:
+                raise ValueError(f"Инструмент '{tool_name}' не найден.")
+            
+            tool_function = available_tools[tool_name]
+            tool_args = {key: value for key, value in function_call.args.items()}
+            
+            # Вызываем нашу Python-функцию
+            tool_response_text = tool_function(user=user, **tool_args)
+            
+            # Отправляем результат работы инструмента обратно в модель
+            response = chat.send_message(
+                genai.Part(
+                    function_response=genai.FunctionResponse(
+                        name=tool_name,
+                        response={'result': tool_response_text}
+                    )
+                )
+            )
         
-        if response.tool_calls:
-            tool_call = response.tool_calls[0]
-            tool_name = tool_call.name
-            tool_args = {k: v for k, v in tool_call.args.items()}
-            tool_response = locals()[tool_name](user, **tool_args)
-            return tool_response
-        else:
-            return response.text
+        # Когда циклы вызова инструментов завершены, возвращаем финальный текстовый ответ модели
+        return response.text
 
     except Exception as e:
-        logging.error(f"Orchestrator general error: {e}")
-        return _('Произошла ошибка в работе ассистента.')
+        logging.error(f"Specialist response error: {e}")
+        return _('Произошла ошибка в работе ассистента-специалиста.')

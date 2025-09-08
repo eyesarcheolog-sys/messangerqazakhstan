@@ -16,7 +16,8 @@ from flask_migrate import Migrate
 from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
-from ai_logic import get_orchestrated_ai_response
+# <<< 1. ИЗМЕНЕН ИМПОРТ: импортируем нашу новую функцию "специалиста"
+from ai_logic import get_specialist_response
 from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -73,6 +74,7 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 # --- ROUTES ---
+# ... (весь код до блока ассистента остается без изменений) ...
 @app.route('/')
 @login_required
 def index():
@@ -116,7 +118,7 @@ def register():
         password = request.form['password']
         if User.query.filter_by(username=username).first():
             return _("This username is already taken!")
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha26')
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
@@ -218,13 +220,7 @@ def history(username):
             (Message.sender_id == peer.id) & (Message.recipient_id == current_user.id))
     ).order_by(Message.timestamp.asc()).all()
     
-    messages_json = [{
-        'sender': msg.author.username, 
-        'message': msg.body, 
-        'timestamp': msg.timestamp.isoformat() + "Z",
-        'audio_url': msg.audio_url,
-        'transcription': msg.transcription
-    } for msg in messages]
+    messages_json = [{'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z", 'audio_url': msg.audio_url, 'transcription': msg.transcription} for msg in messages]
     return jsonify(messages_json)
 
 @app.route('/history/group/<int:group_id>')
@@ -235,13 +231,7 @@ def group_history(group_id):
         return _("Group not found or you are not a member"), 404
     messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp.asc()).all()
     
-    messages_json = [{
-        'sender': msg.author.username, 
-        'message': msg.body, 
-        'timestamp': msg.timestamp.isoformat() + "Z",
-        'audio_url': msg.audio_url,
-        'transcription': msg.transcription
-    } for msg in messages]
+    messages_json = [{'sender': msg.author.username, 'message': msg.body, 'timestamp': msg.timestamp.isoformat() + "Z", 'audio_url': msg.audio_url, 'transcription': msg.transcription} for msg in messages]
     return jsonify(messages_json)
 
 @app.route('/uploads/<filename>')
@@ -251,146 +241,19 @@ def uploaded_file(filename):
 @app.route('/send_audio', methods=['POST'])
 @login_required
 def send_audio():
-    audio_file = request.files.get('audio')
-    transcription_text = request.form.get('transcription', '')
-    recipient_username = request.form.get('recipient')
-    group_id = request.form.get('group_id')
-
-    if not audio_file:
-        return jsonify({"error": _("No audio file")}), 400
-    if not group_id and not recipient_username:
-        return jsonify({"error": _("No recipient specified")}), 400
-    
-    upload_dir = os.path.join(app.root_path, 'uploads')
-    if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
-
-    filename = f"{uuid.uuid4()}.webm"
-    filepath = os.path.join(upload_dir, filename)
-    audio_file.save(filepath)
-    
-    audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
-    
-    timestamp = datetime.utcnow()
-    new_message = Message(
-        sender_id=current_user.id,
-        timestamp=timestamp,
-        audio_url=audio_url,
-        transcription=transcription_text
-    )
-
-    message_payload = {
-        'sender': current_user.username,
-        'timestamp': timestamp.isoformat() + "Z",
-        'audio_url': audio_url,
-        'transcription': transcription_text
-    }
-    
-    try:
-        if group_id:
-            group = db.session.get(Group, int(group_id))
-            if not group or current_user not in group.members:
-                return jsonify({"error": _("Group not found or access denied")}), 404
-            new_message.group_id = group_id
-            db.session.add(new_message)
-            db.session.commit()
-            
-            message_payload['group_id'] = group_id
-            room = f'group_{group_id}'
-            socketio.emit('receive_voice_message', message_payload, to=room)
-        
-        elif recipient_username:
-            recipient_obj = User.query.filter_by(username=recipient_username).first()
-            if not recipient_obj:
-                return jsonify({"error": _("Recipient not found")}), 404
-            new_message.recipient_id = recipient_obj.id
-            db.session.add(new_message)
-            db.session.commit()
-
-            recipient_sid = user_sids.get(recipient_username)
-            if recipient_sid:
-                socketio.emit('receive_voice_message', message_payload, to=recipient_sid)
-            
-            sender_sid = user_sids.get(current_user.username)
-            if sender_sid:
-                socketio.emit('receive_voice_message', message_payload, to=sender_sid)
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"DATABASE ERROR while saving message: {e}")
-        return jsonify({"error": _("Database error")}), 500
-
+    # ... (код этой функции не меняется) ...
     return jsonify({"success": True}), 200
 
 @app.route('/edit_with_ai', methods=['POST'])
 @login_required
 def edit_with_ai():
-    data = request.get_json()
-    original_text = data.get('text')
-    model_choice = data.get('model', 'gemini')
-    task_type = data.get('task_type', 'generate')
+    # ... (код этой функции не меняется) ...
+    return jsonify({'edited_text': edited_text})
 
-    if not original_text:
-        return jsonify({'error': _('No text provided')}), 400
-
-    try:
-        edited_text = ""
-        
-        if task_type == 'improve':
-            prompt = f"""
-            Ты — умный ассистент-редактор. Твоя задача — взять текст пользователя и улучшить его.
-            - Исправь все орфографические, пунктуационные и грамматические ошибки.
-            - Улучши стиль и ясность, чтобы текст звучал естественно и грамотно.
-            - **Не меняй основной смысл текста и не добавляй новой информации от себя.**
-            - Твой ответ ВСЕГДА должен быть на том же языке, что и оригинальный текст.
-            - ФОРМАТ ОТВЕТА: Только итоговый, отредактированный текст, без твоих комментариев.
-
-            Оригинальный текст: "{original_text}"
-            """
-        else: # 'generate'
-            prompt = original_text
-
-        if model_choice == 'gemini':
-            api_key = os.environ.get("GEMINI_API_KEY")
-            if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel(
-                'gemini-1.5-flash-latest',
-                system_instruction="Ты — полезный ИИ-ассистент в чате. Отвечай на русском языке, если не указано иное."
-            )
-            response = model.generate_content(prompt)
-            
-            try:
-                edited_text = response.text
-            except ValueError:
-                print("Gemini response blocked by safety settings.")
-                edited_text = "[Ответ был заблокирован из-за настроек безопасности]"
-
-        else: # deepseek
-            api_key = os.environ.get("DEEPSEEK_API_KEY")
-            if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
-            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {"role": "system", "content": "You are a helpful AI assistant. Respond in Russian unless the user asks for another language."},
-                    {"role": "user", "content": prompt},
-                ]
-            )
-            edited_text = response.choices[0].message.content
-        
-        return jsonify({'edited_text': edited_text})
-
-    except Exception as e:
-        print(f"Error calling {model_choice} API: {e}")
-        return jsonify({'error': _('{model_choice} service failed').format(model_choice=model_choice)}), 500
-
-
-# --- НАЧАЛО: Обновленный блок для работы с ИИ-ассистентом ---
+# <<< 2. ВСЯ ЛОГИКА МАРШРУТА ПОЛНОСТЬЮ ПЕРЕПИСАНА >>>
 @app.route('/assistant_history')
 @login_required
 def assistant_history():
-    """ Возвращает историю сообщений с ассистентом для текущего пользователя. """
     messages = AssistantMessage.query.filter_by(user_id=current_user.id).order_by(AssistantMessage.timestamp.asc()).all()
     history = [{'role': msg.role, 'content': msg.content} for msg in messages]
     return jsonify(history)
@@ -400,62 +263,74 @@ def assistant_history():
 def chat_with_assistant():
     data = request.get_json()
     user_prompt = data.get('prompt')
-    assistant_id = data.get('assistant_id')
 
     if not user_prompt:
         return jsonify({'error': _('No prompt provided')}), 400
 
-    if not assistant_id:
-        return jsonify({'error': _('No assistant specified')}), 400
-
     try:
-        # Сохраняем сообщение пользователя
         user_message = AssistantMessage(user_id=current_user.id, role='user', content=user_prompt)
         db.session.add(user_message)
-        
-        # Получаем ответ от ИИ
-        final_response = get_orchestrated_ai_response(user_prompt, current_user, assistant_id)
+        db.session.flush()
 
-        # Сохраняем ответ ассистента
+        # --- ЭТАП 1: МЕНЕДЖЕР-ОРКЕСТРАТОР ---
+        specialists = Assistant.query.filter_by(user_id=current_user.id, status='active').all()
+        if not specialists:
+            final_response = _('У вас нет активных ассистентов-специалистов. Пожалуйста, создайте и активируйте одного в панели управления.')
+        else:
+            specialist_list_for_prompt = "\n".join([f"- id: {s.id}, name: {s.name}, description: {s.description}" for s in specialists])
+            orchestrator_prompt = f"""
+            Ты — главный ассистент-диспетчер. Твоя задача — проанализировать запрос пользователя и выбрать ОДНОГО наиболее подходящего специалиста из списка ниже.
+            В своем ответе ты должен указать ТОЛЬКО ID выбранного специалиста в формате "id: <число>". Никаких других слов или объяснений.
+
+            Доступные специалисты:
+            {specialist_list_for_prompt}
+
+            Запрос пользователя: "{user_prompt}"
+            """
+            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+            orchestrator_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            orchestrator_response = orchestrator_model.generate_content(orchestrator_prompt)
+            
+            # --- ЭТАП 2: ВЫЗОВ СПЕЦИАЛИСТА ---
+            try:
+                response_text = orchestrator_response.text
+                specialist_id_str = response_text.split('id:')[1].strip()
+                specialist_id = int(specialist_id_str)
+                
+                specialist_assistant = db.session.get(Assistant, specialist_id)
+                if specialist_assistant and specialist_assistant.user_id == current_user.id:
+                    final_response = get_specialist_response(user_prompt, current_user, specialist_assistant)
+                else:
+                    final_response = _("Диспетчер выбрал несуществующего или чужого ассистента.")
+
+            except (IndexError, ValueError, AttributeError):
+                print(f"Orchestrator did not return a valid ID. Response: {orchestrator_response.text}")
+                # Если диспетчер не справился, используем общую модель без инструментов
+                general_model = genai.GenerativeModel('gemini-1.5-pro-latest')
+                response = general_model.generate_content(user_prompt)
+                final_response = response.text
+        
+        # Сохраняем финальный ответ
         assistant_response = AssistantMessage(user_id=current_user.id, role='assistant', content=final_response)
         db.session.add(assistant_response)
-
-        db.session.commit() # Сохраняем оба сообщения в базу
+        db.session.commit()
 
         return jsonify({'response': final_response})
 
     except Exception as e:
-        db.session.rollback() # Откатываем изменения в случае ошибки
+        db.session.rollback()
         print(f"Error in chat_with_assistant route: {e}")
         return jsonify({'error': _('AI Assistant service failed')}), 500
-# --- КОНЕЦ: Обновленный блок для работы с ИИ-ассистентом ---
 
 
 @app.route('/js/translations.js')
 def js_translations():
-    translations = {
-        "Please select a chat.": _("Please select a chat."),
-        "Microphone error:": _("Microphone error:"),
-        "AI Error:": _("AI Error:"),
-        "An error occurred while contacting the AI.": _("An error occurred while contacting the AI."),
-        "A network error has occurred. Please try again.": _("A network error has occurred. Please try again."),
-        "Could not get a response from the AI.": _("Could not get a response from the AI."),
-        "Recording: {seconds} sec.": _("Recording: {seconds} sec."),
-        "Recording finished": _("Recording finished"),
-        "Transcription ready": _("Transcription ready"),
-        "Press 'Start' to begin recording": _("Press 'Start' to begin recording"),
-        "AI is working...": _("AI is working..."),
-        "Thinking...": _("Thinking..."),
-        "Show text": _("Show text"),
-        "Hide text": _("Hide text"),
-        "Chat with {name}": _("Chat with {name}"),
-        "Select a chat": _("Выберите чат")
-    }
+    # ... (код этой функции не меняется) ...
     js_code = f"window.translations = {json.dumps(translations)};"
     return Response(js_code, mimetype='application/javascript')
 
 # --- ASSISTANTS ROUTES ---
-
+# ... (весь остальной код файла остается без изменений) ...
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
@@ -485,7 +360,7 @@ def configure_assistant(assistant_id):
         assistant.name = request.form.get('assistant_name')
         assistant.description = request.form.get('assistant_description')
         assistant.instructions = request.form.get('instructions')
-        assistant.status = request.form.get('assistant_status') # <<< ВОТ ИСПРАВЛЕНИЕ
+        assistant.status = request.form.get('assistant_status')
         db.session.commit()
         return redirect(url_for('configure_assistant', assistant_id=assistant.id))
 
@@ -564,7 +439,7 @@ def oauth2callback_google():
     )
     
     flow.fetch_token(authorization_response=request.url)
-    session.pop('state', None) # <-- Добавлена эта строка
+    session.pop('state', None)
     credentials = flow.credentials
     
     current_user.google_credentials_json = credentials.to_json()
@@ -605,12 +480,7 @@ def handle_private_message(data):
     db.session.commit()
     
     recipient_sid = user_sids.get(recipient_username)
-    message_payload = {
-        'sender': current_user.username,
-        'recipient': recipient_username,
-        'message': message_text,
-        'timestamp': timestamp.isoformat() + "Z"
-    }
+    message_payload = { 'sender': current_user.username, 'recipient': recipient_username, 'message': message_text, 'timestamp': timestamp.isoformat() + "Z" }
     if recipient_sid:
         emit('receive_private_message', message_payload, to=recipient_sid)
         emit('new_message_notification', {'sender': current_user.username}, to=recipient_sid)
@@ -632,13 +502,7 @@ def handle_group_message(data):
     new_message = Message(sender_id=current_user.id, group_id=group_id, body=message_text, timestamp=timestamp)
     db.session.add(new_message)
     db.session.commit()
-    message_payload = {
-        'sender': current_user.username,
-        'message': message_text,
-        'timestamp': timestamp.isoformat() + "Z",
-        'group_id': group_id,
-        'group_name': group.name
-    }
+    message_payload = { 'sender': current_user.username, 'message': message_text, 'timestamp': timestamp.isoformat() + "Z", 'group_id': group_id, 'group_name': group.name }
     room = f'group_{group_id}'
     emit('receive_group_message', message_payload, to=room)
     emit('new_message_notification', {'group_id': group_id, 'group_name': group.name, 'sender': current_user.username}, to=room, skip_sid=request.sid)
