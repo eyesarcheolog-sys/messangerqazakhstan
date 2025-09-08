@@ -16,7 +16,7 @@ from flask_migrate import Migrate
 from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
-# <<< 1. ИЗМЕНЕН ИМПОРТ: импортируем нашу новую функцию "специалиста"
+# <<< 1. ИЗМЕНЕН ИМПОРТ >>>
 from ai_logic import get_specialist_response
 from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from google.oauth2.credentials import Credentials
@@ -41,12 +41,9 @@ app.config['LANGUAGES'] = {
 app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
 
 def get_locale():
-    # Проверяем, был ли язык явно задан в URL-параметре
     lang = request.args.get('lang')
     if lang in app.config['LANGUAGES']:
-        session['lang'] = lang  # Сохраняем выбранный язык в сессии
-    
-    # Возвращаем язык из сессии или определяем по заголовку браузера
+        session['lang'] = lang
     return session.get('lang', request.accept_languages.best_match(app.config['LANGUAGES'].keys()))
 
 babel = Babel(app, locale_selector=get_locale)
@@ -74,7 +71,6 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 # --- ROUTES ---
-# ... (весь код до блока ассистента остается без изменений) ...
 @app.route('/')
 @login_required
 def index():
@@ -110,7 +106,6 @@ def index():
 
     return render_template('index.html', current_user=current_user, users=users, groups=groups, unread_counts=unread_counts)
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -118,7 +113,7 @@ def register():
         password = request.form['password']
         if User.query.filter_by(username=username).first():
             return _("This username is already taken!")
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha26')
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
@@ -241,14 +236,130 @@ def uploaded_file(filename):
 @app.route('/send_audio', methods=['POST'])
 @login_required
 def send_audio():
-    # ... (код этой функции не меняется) ...
+    audio_file = request.files.get('audio')
+    transcription_text = request.form.get('transcription', '')
+    recipient_username = request.form.get('recipient')
+    group_id = request.form.get('group_id')
+
+    if not audio_file:
+        return jsonify({"error": _("No audio file")}), 400
+    if not group_id and not recipient_username:
+        return jsonify({"error": _("No recipient specified")}), 400
+    
+    upload_dir = os.path.join(app.root_path, 'uploads')
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+
+    filename = f"{uuid.uuid4()}.webm"
+    filepath = os.path.join(upload_dir, filename)
+    audio_file.save(filepath)
+    
+    audio_url = url_for('uploaded_file', filename=filename, _external=True, _scheme='https')
+    
+    timestamp = datetime.utcnow()
+    new_message = Message(sender_id=current_user.id, timestamp=timestamp, audio_url=audio_url, transcription=transcription_text)
+
+    message_payload = {'sender': current_user.username, 'timestamp': timestamp.isoformat() + "Z", 'audio_url': audio_url, 'transcription': transcription_text}
+    
+    try:
+        if group_id:
+            group = db.session.get(Group, int(group_id))
+            if not group or current_user not in group.members:
+                return jsonify({"error": _("Group not found or access denied")}), 404
+            new_message.group_id = group_id
+            db.session.add(new_message)
+            db.session.commit()
+            
+            message_payload['group_id'] = group_id
+            room = f'group_{group_id}'
+            socketio.emit('receive_voice_message', message_payload, to=room)
+        
+        elif recipient_username:
+            recipient_obj = User.query.filter_by(username=recipient_username).first()
+            if not recipient_obj:
+                return jsonify({"error": _("Recipient not found")}), 404
+            new_message.recipient_id = recipient_obj.id
+            db.session.add(new_message)
+            db.session.commit()
+
+            recipient_sid = user_sids.get(recipient_username)
+            if recipient_sid:
+                socketio.emit('receive_voice_message', message_payload, to=recipient_sid)
+            
+            sender_sid = user_sids.get(current_user.username)
+            if sender_sid:
+                socketio.emit('receive_voice_message', message_payload, to=sender_sid)
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"DATABASE ERROR while saving message: {e}")
+        return jsonify({"error": _("Database error")}), 500
+
     return jsonify({"success": True}), 200
 
+# <<< КОД ВНУТРИ ЭТОЙ ФУНКЦИИ ВОССТАНОВЛЕН >>>
 @app.route('/edit_with_ai', methods=['POST'])
 @login_required
 def edit_with_ai():
-    # ... (код этой функции не меняется) ...
-    return jsonify({'edited_text': edited_text})
+    data = request.get_json()
+    original_text = data.get('text')
+    model_choice = data.get('model', 'gemini')
+    task_type = data.get('task_type', 'generate')
+
+    if not original_text:
+        return jsonify({'error': _('No text provided')}), 400
+
+    try:
+        edited_text = ""
+        
+        if task_type == 'improve':
+            prompt = f"""
+            Ты — умный ассистент-редактор. Твоя задача — взять текст пользователя и улучшить его.
+            - Исправь все орфографические, пунктуационные и грамматические ошибки.
+            - Улучши стиль и ясность, чтобы текст звучал естественно и грамотно.
+            - **Не меняй основной смысл текста и не добавляй новой информации от себя.**
+            - Твой ответ ВСЕГДА должен быть на том же языке, что и оригинальный текст.
+            - ФОРМАТ ОТВЕТА: Только итоговый, отредактированный текст, без твоих комментариев.
+
+            Оригинальный текст: "{original_text}"
+            """
+        else: # 'generate'
+            prompt = original_text
+
+        if model_choice == 'gemini':
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key: raise ValueError("GEMINI_API_KEY environment variable not set")
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(
+                'gemini-1.5-flash-latest',
+                system_instruction="Ты — полезный ИИ-ассистент в чате. Отвечай на русском языке, если не указано иное."
+            )
+            response = model.generate_content(prompt)
+            
+            try:
+                edited_text = response.text
+            except ValueError:
+                print("Gemini response blocked by safety settings.")
+                edited_text = "[Ответ был заблокирован из-за настроек безопасности]"
+
+        else: # deepseek
+            api_key = os.environ.get("DEEPSEEK_API_KEY")
+            if not api_key: raise ValueError("DEEPSEEK_API_KEY environment variable not set")
+            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "You are a helpful AI assistant. Respond in Russian unless the user asks for another language."},
+                    {"role": "user", "content": prompt},
+                ]
+            )
+            edited_text = response.choices[0].message.content
+        
+        return jsonify({'edited_text': edited_text})
+
+    except Exception as e:
+        print(f"Error calling {model_choice} API: {e}")
+        return jsonify({'error': _('{model_choice} service failed').format(model_choice=model_choice)}), 500
 
 # <<< 2. ВСЯ ЛОГИКА МАРШРУТА ПОЛНОСТЬЮ ПЕРЕПИСАНА >>>
 @app.route('/assistant_history')
@@ -305,12 +416,10 @@ def chat_with_assistant():
 
             except (IndexError, ValueError, AttributeError):
                 print(f"Orchestrator did not return a valid ID. Response: {orchestrator_response.text}")
-                # Если диспетчер не справился, используем общую модель без инструментов
                 general_model = genai.GenerativeModel('gemini-1.5-pro-latest')
                 response = general_model.generate_content(user_prompt)
                 final_response = response.text
         
-        # Сохраняем финальный ответ
         assistant_response = AssistantMessage(user_id=current_user.id, role='assistant', content=final_response)
         db.session.add(assistant_response)
         db.session.commit()
@@ -322,15 +431,31 @@ def chat_with_assistant():
         print(f"Error in chat_with_assistant route: {e}")
         return jsonify({'error': _('AI Assistant service failed')}), 500
 
-
+# <<< КОД ВНУТРИ ЭТОЙ ФУНКЦИИ ВОССТАНОВЛЕН >>>
 @app.route('/js/translations.js')
 def js_translations():
-    # ... (код этой функции не меняется) ...
+    translations = {
+        "Please select a chat.": _("Please select a chat."),
+        "Microphone error:": _("Microphone error:"),
+        "AI Error:": _("AI Error:"),
+        "An error occurred while contacting the AI.": _("An error occurred while contacting the AI."),
+        "A network error has occurred. Please try again.": _("A network error has occurred. Please try again."),
+        "Could not get a response from the AI.": _("Could not get a response from the AI."),
+        "Recording: {seconds} sec.": _("Recording: {seconds} sec."),
+        "Recording finished": _("Recording finished"),
+        "Transcription ready": _("Transcription ready"),
+        "Press 'Start' to begin recording": _("Press 'Start' to begin recording"),
+        "AI is working...": _("AI is working..."),
+        "Thinking...": _("Thinking..."),
+        "Show text": _("Show text"),
+        "Hide text": _("Hide text"),
+        "Chat with {name}": _("Chat with {name}"),
+        "Select a chat": _("Выберите чат")
+    }
     js_code = f"window.translations = {json.dumps(translations)};"
     return Response(js_code, mimetype='application/javascript')
 
 # --- ASSISTANTS ROUTES ---
-# ... (весь остальной код файла остается без изменений) ...
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
@@ -399,7 +524,6 @@ def disconnect_google():
     return redirect(request.referrer or url_for('assistants_dashboard'))
 
 # --- GOOGLE CALENDAR OAUTH ROUTES ---
-
 @app.route('/authorize/google')
 @login_required
 def authorize_google():
@@ -412,11 +536,7 @@ def authorize_google():
         ],
         redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
     )
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true',
-        prompt='consent'
-    )
+    authorization_url, state = flow.authorization_url(access_type='offline', include_granted_scopes='true', prompt='consent')
     session['state'] = state
     return redirect(authorization_url)
 
@@ -488,7 +608,6 @@ def handle_private_message(data):
     sender_sid = user_sids.get(current_user.username)
     if sender_sid:
         emit('receive_private_message', message_payload, to=sender_sid)
-
 
 @socketio.on('group_message')
 @login_required
