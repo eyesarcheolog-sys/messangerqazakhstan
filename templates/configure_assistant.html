@@ -22,7 +22,7 @@
     </div>
     
     <div class="form-section">
-        <label for="assistant_status">{{ _('Статус ассистента') }}</label>
+        <label>{{ _('Статус ассистента') }}</label>
         <p class="form-hint">{{ _('Установите статус, чтобы включить или отключить ассистента.') }}</p>
         <div class="status-control">
             <input type="radio" id="status_active" name="assistant_status" value="active" {% if assistant.status == 'active' %}checked{% endif %}>
