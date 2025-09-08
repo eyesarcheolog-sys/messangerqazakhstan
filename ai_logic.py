@@ -9,13 +9,12 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, date
 import logging
-# <<< Добавляем нужные импорты для ручного управления
-from google.generativeai.types import FunctionResponse, Part
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
 class GoogleTools:
+    """Класс-контейнер для всех инструментов, работающих с Google API."""
     def __init__(self, user):
         self.user = user
 
@@ -116,32 +115,11 @@ def get_specialist_response(user_prompt, user, assistant):
             tools=tools_for_model
         )
         
-        chat = model.start_chat(history=chat_history)
-        # <<< НАЧАЛО: ГИБРИДНЫЙ ПОДХОД С РУЧНЫМ ЦИКЛОМ >>>
-        # Отправляем первый запрос
+        # <<< Возвращаемся к самому простому и надежному способу >>>
+        # enable_automatic_function_calling=True будет работать с классом GoogleTools, 
+        # так как мы элегантно спрятали 'user' внутри него.
+        chat = model.start_chat(history=chat_history, enable_automatic_function_calling=True)
         response = chat.send_message(user_prompt)
-
-        # Пока модель просит вызвать функцию, мы делаем это вручную
-        while response.candidates[0].content.parts[0].function_call:
-            function_call = response.candidates[0].content.parts[0].function_call
-            tool_name = function_call.name
-            
-            # Находим нужный метод в нашем классе
-            if hasattr(google_tools, tool_name):
-                executor = getattr(google_tools, tool_name)
-                tool_args = {key: value for key, value in function_call.args.items()}
-                
-                # Вызываем метод. 'user' уже находится внутри класса
-                tool_response_text = executor(**tool_args)
-                
-                # Отправляем результат обратно модели
-                response = chat.send_message(
-                    Part(function_response=FunctionResponse(name=tool_name, response={'result': tool_response_text}))
-                )
-            else:
-                # Если модель выдумала несуществующий инструмент, выходим из цикла
-                break
-        # <<< КОНЕЦ: ГИБРИДНЫЙ ПОДХОД >>>
         
         return response.text
 

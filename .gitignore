@@ -27,3 +27,19 @@ messages.pot
 uploads/
 
 .tmp.driveupload/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Other
+.DS_Store
+instance/
