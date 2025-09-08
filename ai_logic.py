@@ -7,9 +7,10 @@ from flask_babel import gettext as _
 from models import db, Assistant, AssistantMessage, User
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from pytz import timezone as pytz_timezone, utc
 import logging
+from functools import partial
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -88,7 +89,6 @@ def create_task(user, title, due=None):
     if not service: return _("Доступ к Google Tasks не настроен.")
     task = {'title': title}
     if due:
-        # Gemini может присылать дату в разных форматах, пробуем обработать ISO
         try:
             due_dt_object = datetime.fromisoformat(due.replace('Z', '+00:00'))
             task['due'] = due_dt_object.isoformat()
@@ -106,7 +106,6 @@ def create_calendar_event(user, summary, start, end=None):
     service = get_google_service(user, 'calendar', 'v3')
     if not service: return _("Доступ к Google Календарю не настроен.")
     
-    # Получаем таймзону пользователя, если она задана, иначе UTC
     user_tz_str = getattr(user, 'timezone', 'UTC')
     
     try:
@@ -134,13 +133,8 @@ def create_calendar_event(user, summary, start, end=None):
         logging.error(f"Error creating calendar event: {e}")
         return _("Не удалось создать событие в календаре.")
 
-# <<< ФУНКЦИЯ ПЕРЕИМЕНОВАНА И ПОЛНОСТЬЮ ПЕРЕРАБОТАНА >>>
+# <<< ГЛАВНАЯ ФУНКЦИЯ-СПЕЦИАЛИСТ, ПОЛНОСТЬЮ ПЕРЕРАБОТАНА >>>
 def get_specialist_response(user_prompt, user, assistant):
-    """
-    Эта функция принимает уже ВЫБРАННОГО ассистента-специалиста
-    и выполняет запрос пользователя с его инструментами, используя правильный
-    цикл Function Calling.
-    """
     try:
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
@@ -150,62 +144,44 @@ def get_specialist_response(user_prompt, user, assistant):
         if not assistant or assistant.status != 'active':
             return _("Выбранный ассистент не найден или неактивен.")
         
-        # Загружаем историю чата
+        # 1. Подставляем текущую дату в инструкции
+        instructions = assistant.instructions.replace('{{current_date}}', date.today().strftime('%Y-%m-%d'))
+        
+        # 2. Загружаем историю чата
         last_messages = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(10).all()
         last_messages.reverse()
         history = [{'role': msg.role, 'parts': [msg.content]} for msg in last_messages]
         
-        # --- УЛУЧШЕННАЯ ЛОГИКА ВЫБОРА ИНСТРУМЕНТОВ ---
-        # Теперь мы сопоставляем строковые имена с реальными функциями
+        # 3. "Прячем" аргумент user от модели с помощью partial
+        # Это решает ошибку "multiple values for keyword argument 'user'"
         available_tools = {
-            "create_calendar_event": create_calendar_event,
-            "find_events": find_events,
-            "find_and_delete_event": find_and_delete_event,
-            "create_task": create_task,
+            "create_calendar_event": partial(create_calendar_event, user),
+            "find_events": partial(find_events, user),
+            "find_and_delete_event": partial(find_and_delete_event, user),
+            "create_task": partial(create_task, user),
         }
         
-        # Пока оставляем старую логику выбора по имени, но теперь она надежнее
         tools_for_model = []
-        if 'календар' in assistant.name.lower() or 'события' in assistant.name.lower() or 'встреча' in assistant.name.lower():
-            tools_for_model.extend([available_tools["create_calendar_event"], available_tools["find_events"], available_tools["find_and_delete_event"]])
-        if 'задачи' in assistant.name.lower() or 'задач' in assistant.name.lower():
+        if any(keyword in assistant.name.lower() for keyword in ['календар', 'события', 'встреча']):
+            tools_for_model.extend([
+                available_tools["create_calendar_event"], 
+                available_tools["find_events"], 
+                available_tools["find_and_delete_event"]
+            ])
+        if any(keyword in assistant.name.lower() for keyword in ['задачи', 'задач']):
             tools_for_model.append(available_tools["create_task"])
 
         model = genai.GenerativeModel(
             'gemini-1.5-pro-latest', 
-            system_instruction=assistant.instructions, 
+            system_instruction=instructions, 
             tools=tools_for_model
         )
         
-        chat = model.start_chat(history=history, enable_automatic_function_calling=False) # Важно отключить автоматический вызов
+        # 4. Включаем автоматический вызов функций - это более надежный способ
+        # Он решает ошибку "Could not convert part.function_call to text"
+        chat = model.start_chat(history=history, enable_automatic_function_calling=True)
         response = chat.send_message(user_prompt)
-
-        # <<< УЛУЧШЕННАЯ ОБРАБОТКА ВЫЗОВА ИНСТРУМЕНТОВ (FUNCTION CALLING) >>>
-        # Этот цикл позволяет модели и инструментам общаться, пока не будет получен финальный ответ
-        while response.candidates[0].content.parts[0].function_call:
-            function_call = response.candidates[0].content.parts[0].function_call
-            tool_name = function_call.name
-            
-            if tool_name not in available_tools:
-                raise ValueError(f"Инструмент '{tool_name}' не найден.")
-            
-            tool_function = available_tools[tool_name]
-            tool_args = {key: value for key, value in function_call.args.items()}
-            
-            # Вызываем нашу Python-функцию
-            tool_response_text = tool_function(user=user, **tool_args)
-            
-            # Отправляем результат работы инструмента обратно в модель
-            response = chat.send_message(
-                genai.Part(
-                    function_response=genai.FunctionResponse(
-                        name=tool_name,
-                        response={'result': tool_response_text}
-                    )
-                )
-            )
         
-        # Когда циклы вызова инструментов завершены, возвращаем финальный текстовый ответ модели
         return response.text
 
     except Exception as e:
