@@ -9,14 +9,13 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, date
 import logging
+# <<< Добавляем нужные импорты для ручного управления
+from google.generativeai.types import FunctionResponse, Part
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-# <<< СОЗДАЕМ КЛАСС-КОНТЕЙНЕР ДЛЯ ВСЕХ НАШИХ ИНСТРУМЕНТОВ >>>
 class GoogleTools:
-    """Этот класс содержит все функции для работы с Google API.
-    Он инициализируется с объектом 'user', чтобы каждая функция имела к нему доступ."""
     def __init__(self, user):
         self.user = user
 
@@ -28,7 +27,7 @@ class GoogleTools:
         return build(service_name, version, credentials=creds)
 
     def create_calendar_event(self, summary: str, start: str, end: str = None):
-        """Создает новое событие в Google Календаре."""
+        """Создает новое событие в Google Календаре. Время должно быть в формате ISO 8601."""
         service = self._get_google_service('calendar', 'v3')
         if not service: return _("Доступ к Google Календарю не настроен.")
         
@@ -74,7 +73,7 @@ class GoogleTools:
             return _("Произошла ошибка при поиске событий.")
 
     def create_task(self, title: str, due: str = None):
-        """Создает новую задачу в Google Tasks."""
+        """Создает новую задачу в Google Tasks. Срок выполнения (due) должен быть в формате ISO 8601."""
         service = self._get_google_service('tasks', 'v1')
         if not service: return _("Доступ к Google Tasks не настроен.")
         task = {'title': title}
@@ -101,12 +100,10 @@ def get_specialist_response(user_prompt, user, assistant):
         
         history = AssistantMessage.query.filter_by(user_id=user.id).order_by(AssistantMessage.timestamp.desc()).limit(10).all()
         history.reverse()
-        chat_history = [{'role': msg.role, 'parts': [msg.content]} for msg in history]
+        chat_history = [{'role': 'user' if msg.role == 'user' else 'model', 'parts': [msg.content]} for msg in history]
         
-        # Создаем экземпляр нашего "мастера на все руки", передав ему пользователя
         google_tools = GoogleTools(user)
 
-        # Выбираем, какие МЕТОДЫ нашего "мастера" передать модели
         tools_for_model = []
         if any(keyword in assistant.name.lower() for keyword in ['календар', 'события', 'встреча']):
             tools_for_model.extend([google_tools.create_calendar_event, google_tools.find_events])
@@ -119,9 +116,32 @@ def get_specialist_response(user_prompt, user, assistant):
             tools=tools_for_model
         )
         
-        # Начинаем чат и отправляем сообщение
         chat = model.start_chat(history=chat_history)
+        # <<< НАЧАЛО: ГИБРИДНЫЙ ПОДХОД С РУЧНЫМ ЦИКЛОМ >>>
+        # Отправляем первый запрос
         response = chat.send_message(user_prompt)
+
+        # Пока модель просит вызвать функцию, мы делаем это вручную
+        while response.candidates[0].content.parts[0].function_call:
+            function_call = response.candidates[0].content.parts[0].function_call
+            tool_name = function_call.name
+            
+            # Находим нужный метод в нашем классе
+            if hasattr(google_tools, tool_name):
+                executor = getattr(google_tools, tool_name)
+                tool_args = {key: value for key, value in function_call.args.items()}
+                
+                # Вызываем метод. 'user' уже находится внутри класса
+                tool_response_text = executor(**tool_args)
+                
+                # Отправляем результат обратно модели
+                response = chat.send_message(
+                    Part(function_response=FunctionResponse(name=tool_name, response={'result': tool_response_text}))
+                )
+            else:
+                # Если модель выдумала несуществующий инструмент, выходим из цикла
+                break
+        # <<< КОНЕЦ: ГИБРИДНЫЙ ПОДХОД >>>
         
         return response.text
 
