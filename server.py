@@ -1,4 +1,4 @@
-# server.py (Новый единый главный файл)
+# server.py (Финальная, исправленная версия)
 
 from gevent import monkey
 monkey.patch_all()
@@ -319,7 +319,15 @@ def chat_with_assistant():
             final_response = _('У вас нет активных ассистентов-специалистов. Пожалуйста, создайте и активируйте одного в панели управления.')
         else:
             specialist_list_for_prompt = "\n".join([f"- id: {s.id}, name: {s.name}, description: {s.description}" for s in specialists])
-            orchestrator_prompt = f'Ты — главный ассистент-диспетчер...Запрос пользователя: "{user_prompt}"'
+            orchestrator_prompt = f"""
+            Ты — главный ассистент-диспетчер. Твоя задача — проанализировать запрос пользователя и выбрать ОДНОГО наиболее подходящего специалиста из списка ниже.
+            В своем ответе ты должен указать ТОЛЬКО ID выбранного специалиста в формате "id: <число>". Никаких других слов или объяснений.
+
+            Доступные специалисты:
+            {specialist_list_for_prompt}
+
+            Запрос пользователя: "{user_prompt}"
+            """
             genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
             orchestrator_model = genai.GenerativeModel('gemini-1.5-flash-latest')
             orchestrator_response = orchestrator_model.generate_content(orchestrator_prompt)
