@@ -16,7 +16,7 @@ babel = Babel()
 
 def create_app():
     """Создает и конфигурирует экземпляр приложения Flask."""
-    app = Flask(__name__)
+    app = Flask(__name__, instance_relative_config=True)
 
     # --- КОНФИГУРАЦИЯ ---
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
