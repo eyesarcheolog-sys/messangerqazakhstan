@@ -13,84 +13,77 @@ import logging
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-class GoogleTools:
-    """Класс-контейнер для всех инструментов, работающих с Google API."""
-    def __init__(self, user):
-        self.user = user
-        self.user_tz = getattr(user, 'timezone', 'UTC') 
+# --- Функции-инструменты ---
+# Они остаются такими же, но теперь это не методы класса
 
-    def _get_google_service(self, service_name, version):
-        if not self.user.google_credentials_json:
-            return None
-        info = json.loads(self.user.google_credentials_json)
-        creds = Credentials.from_authorized_user_info(info)
-        return build(service_name, version, credentials=creds)
+def get_google_service(user, service_name, version):
+    if not user.google_credentials_json:
+        return None
+    info = json.loads(user.google_credentials_json)
+    creds = Credentials.from_authorized_user_info(info)
+    return build(service_name, version, credentials=creds)
 
-    def create_calendar_event(self, summary: str, start: str, end: str = None):
-        """Создает новое событие в Google Календаре. Время должно быть в формате ISO 8601."""
-        service = self._get_google_service('calendar', 'v3')
-        if not service: return _("Доступ к Google Календарю не настроен.")
-        
-        try:
-            start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
-            end_dt = datetime.fromisoformat(end.replace('Z', '+00:00')) if end else start_dt + timedelta(hours=1)
-        except ValueError:
-            return _("Не удалось распознать дату. Используйте формат ISO YYYY-MM-DDTHH:MM:SS.")
+def create_calendar_event(user, summary: str, start: str, end: str = None):
+    """Создает новое событие в Google Календаре. Время должно быть в формате ISO 8601."""
+    service = get_google_service(user, 'calendar', 'v3')
+    if not service: return _("Доступ к Google Календарю не настроен.")
+    
+    try:
+        start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
+        end_dt = datetime.fromisoformat(end.replace('Z', '+00:00')) if end else start_dt + timedelta(hours=1)
+    except ValueError:
+        return _("Не удалось распознать дату. Используйте формат ISO YYYY-MM-DDTHH:MM:SS.")
 
-        event = {
-            'summary': summary,
-            'start': {'dateTime': start_dt.isoformat(), 'timeZone': self.user_tz},
-            'end': {'dateTime': end_dt.isoformat(), 'timeZone': self.user_tz}
-        }
-        
-        try:
-            created_event = service.events().insert(calendarId='primary', body=event).execute()
-            logging.info(f"Event created successfully: {created_event.get('id')}")
-            return _("✅ Событие '{summary}' успешно создано на {start_time}.").format(
-                summary=created_event.get('summary'),
-                start_time=start_dt.strftime('%d %B в %H:%M')
-            )
-        except Exception as e:
-            logging.error(f"Error creating calendar event: {e}")
-            return _("Не удалось создать событие в календаре.")
+    event = {
+        'summary': summary,
+        'start': {'dateTime': start_dt.isoformat(), 'timeZone': 'UTC'},
+        'end': {'dateTime': end_dt.isoformat(), 'timeZone': 'UTC'}
+    }
+    
+    try:
+        created_event = service.events().insert(calendarId='primary', body=event).execute()
+        logging.info(f"Event created: {created_event.get('htmlLink')}")
+        return _("✅ Событие '{summary}' успешно создано.").format(summary=created_event.get('summary'))
+    except Exception as e:
+        logging.error(f"Error creating calendar event: {e}")
+        return _("Не удалось создать событие в календаре.")
 
-    def find_events(self, search_term: str):
-        """Находит события в Google Календаре по ключевым словам."""
-        # (Остальные методы класса остаются без изменений)
-        service = self._get_google_service('calendar', 'v3')
-        if not service: return _("Доступ к Google Календарю не настроен.")
-        now = datetime.utcnow()
-        time_min = now.isoformat() + "Z"
-        time_max = (now + timedelta(days=7)).isoformat() + "Z"
-        try:
-            events_result = service.events().list(calendarId='primary', q=search_term, timeMin=time_min, timeMax=time_max, maxResults=5, singleEvents=True, orderBy='startTime').execute()
-            events = events_result.get('items', [])
-            if not events: return _("На ближайшую неделю событий с названием '{search_term}' не найдено.").format(search_term=search_term)
-            response_lines = [_("Вот что мне удалось найти:")]
-            for event in events:
-                start_dt = datetime.fromisoformat(event['start'].get('dateTime').replace('Z', '+00:00'))
-                response_lines.append(f"- '{event.get('summary')}' ({start_dt.strftime('%d %B в %H:%M')})")
-            return "\n".join(response_lines)
-        except Exception as e:
-            logging.error(f"Error finding events: {e}")
-            return _("Произошла ошибка при поиске событий.")
+def find_events(user, search_term: str):
+    """Находит события в Google Календаре по ключевым словам."""
+    service = get_google_service(user, 'calendar', 'v3')
+    # ... остальной код функции без изменений ...
+    if not service: return _("Доступ к Google Календарю не настроен.")
+    now = datetime.utcnow()
+    time_min = now.isoformat() + "Z"
+    time_max = (now + timedelta(days=7)).isoformat() + "Z"
+    try:
+        events_result = service.events().list(calendarId='primary', q=search_term, timeMin=time_min, timeMax=time_max, maxResults=5, singleEvents=True, orderBy='startTime').execute()
+        events = events_result.get('items', [])
+        if not events: return _("На ближайшую неделю событий с названием '{search_term}' не найдено.").format(search_term=search_term)
+        response_lines = [_("Вот что мне удалось найти:")]
+        for event in events:
+            start_dt = datetime.fromisoformat(event['start'].get('dateTime').replace('Z', '+00:00'))
+            response_lines.append(f"- '{event.get('summary')}' ({start_dt.strftime('%d %B в %H:%M')})")
+        return "\n".join(response_lines)
+    except Exception as e:
+        logging.error(f"Error finding events: {e}")
+        return _("Произошла ошибка при поиске событий.")
 
 
-    def create_task(self, title: str, due: str = None):
-        """Создает новую задачу в Google Tasks. Срок выполнения (due) должен быть в формате ISO 8601."""
-        service = self._get_google_service('tasks', 'v1')
-        if not service: return _("Доступ к Google Tasks не настроен.")
-        task = {'title': title}
-        if due:
-            task['due'] = datetime.fromisoformat(due.replace('Z', '+00:00')).isoformat() + "Z"
-        try:
-            result = service.tasks().insert(tasklist='@default', body=task).execute()
-            logging.info(f"Task created successfully: {result.get('id')}")
-            return _("✅ Задача успешно создана: '{task_title}'").format(task_title=result.get('title'))
-        except Exception as e:
-            logging.error(f"Error creating task: {e}")
-            return _("Не удалось создать задачу.")
-
+def create_task(user, title: str, due: str = None):
+    """Создает новую задачу в Google Tasks. Срок выполнения (due) должен быть в формате ISO 8601."""
+    service = get_google_service(user, 'tasks', 'v1')
+    if not service: return _("Доступ к Google Tasks не настроен.")
+    task = {'title': title}
+    if due:
+        task['due'] = datetime.fromisoformat(due.replace('Z', '+00:00')).isoformat() + "Z"
+    try:
+        result = service.tasks().insert(tasklist='@default', body=task).execute()
+        logging.info(f"Task created: {result.get('id')}")
+        return _("✅ Задача '{title}' успешно создана.").format(title=result.get('title'))
+    except Exception as e:
+        logging.error(f"Error creating task: {e}")
+        return _("Не удалось создать задачу.")
 
 def get_specialist_response(user_prompt, user, assistant):
     try:
@@ -107,24 +100,53 @@ def get_specialist_response(user_prompt, user, assistant):
         history.reverse()
         chat_history = [{'role': 'user' if msg.role == 'user' else 'model', 'parts': [msg.content]} for msg in history]
         
-        google_tools = GoogleTools(user)
-
-        tools_for_model = []
-        if any(keyword in assistant.name.lower() for keyword in ['календар', 'события', 'встреча']):
-            tools_for_model.extend([google_tools.create_calendar_event, google_tools.find_events])
-        if any(keyword in assistant.name.lower() for keyword in ['задачи', 'задач']):
-            tools_for_model.append(google_tools.create_task)
-
+        # <<< НОВЫЙ УПРОЩЕННЫЙ ПОДХОД >>>
+        # 1. Мы явно передаем описание инструментов и их исполнителей
+        tools = {
+            "create_calendar_event": create_calendar_event,
+            "find_events": find_events,
+            "create_task": create_task
+        }
+        
+        # 2. Создаем модель, но пока не передаем ей инструменты
         model = genai.GenerativeModel(
             model_name='gemini-1.5-pro-latest',
-            system_instruction=instructions,
-            tools=tools_for_model
+            system_instruction=instructions
         )
+        chat = model.start_chat(history=chat_history)
         
-        chat = model.start_chat(history=chat_history, enable_automatic_function_calling=True)
-        response = chat.send_message(user_prompt)
-        
-        return response.text
+        # 3. Отправляем запрос, но теперь передаем инструменты прямо в send_message
+        # Это более явный и надежный способ
+        response = chat.send_message(user_prompt, tools=list(tools.values()))
+
+        # 4. Проверяем, хочет ли модель вызвать функцию
+        if response.candidates[0].content.parts[0].function_call:
+            function_call = response.candidates[0].content.parts[0].function_call
+            tool_name = function_call.name
+            
+            if tool_name in tools:
+                executor = tools[tool_name]
+                tool_args = {key: value for key, value in function_call.args.items()}
+                
+                # Вызываем функцию, передавая пользователя и аргументы от модели
+                tool_response_text = executor(user=user, **tool_args)
+                
+                # Создаем ответ для модели
+                function_response = genai.protos.Part(
+                    function_response=genai.protos.FunctionResponse(
+                        name=tool_name,
+                        response={'result': tool_response_text}
+                    )
+                )
+                
+                # Отправляем ответ инструмента обратно в модель для финального ответа
+                final_response = chat.send_message(function_response)
+                return final_response.text
+            else:
+                return _("Модель попыталась вызвать неизвестный инструмент.")
+        else:
+            # Если вызов инструмента не требуется, просто возвращаем текстовый ответ
+            return response.text
 
     except Exception as e:
         logging.error(f"Specialist response error: {e}")
