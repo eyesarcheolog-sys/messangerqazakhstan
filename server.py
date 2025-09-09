@@ -7,6 +7,8 @@ import os
 import uuid
 import json
 from flask import render_template, request, redirect, url_for, jsonify, send_from_directory, Response, session
+# --- ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ ЯВНЫЙ ИМПОРТ ФУНКЦИЙ SOCKET.IO ---
+from flask_socketio import emit, join_room, leave_room
 from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime
 from sqlalchemy import or_, func
@@ -15,7 +17,6 @@ from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import gettext as _
 
-# --- ИЗМЕНЕНИЕ 1: ИМПОРТИРУЕМ ГОТОВЫЕ ОБЪЕКТЫ ИЗ ФАБРИКИ ---
 from app_factory import create_app, db, socketio
 from ai_logic import get_specialist_response
 from models import User, Group, Message, Assistant, Knowledge, AssistantMessage 
@@ -23,12 +24,10 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-# --- ИЗМЕНЕНИЕ 2: СОЗДАЕМ ПРИЛОЖЕНИЕ ЧЕРЕЗ ФАБРИКУ ---
 app = create_app()
 
 user_sids = {}
 
-# --- ИЗМЕНЕНИЕ 3: ВСЯ КОНФИГУРАЦИЯ УДАЛЕНА. ОСТАЛСЯ ТОЛЬКО КОНТЕКСТНЫЙ ПРОЦЕССОР ---
 @app.context_processor
 def inject_conf_var():
     from app_factory import get_locale
@@ -38,9 +37,6 @@ def inject_conf_var():
     )
 
 # --- ROUTES ---
-# Весь код ниже остается таким же, как у тебя был,
-# так как он содержит только логику маршрутов.
-
 @app.route('/')
 @login_required
 def index():
@@ -201,7 +197,9 @@ def group_history(group_id):
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)
+    # This needs to be associated with the app object from the factory
+    with app.app_context():
+        return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)
 
 @app.route('/send_audio', methods=['POST'])
 @login_required
@@ -596,8 +594,4 @@ def handle_group_message(data):
     room = f'group_{group_id}'
     emit('receive_group_message', message_payload, to=room)
     emit('new_message_notification', {'group_id': group_id, 'group_name': group.name, 'sender': current_user.username}, to=room, skip_sid=request.sid)
-
-# --- ИЗМЕНЕНИЕ 4: УДАЛЯЕМ ЭТОТ БЛОК ---
-# if __name__ == '__main__':
-#     socketio.run(app, debug=True)
 
