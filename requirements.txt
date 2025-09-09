@@ -11,7 +11,7 @@ python-dotenv
 gevent
 requests
 beautifulsoup4
-Flask-Babel
+Flask-Babel>=2.0.0
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

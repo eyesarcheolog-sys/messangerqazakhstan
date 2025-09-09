@@ -1,9 +1,9 @@
+# ai_logic.py
+
 import os
 import json
 import google.generativeai as genai
-# --- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ИМПОРТОВ ---
-# FunctionResponse импортируется из types, а Part создается через genai.Part
-from google.generativeai.types import FunctionResponse
+# --- ИЗМЕНЕНИЕ: НЕПРАВИЛЬНЫЙ ИМПОРТ УДАЛЕН ---
 from flask_babel import gettext as _
 from models import db, Assistant, AssistantMessage, User
 from google.oauth2.credentials import Credentials
@@ -160,9 +160,10 @@ def get_specialist_response(user_prompt, user, assistant):
             tool_response_text = tool_function(**tool_args)
             logging.info(f"Tool '{tool_name}' returned: {tool_response_text}")
 
+            # --- ИЗМЕНЕНИЕ: ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ ВЫЗОВ genai.types.FunctionResponse ---
             response = chat.send_message(
                 genai.Part(
-                    function_response=FunctionResponse(
+                    function_response=genai.types.FunctionResponse(
                         name=tool_name,
                         response={'result': tool_response_text}
                     )

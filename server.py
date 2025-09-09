@@ -7,7 +7,6 @@ import os
 import uuid
 import json
 from flask import render_template, request, redirect, url_for, jsonify, send_from_directory, Response, session
-# --- ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ ЯВНЫЙ ИМПОРТ ФУНКЦИЙ SOCKET.IO ---
 from flask_socketio import emit, join_room, leave_room
 from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime
@@ -17,19 +16,20 @@ from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import gettext as _
 
-from app_factory import create_app, db, socketio
+# --- ИЗМЕНЕНИЕ: ПРАВИЛЬНЫЙ ИМПОРТ ОБЪЕКТОВ ИЗ ДРУГИХ ФАЙЛОВ ---
+from app_factory import app, socketio
+from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from ai_logic import get_specialist_response
-from models import User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-app = create_app()
-
+# Глобальная переменная для отслеживания сессий пользователей
 user_sids = {}
 
 @app.context_processor
 def inject_conf_var():
+    # Эта функция делает переменные доступными во всех шаблонах Jinja2
     from app_factory import get_locale
     return dict(
         AVAILABLE_LANGUAGES=app.config['LANGUAGES'],
@@ -40,10 +40,12 @@ def inject_conf_var():
 @app.route('/')
 @login_required
 def index():
+    # Главная страница, отображает чаты и контакты
     users = User.query.all()
     groups = current_user.groups
     unread_counts = {}
 
+    # Подсчет непрочитанных личных сообщений
     private_unread = db.session.query(
         Message.sender_id, func.count(Message.id)
     ).join(User, User.id == Message.sender_id).filter(
@@ -57,6 +59,7 @@ def index():
         if sender_username:
             unread_counts[sender_username] = count
 
+    # Подсчет непрочитанных групповых сообщений
     if groups:
         group_ids = [g.id for g in groups]
         group_unread = db.session.query(
@@ -74,6 +77,7 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Страница регистрации нового пользователя
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -88,6 +92,7 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Страница входа
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -103,12 +108,14 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    # Выход из системы
     logout_user()
     return redirect(url_for('login'))
 
 @app.route('/create_group', methods=['POST'])
 @login_required
 def create_group():
+    # Создание новой группы
     group_name = request.form.get('group_name')
     member_ids = request.form.getlist('members')
     if not group_name or not member_ids:
@@ -129,6 +136,7 @@ def create_group():
 @app.route('/group/<int:group_id>')
 @login_required
 def group_info(group_id):
+    # Страница с информацией и настройками группы
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
         return _("Group not found or you are not a member"), 404
@@ -138,6 +146,7 @@ def group_info(group_id):
 @app.route('/group/<int:group_id>/edit_name', methods=['POST'])
 @login_required
 def edit_group_name(group_id):
+    # Изменение названия группы
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
         return _("Access denied"), 403
@@ -150,6 +159,7 @@ def edit_group_name(group_id):
 @app.route('/group/<int:group_id>/edit_members', methods=['POST'])
 @login_required
 def edit_group_members(group_id):
+    # Изменение состава участников группы
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
         return _("Access denied"), 403
@@ -162,6 +172,7 @@ def edit_group_members(group_id):
 @app.route('/group/<int:group_id>/delete', methods=['POST'])
 @login_required
 def delete_group(group_id):
+    # Удаление группы
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
         return _("Access denied"), 403
@@ -173,6 +184,7 @@ def delete_group(group_id):
 @app.route('/history/<username>')
 @login_required
 def history(username):
+    # Получение истории личных сообщений
     peer = User.query.filter_by(username=username).first_or_404()
     Message.query.filter_by(sender_id=peer.id, recipient_id=current_user.id, is_read=False).update({'is_read': True})
     db.session.commit()
@@ -187,6 +199,7 @@ def history(username):
 @app.route('/history/group/<int:group_id>')
 @login_required
 def group_history(group_id):
+    # Получение истории групповых сообщений
     group = db.session.get(Group, group_id)
     if not group or current_user not in group.members:
         return _("Group not found or you are not a member"), 404
@@ -197,13 +210,14 @@ def group_history(group_id):
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    # This needs to be associated with the app object from the factory
+    # Отдача загруженных файлов (например, аудио)
     with app.app_context():
         return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)
 
 @app.route('/send_audio', methods=['POST'])
 @login_required
 def send_audio():
+    # Прием и сохранение аудиосообщений
     audio_file = request.files.get('audio')
     transcription_text = request.form.get('transcription', '')
     recipient_username = request.form.get('recipient')
@@ -268,6 +282,7 @@ def send_audio():
 @app.route('/edit_with_ai', methods=['POST'])
 @login_required
 def edit_with_ai():
+    # Редактирование текста с помощью ИИ
     data = request.get_json()
     original_text = data.get('text')
     model_choice = data.get('model', 'gemini')
@@ -331,6 +346,7 @@ def edit_with_ai():
 @app.route('/assistant_history')
 @login_required
 def assistant_history():
+    # Получение истории чата с ассистентом
     messages = AssistantMessage.query.filter_by(user_id=current_user.id).order_by(AssistantMessage.timestamp.asc()).all()
     history = [{'role': msg.role, 'content': msg.content} for msg in messages]
     return jsonify(history)
@@ -338,6 +354,7 @@ def assistant_history():
 @app.route('/chat_with_assistant', methods=['POST'])
 @login_required
 def chat_with_assistant():
+    # Основная логика чата с ИИ-ассистентом (Менеджер -> Специалист)
     data = request.get_json()
     user_prompt = data.get('prompt')
 
@@ -349,7 +366,7 @@ def chat_with_assistant():
         db.session.add(user_message)
         db.session.flush()
 
-        # --- ЭТАП 1: МЕНЕДЖЕР-ОРКЕСТРАТОР ---
+        # ЭТАП 1: МЕНЕДЖЕР-ОРКЕСТРАТОР
         specialists = Assistant.query.filter_by(user_id=current_user.id, status='active').all()
         if not specialists:
             final_response = _('У вас нет активных ассистентов-специалистов. Пожалуйста, создайте и активируйте одного в панели управления.')
@@ -368,7 +385,7 @@ def chat_with_assistant():
             orchestrator_model = genai.GenerativeModel('gemini-1.5-flash-latest')
             orchestrator_response = orchestrator_model.generate_content(orchestrator_prompt)
             
-            # --- ЭТАП 2: ВЫЗОВ СПЕЦИАЛИСТА ---
+            # ЭТАП 2: ВЫЗОВ СПЕЦИАЛИСТА
             try:
                 response_text = orchestrator_response.text
                 specialist_id_str = response_text.split('id:')[1].strip()
@@ -399,6 +416,7 @@ def chat_with_assistant():
 
 @app.route('/js/translations.js')
 def js_translations():
+    # Динамическая генерация JS файла с переводами для фронтенда
     translations = {
         "Please select a chat.": _("Please select a chat."),
         "Microphone error:": _("Microphone error:"),
@@ -424,12 +442,14 @@ def js_translations():
 @app.route('/assistants')
 @login_required
 def assistants_dashboard():
+    # Главная панель управления ассистентами
     user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
     return render_template('assistants.html', assistants=user_assistants)
 
 @app.route('/assistants/create', methods=['GET'])
 @login_required
 def create_assistant():
+    # Создание нового ассистента с базовыми настройками
     new_assistant = Assistant(
         name=_('Новый ассистент'),
         description=_('Краткое описание'),
@@ -444,6 +464,7 @@ def create_assistant():
 @app.route('/assistants/configure/<int:assistant_id>', methods=['GET', 'POST'])
 @login_required
 def configure_assistant(assistant_id):
+    # Страница настройки конкретного ассистента
     assistant = Assistant.query.filter_by(id=assistant_id, user_id=current_user.id).first_or_404()
     
     if request.method == 'POST':
@@ -463,6 +484,7 @@ def configure_assistant(assistant_id):
 @app.route('/assistants/delete/<int:assistant_id>', methods=['POST'])
 @login_required
 def delete_assistant(assistant_id):
+    # Удаление ассистента
     assistant = Assistant.query.filter_by(id=assistant_id, user_id=current_user.id).first_or_404()
     db.session.delete(assistant)
     db.session.commit()
@@ -471,22 +493,26 @@ def delete_assistant(assistant_id):
 @app.route('/assistants/my')
 @login_required
 def my_assistants_page():
+    # Страница "Мои ассистенты"
     user_assistants = Assistant.query.filter_by(user_id=current_user.id).all()
     return render_template('my_assistants.html', assistants=user_assistants)
 
 @app.route('/assistants/knowledge')
 @login_required
 def knowledge_base_page():
+    # Заглушка для страницы "База знаний"
     return render_template('knowledge_base.html')
 
 @app.route('/assistants/settings')
 @login_required
 def assistants_settings_page():
+    # Заглушка для страницы "Настройки"
     return render_template('settings.html')
 
 @app.route('/assistants/disconnect_google', methods=['POST'])
 @login_required
 def disconnect_google():
+    # Отключение аккаунта Google
     user = db.session.get(User, current_user.id)
     user.google_credentials_json = None
     db.session.commit()
@@ -496,6 +522,7 @@ def disconnect_google():
 @app.route('/authorize/google')
 @login_required
 def authorize_google():
+    # Перенаправление на страницу авторизации Google
     credentials_path = os.path.join(app.root_path, 'google_credentials.json')
     flow = Flow.from_client_secrets_file(
         credentials_path,
@@ -512,6 +539,7 @@ def authorize_google():
 @app.route('/oauth2callback/google')
 @login_required
 def oauth2callback_google():
+    # Обработка ответа от Google после авторизации
     credentials_path = os.path.join(app.root_path, 'google_credentials.json')
     state = session.get('state')
     if not state or state != request.args.get('state'):
@@ -540,6 +568,7 @@ def oauth2callback_google():
 @socketio.on('connect')
 @login_required
 def handle_connect():
+    # Обработка подключения нового клиента
     user_sids[current_user.username] = request.sid
     for group in current_user.groups:
         join_room(f'group_{group.id}')
@@ -547,6 +576,7 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    # Обработка отключения клиента
     if current_user.is_authenticated and current_user.username in user_sids:
         for group in current_user.groups:
             leave_room(f'group_{group.id}')
@@ -557,6 +587,7 @@ def handle_disconnect():
 @socketio.on('private_message')
 @login_required
 def handle_private_message(data):
+    # Обработка отправки личного сообщения
     recipient_username = data['recipient']
     message_text = data['message']
     timestamp = datetime.utcnow()
@@ -581,6 +612,7 @@ def handle_private_message(data):
 @socketio.on('group_message')
 @login_required
 def handle_group_message(data):
+    # Обработка отправки группового сообщения
     group_id = data['group_id']
     message_text = data['message']
     timestamp = datetime.utcnow()
@@ -594,4 +626,3 @@ def handle_group_message(data):
     room = f'group_{group_id}'
     emit('receive_group_message', message_payload, to=room)
     emit('new_message_notification', {'group_id': group_id, 'group_name': group.name, 'sender': current_user.username}, to=room, skip_sid=request.sid)
-
