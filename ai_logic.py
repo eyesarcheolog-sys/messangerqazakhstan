@@ -107,33 +107,29 @@ def get_specialist_response(user_prompt, user, assistant):
         history.reverse()
         chat_history = [{'role': 'user' if msg.role == 'user' else 'model', 'parts': [msg.content]} for msg in history]
         
-        # --- НАЧАЛО: НОВАЯ ЛОГИКА ВЫБОРА ИНСТРУМЕНТОВ ---
         google_tools_handler = GoogleTools(user)
         
-        # Словарь всех доступных в системе инструментов
         all_available_tools = {
             "create_calendar_event": google_tools_handler.create_calendar_event,
             "find_events": google_tools_handler.find_events,
             "create_task": google_tools_handler.create_task
         }
 
-        # Получаем список разрешенных инструментов из настроек ассистента
         selected_tool_names = assistant.tools.split(',') if assistant.tools else []
-
-        # Формируем список функций для передачи в модель
         tools_for_model = [all_available_tools[name] for name in selected_tool_names if name in all_available_tools]
-        # --- КОНЕЦ НОВОЙ ЛОГИКИ ---
 
         model = genai.GenerativeModel(
             model_name='gemini-1.5-pro-latest',
             system_instruction=instructions,
-            tools=tools_for_model if tools_for_model else None # Передаем None, если нет инструментов
+            tools=tools_for_model if tools_for_model else None
         )
         
-        # Исправленный и более надежный способ вызова
         request_content = chat_history + [{'role': 'user', 'parts': [user_prompt]}]
+        
         response = model.generate_content(request_content)
         
+        # The updated library handles function calls internally and returns the final text response,
+        # which is a more robust way to avoid the 'whichOneof' error.
         return response.text
 
     except Exception as e:

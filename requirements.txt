@@ -6,7 +6,7 @@ Flask-Login
 psycopg2-binary
 Flask-Migrate
 openai
-google-generativeai==0.11.3
+google-generativeai==0.5.4
 python-dotenv
 gevent
 requests
@@ -16,3 +16,4 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 pytz
+Werkzeug
