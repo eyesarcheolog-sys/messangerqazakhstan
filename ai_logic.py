@@ -1,14 +1,15 @@
 import os
 import json
 import google.generativeai as genai
-from google.generativeai.types import Part
+# --- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ИМПОРТОВ ---
+# FunctionResponse импортируется из types, а Part создается через genai.Part
+from google.generativeai.types import FunctionResponse
 from flask_babel import gettext as _
 from models import db, Assistant, AssistantMessage, User
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, date
 import logging
-# --- ИСПРАВЛЕНИЕ 1: ПЕРЕНОСИМ ИМПОРТ В НАЧАЛО ФАЙЛА ---
 from google.auth.transport.requests import Request
 
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +28,6 @@ class GoogleTools:
             creds = Credentials.from_authorized_user_info(info)
             if creds.expired and creds.refresh_token:
                 logging.info(f"Google credentials for user {self.user.id} expired. Refreshing...")
-                # Теперь Request импортирован глобально
                 creds.refresh(Request())
                 self.user.google_credentials_json = creds.to_json()
                 db.session.commit()
@@ -64,7 +64,6 @@ class GoogleTools:
             logging.error(f"Error creating calendar event in Google API: {e}", exc_info=True)
             return _("Failed to create the calendar event.")
 
-    # --- ИСПРАВЛЕНИЕ 2: ПОЛНАЯ РЕАЛИЗАЦИЯ ФУНКЦИИ find_events ---
     def find_events(self, search_term: str):
         service = self._get_google_service('calendar', 'v3')
         if not service:
@@ -94,7 +93,6 @@ class GoogleTools:
         except Exception as e:
             logging.error(f"Error finding events: {e}", exc_info=True)
             return _("An error occurred while searching for events.")
-    # --- КОНЕЦ ИСПРАВЛЕНИЯ 2 ---
 
     def create_task(self, title: str, due: str = None):
         service = self._get_google_service('tasks', 'v1')
@@ -163,8 +161,8 @@ def get_specialist_response(user_prompt, user, assistant):
             logging.info(f"Tool '{tool_name}' returned: {tool_response_text}")
 
             response = chat.send_message(
-                Part(
-                    function_response=genai.FunctionResponse(
+                genai.Part(
+                    function_response=FunctionResponse(
                         name=tool_name,
                         response={'result': tool_response_text}
                     )

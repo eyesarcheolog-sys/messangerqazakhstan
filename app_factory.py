@@ -8,13 +8,13 @@ from flask_socketio import SocketIO
 from flask_login import LoginManager
 
 # --- ИНИЦИАЛИЗАЦИЯ РАСШИРЕНИЙ ---
-# Мы создаем экземпляры здесь, но связываем их с приложением внутри фабрики
 migrate = Migrate()
 socketio = SocketIO()
 login_manager = LoginManager()
+# --- ИЗМЕНЕНИЕ: Babel инициализируется без селектора здесь ---
 babel = Babel()
 
-def create_app():
+def create_flask_app():
     """Создает и конфигурирует экземпляр приложения Flask."""
     app = Flask(__name__, instance_relative_config=True)
 
@@ -45,7 +45,8 @@ def create_app():
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    # --- НАСТРОЙКА BABEL ---
+    # --- ИЗМЕНЕНИЕ: ФУНКЦИЯ ВЫБОРА ЯЗЫКА ТЕПЕРЬ ВНУТРИ ФАБРИКИ ---
+    # Она регистрируется через декоратор и имеет доступ к 'app'
     @babel.localeselector
     def get_locale():
         lang = request.args.get('lang')
@@ -55,7 +56,6 @@ def create_app():
 
     with app.app_context():
         # --- РЕГИСТРАЦИЯ МАРШРУТОВ И СОКЕТОВ ---
-        # Импортируем здесь, чтобы избежать циклического импорта
         import server 
         
     return app

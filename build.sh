@@ -1,3 +1,5 @@
+# build.sh
+
 #!/usr/bin/env bash
 # exit on error
 set -o errexit
@@ -5,7 +7,6 @@ set -o errexit
 pip install -r requirements.txt
 
 # Указываем Flask, как найти наше приложение через фабрику
-export FLASK_APP="app_factory:create_app()"
+export FLASK_APP="app_factory:create_flask_app()" # <--- ИСПРАВЛЕНО
 
 flask db upgrade
-
