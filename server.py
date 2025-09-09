@@ -466,7 +466,8 @@ def create_assistant():
         description=_('Краткое описание'),
         status='inactive',
         instructions=_('Ты — полезный ассистент.'),
-        owner=current_user
+        # --- ИСПРАВЛЕНИЕ ОШИБКИ ---
+        user_id=current_user.id
     )
     db.session.add(new_assistant)
     db.session.commit()
@@ -483,10 +484,8 @@ def configure_assistant(assistant_id):
         assistant.instructions = request.form.get('instructions')
         assistant.status = request.form.get('assistant_status')
         
-        # --- НАЧАЛО: ОБНОВЛЕННЫЙ КОД ДЛЯ СОХРАНЕНИЯ ИНСТРУМЕНТОВ ---
         selected_tools = request.form.getlist('tools')
         assistant.tools = ','.join(selected_tools) if selected_tools else ''
-        # --- КОНЕЦ ОБНОВЛЕННОГО КОДА ---
 
         db.session.commit()
         return redirect(url_for('configure_assistant', assistant_id=assistant.id))
