@@ -209,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- VOICE MESSAGE MODAL LOGIC ---
+    // ... (Этот блок без изменений)
     const mainRecordBtn = document.getElementById('record-btn');
     const voiceModal = document.getElementById('voice-modal');
     if (voiceModal) {
@@ -269,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (audioPlayer) audioPlayer.src = "";
             if (recordingInterval) clearInterval(recordingInterval);
             if (recognition) {
-                recognition.onend = null; // сбрасываем обработчик
+                recognition.onend = null;
                 try { recognition.abort(); } catch(e) { /* ignore */ }
             }
             updateUI('idle');
@@ -290,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
                 if (recognition) {
-                    try { recognition.abort(); } catch(e) { /* ignore */ } // используем abort() для немедленной остановки
+                    try { recognition.abort(); } catch(e) { /* ignore */ }
                 }
                 voiceModal.style.display = 'none';
             };
@@ -415,9 +416,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
     // --- AI ASSISTANT MODAL LOGIC ---
+    // --- НАЧАЛО ИЗМЕНЕНИЙ ---
     const assistantModal = document.getElementById('assistant-modal');
-    let currentAssistantId = null;
 
     if (assistantModal) {
         const openAssistantBtn = document.getElementById('assistant-btn');
@@ -445,9 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         if (openAssistantBtn) {
             openAssistantBtn.onclick = () => {
-                const assistantBtn = document.getElementById('assistant-btn');
-                currentAssistantId = assistantBtn.dataset.assistantId;
-                
+                // ID ассистента больше не нужен, бэкенд сам его выберет
                 assistantModal.style.display = 'flex';
                 loadAssistantHistory();
             };
@@ -456,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closeAssistantBtn) {
             closeAssistantBtn.onclick = () => {
                 assistantModal.style.display = 'none';
-                currentAssistantId = null;
             };
         }
 
@@ -464,7 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
             assistantForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const userPrompt = assistantInput.value;
-                if (!userPrompt || !currentAssistantId) return;
+                // Убираем проверку на ID ассистента, так как он больше не нужен
+                if (!userPrompt) return;
 
                 addAssistantMessage(userPrompt, 'user');
                 assistantInput.value = '';
@@ -476,9 +476,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const response = await fetch('/chat_with_assistant', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
+                        // Убираем assistant_id из тела запроса
                         body: JSON.stringify({ 
-                            prompt: userPrompt, 
-                            assistant_id: currentAssistantId 
+                            prompt: userPrompt 
                         })
                     });
 
@@ -527,4 +527,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
 });
