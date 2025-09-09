@@ -2,7 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 
-# Важно: мы инициализируем db здесь, но свяжем его с app в server.py
+# db инициализируется здесь один раз для всего проекта.
+# Фабрика приложений будет импортировать этот объект и связывать его с app.
 db = SQLAlchemy()
 
 group_members = db.Table('group_members',
@@ -43,11 +44,7 @@ class Assistant(db.Model):
     status = db.Column(db.String(20), nullable=False, default='inactive')
     instructions = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
-    # --- НАЧАЛО: НОВОЕ ПОЛЕ ДЛЯ ИНСТРУМЕНТОВ ---
-    tools = db.Column(db.String(500), nullable=True) # Хранит названия инструментов через запятую
-    # --- КОНЕЦ НОВОГО ПОЛЯ ---
-    
+    tools = db.Column(db.String(500), nullable=True) 
     knowledge_sources = db.relationship('Knowledge', backref='assistant', lazy=True, cascade="all, delete-orphan")
 
 class Knowledge(db.Model):
@@ -56,13 +53,11 @@ class Knowledge(db.Model):
     content = db.Column(db.Text, nullable=False)
     assistant_id = db.Column(db.Integer, db.ForeignKey('assistant.id'), nullable=False)
 
-# --- НАЧАЛО: Новый класс для хранения истории чата с ассистентом ---
 class AssistantMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     role = db.Column(db.String(10), nullable=False)  # 'user' или 'assistant'
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-
     owner = db.relationship('User', backref=db.backref('assistant_messages', lazy=True))
-# --- КОНЕЦ НОВОГО КЛАССА ---
+

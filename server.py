@@ -6,70 +6,41 @@ monkey.patch_all()
 import os
 import uuid
 import json
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Response, session
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask import render_template, request, redirect, url_for, jsonify, send_from_directory, Response, session
+from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime
 from sqlalchemy import or_, func
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_migrate import Migrate
 from openai import OpenAI
 import google.generativeai as genai
-from flask_babel import Babel, gettext as _
+from flask_babel import gettext as _
+
+# --- ИЗМЕНЕНИЕ 1: ИМПОРТИРУЕМ ГОТОВЫЕ ОБЪЕКТЫ ИЗ ФАБРИКИ ---
+from app_factory import create_app, db, socketio
 from ai_logic import get_specialist_response
-from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage 
+from models import User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-# --- APP SETUP ---
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-development-secret-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///messenger.db')
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,
-    "pool_recycle": 300,
-}
+# --- ИЗМЕНЕНИЕ 2: СОЗДАЕМ ПРИЛОЖЕНИЕ ЧЕРЕЗ ФАБРИКУ ---
+app = create_app()
 
-# --- BABEL SETUP ---
-app.config['LANGUAGES'] = {
-    'en': 'en',
-    'ru': 'ru',
-    'kk': 'kk'
-}
-app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
+user_sids = {}
 
-def get_locale():
-    lang = request.args.get('lang')
-    if lang in app.config['LANGUAGES']:
-        session['lang'] = lang
-    return session.get('lang', request.accept_languages.best_match(app.config['LANGUAGES'].keys()))
-
-babel = Babel(app, locale_selector=get_locale)
-
+# --- ИЗМЕНЕНИЕ 3: ВСЯ КОНФИГУРАЦИЯ УДАЛЕНА. ОСТАЛСЯ ТОЛЬКО КОНТЕКСТНЫЙ ПРОЦЕССОР ---
 @app.context_processor
 def inject_conf_var():
+    from app_factory import get_locale
     return dict(
         AVAILABLE_LANGUAGES=app.config['LANGUAGES'],
         CURRENT_LANGUAGE=get_locale()
     )
 
-# --- OTHER EXTENSIONS ---
-db.init_app(app)
-migrate = Migrate(app, db)
-socketio = SocketIO(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = _("Please log in to access this page.")
-
-user_sids = {}
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
 # --- ROUTES ---
+# Весь код ниже остается таким же, как у тебя был,
+# так как он содержит только логику маршрутов.
+
 @app.route('/')
 @login_required
 def index():
@@ -466,7 +437,6 @@ def create_assistant():
         description=_('Краткое описание'),
         status='inactive',
         instructions=_('Ты — полезный ассистент.'),
-        # --- ИСПРАВЛЕНИЕ ОШИБКИ ---
         user_id=current_user.id
     )
     db.session.add(new_assistant)
@@ -627,5 +597,7 @@ def handle_group_message(data):
     emit('receive_group_message', message_payload, to=room)
     emit('new_message_notification', {'group_id': group_id, 'group_name': group.name, 'sender': current_user.username}, to=room, skip_sid=request.sid)
 
-if __name__ == '__main__':
-    socketio.run(app, debug=True)
+# --- ИЗМЕНЕНИЕ 4: УДАЛЯЕМ ЭТОТ БЛОК ---
+# if __name__ == '__main__':
+#     socketio.run(app, debug=True)
+
