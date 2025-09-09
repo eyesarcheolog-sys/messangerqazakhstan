@@ -9,7 +9,6 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, date
 import logging
-from google.generativeai.types import FunctionResponse, Part
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -57,18 +56,16 @@ class GoogleTools:
 
     def find_events(self, search_term: str):
         """Находит события в Google Календаре по ключевым словам."""
+        # (Остальные методы класса остаются без изменений)
         service = self._get_google_service('calendar', 'v3')
         if not service: return _("Доступ к Google Календарю не настроен.")
-        
         now = datetime.utcnow()
         time_min = now.isoformat() + "Z"
         time_max = (now + timedelta(days=7)).isoformat() + "Z"
-
         try:
             events_result = service.events().list(calendarId='primary', q=search_term, timeMin=time_min, timeMax=time_max, maxResults=5, singleEvents=True, orderBy='startTime').execute()
             events = events_result.get('items', [])
             if not events: return _("На ближайшую неделю событий с названием '{search_term}' не найдено.").format(search_term=search_term)
-            
             response_lines = [_("Вот что мне удалось найти:")]
             for event in events:
                 start_dt = datetime.fromisoformat(event['start'].get('dateTime').replace('Z', '+00:00'))
@@ -77,6 +74,7 @@ class GoogleTools:
         except Exception as e:
             logging.error(f"Error finding events: {e}")
             return _("Произошла ошибка при поиске событий.")
+
 
     def create_task(self, title: str, due: str = None):
         """Создает новую задачу в Google Tasks. Срок выполнения (due) должен быть в формате ISO 8601."""
@@ -123,25 +121,8 @@ def get_specialist_response(user_prompt, user, assistant):
             tools=tools_for_model
         )
         
-        chat = model.start_chat(history=chat_history)
+        chat = model.start_chat(history=chat_history, enable_automatic_function_calling=True)
         response = chat.send_message(user_prompt)
-
-        # <<< Возвращаем надежный РУЧНОЙ ЦИКЛ ОБРАБОТКИ >>>
-        while response.candidates[0].content.parts[0].function_call:
-            function_call = response.candidates[0].content.parts[0].function_call
-            tool_name = function_call.name
-            
-            if hasattr(google_tools, tool_name):
-                executor = getattr(google_tools, tool_name)
-                tool_args = {key: value for key, value in function_call.args.items()}
-                
-                tool_response_text = executor(**tool_args)
-                
-                response = chat.send_message(
-                    Part(function_response=FunctionResponse(name=tool_name, response={'result': tool_response_text}))
-                )
-            else:
-                break
         
         return response.text
 
