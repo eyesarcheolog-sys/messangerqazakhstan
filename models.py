@@ -44,6 +44,10 @@ class Assistant(db.Model):
     instructions = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
+    # --- НАЧАЛО: НОВОЕ ПОЛЕ ДЛЯ ИНСТРУМЕНТОВ ---
+    tools = db.Column(db.String(500), nullable=True) # Хранит названия инструментов через запятую
+    # --- КОНЕЦ НОВОГО ПОЛЯ ---
+    
     knowledge_sources = db.relationship('Knowledge', backref='assistant', lazy=True, cascade="all, delete-orphan")
 
 class Knowledge(db.Model):

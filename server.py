@@ -16,7 +16,6 @@ from flask_migrate import Migrate
 from openai import OpenAI
 import google.generativeai as genai
 from flask_babel import Babel, gettext as _
-# <<< 1. ИЗМЕНЕН ИМПОРТ >>>
 from ai_logic import get_specialist_response
 from models import db, User, Group, Message, Assistant, Knowledge, AssistantMessage 
 from google.oauth2.credentials import Credentials
@@ -297,7 +296,6 @@ def send_audio():
 
     return jsonify({"success": True}), 200
 
-# <<< КОД ВНУТРИ ЭТОЙ ФУНКЦИИ ВОССТАНОВЛЕН >>>
 @app.route('/edit_with_ai', methods=['POST'])
 @login_required
 def edit_with_ai():
@@ -361,7 +359,6 @@ def edit_with_ai():
         print(f"Error calling {model_choice} API: {e}")
         return jsonify({'error': _('{model_choice} service failed').format(model_choice=model_choice)}), 500
 
-# <<< 2. ВСЯ ЛОГИКА МАРШРУТА ПОЛНОСТЬЮ ПЕРЕПИСАНА >>>
 @app.route('/assistant_history')
 @login_required
 def assistant_history():
@@ -431,7 +428,6 @@ def chat_with_assistant():
         print(f"Error in chat_with_assistant route: {e}")
         return jsonify({'error': _('AI Assistant service failed')}), 500
 
-# <<< КОД ВНУТРИ ЭТОЙ ФУНКЦИИ ВОССТАНОВЛЕН >>>
 @app.route('/js/translations.js')
 def js_translations():
     translations = {
@@ -486,6 +482,12 @@ def configure_assistant(assistant_id):
         assistant.description = request.form.get('assistant_description')
         assistant.instructions = request.form.get('instructions')
         assistant.status = request.form.get('assistant_status')
+        
+        # --- НАЧАЛО: ОБНОВЛЕННЫЙ КОД ДЛЯ СОХРАНЕНИЯ ИНСТРУМЕНТОВ ---
+        selected_tools = request.form.getlist('tools')
+        assistant.tools = ','.join(selected_tools) if selected_tools else ''
+        # --- КОНЕЦ ОБНОВЛЕННОГО КОДА ---
+
         db.session.commit()
         return redirect(url_for('configure_assistant', assistant_id=assistant.id))
 

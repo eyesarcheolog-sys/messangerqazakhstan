@@ -31,7 +31,22 @@
             <label for="status_inactive" class="status-label status-label-inactive">{{ _('Неактивен') }}</label>
         </div>
     </div>
-    
+
+    <div class="form-section">
+        <label>{{ _('Инструменты ассистента') }}</label>
+        <p class="form-hint">{{ _('Выберите, какие инструменты может использовать этот специалист.') }}</p>
+        <div class="tools-control">
+            {% set available_tools = ['create_calendar_event', 'find_events', 'create_task'] %}
+            {% set selected_tools = assistant.tools.split(',') if assistant.tools else [] %}
+            
+            {% for tool in available_tools %}
+            <div class="tool-checkbox">
+                <input type="checkbox" id="tool_{{ tool }}" name="tools" value="{{ tool }}" {% if tool in selected_tools %}checked{% endif %}>
+                <label for="tool_{{ tool }}">{{ tool }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
     <div class="form-section">
         <label for="instructions">{{ _('Инструкции для ассистента (Системный промпт)') }}</label>
         <p class="form-hint">{{ _('Опишите на естественном языке, что должен делать ассистент...') }}</p>
@@ -52,7 +67,7 @@
         
         <div class="data-source">
             <div class="data-source-info">
-                <strong>Google Calendar</strong>
+                <strong>Google Calendar & Tasks</strong>
                 {% if current_user.google_credentials_json %}
                     <span class="status-badge active">{{ _('Подключено') }}</span>
                 {% else %}
@@ -68,7 +83,7 @@
                 <a href="{{ url_for('authorize_google') }}" class="connect-btn">{{ _('Подключить') }}</a>
             {% endif %}
         </div>
-        </div>
+    </div>
 </div>
 
 <hr class="form-separator">
