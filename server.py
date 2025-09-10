@@ -40,27 +40,28 @@ try:
 except OSError:
     pass
 
+# --- ФУНКЦИЯ ВЫБОРА ЯЗЫКА ---
+def get_locale():
+    lang = request.args.get('lang')
+    if lang in app.config.get('LANGUAGES', {}):
+        session['lang'] = lang
+    return session.get('lang', request.accept_languages.best_match(app.config.get('LANGUAGES', {}).keys()))
+
 # --- СВЯЗЫВАНИЕ РАСШИРЕНИЙ С ПРИЛОЖЕНИЕМ ---
 socketio = SocketIO(app)
 login_manager = LoginManager(app)
-babel = Babel(app)
+# ИСПРАВЛЕНИЕ: Инициализируем Babel с передачей функции напрямую
+babel = Babel(app, locale_selector=get_locale)
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# --- НАСТРОЙКА РАСШИРЕНИЙ ---
+# --- НАСТРОЙКА LOGIN MANAGER ---
 login_manager.login_view = 'login'
 login_manager.login_message = _("Please log in to access this page.")
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
-
-@babel.localeselector
-def get_locale():
-    lang = request.args.get('lang')
-    if lang in app.config.get('LANGUAGES', {}):
-        session['lang'] = lang
-    return session.get('lang', request.accept_languages.best_match(app.config.get('LANGUAGES', {}).keys()))
 
 user_sids = {}
 
