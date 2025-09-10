@@ -439,17 +439,27 @@ def disconnect_google():
     db.session.commit()
     return redirect(request.referrer or url_for('assistants_dashboard'))
 
-# --- GOOGLE OAUTH ROUTES ---
+# --- GOOGLE OAUTH ROUTES (ИСПРАВЛЕННАЯ ВЕРСИЯ) ---
+def get_credentials_path():
+    """Возвращает правильный путь к файлу credentials в зависимости от окружения."""
+    render_path = '/etc/secrets/google_credentials.json'
+    local_path = os.path.join(os.path.dirname(__file__), 'google_credentials.json')
+    if os.path.exists(render_path):
+        return render_path
+    return local_path
+
 @app.route('/authorize/google')
 @login_required
 def authorize_google():
-    render_credentials_path = '/etc/secrets/google_credentials.json'
-    local_credentials_path = os.path.join(app.root_path, 'google_credentials.json')
-    if os.path.exists(render_credentials_path):
-        credentials_path = render_credentials_path
-    else:
-        credentials_path = local_credentials_path
-    flow = Flow.from_client_secrets_file(credentials_path, scopes=['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/tasks'], redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https'))
+    credentials_path = get_credentials_path()
+    if not os.path.exists(credentials_path):
+        return "Error: google_credentials.json not found.", 500
+        
+    flow = Flow.from_client_secrets_file(
+        credentials_path,
+        scopes=['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/tasks'],
+        redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https')
+    )
     authorization_url, state = flow.authorization_url(access_type='offline', include_granted_scopes='true', prompt='consent')
     session['state'] = state
     return redirect(authorization_url)
@@ -457,12 +467,7 @@ def authorize_google():
 @app.route('/oauth2callback/google')
 @login_required
 def oauth2callback_google():
-    render_credentials_path = '/etc/secrets/google_credentials.json'
-    local_credentials_path = os.path.join(app.root_path, 'google_credentials.json')
-    if os.path.exists(render_credentials_path):
-        credentials_path = render_credentials_path
-    else:
-        credentials_path = local_credentials_path
+    credentials_path = get_credentials_path()
     state = session.get('state')
     if not state or state != request.args.get('state'): return 'State mismatch error', 400
     flow = Flow.from_client_secrets_file(credentials_path, scopes=['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/tasks'], state=state, redirect_uri=url_for('oauth2callback_google', _external=True, _scheme='https'))
